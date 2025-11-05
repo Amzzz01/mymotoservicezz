@@ -47,14 +47,14 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord }) => {
         <div className="text-center">
             <button
             onClick={() => setIsFormVisible(true)}
-            className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-3 px-6 rounded-lg shadow-lg shadow-cyan-500/20 transition-all duration-300 transform hover:scale-105"
+            className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg shadow-lg shadow-cyan-500/20 transition-all duration-300 transform hover:scale-105 text-sm sm:text-base"
             >
             <PlusIcon className="w-5 h-5" />
             Add New Maintenance Record
             </button>
         </div>
       ) : (
-        <div className="bg-slate-800 p-6 rounded-lg shadow-2xl animate-fade-in">
+        <div className="bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl animate-fade-in">
             <h2 className="text-xl font-bold mb-4 text-cyan-400">New Maintenance Record</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
             <div>

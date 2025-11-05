@@ -6,3 +6,8 @@ export interface MaintenanceRecord {
   motorcycleName: string;
   motorcycleType: string;
 }
+
+export interface User {
+  username: string;
+  password: string;
+}

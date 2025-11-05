@@ -80,7 +80,7 @@ const AISuggestion: React.FC<AISuggestionProps> = ({ records }) => {
                 <button
                     onClick={handleGetSuggestion}
                     disabled={isLoading || records.length === 0}
-                    className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg shadow-violet-500/20 transition-all duration-300 transform hover:scale-105 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
+                    className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg shadow-lg shadow-violet-500/20 transition-all duration-300 transform hover:scale-105 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none text-sm sm:text-base"
                     aria-label="Get AI service suggestion for the most recently serviced motorcycle"
                 >
                     <LightbulbIcon className="w-5 h-5" />
@@ -101,10 +101,10 @@ const AISuggestion: React.FC<AISuggestionProps> = ({ records }) => {
             )}
 
             {suggestion && (
-                <div className="bg-slate-800 p-6 rounded-lg shadow-2xl border border-violet-500/50 animate-fade-in">
+                <div className="bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl border border-violet-500/50 animate-fade-in">
                     <div className="flex items-center gap-3 mb-3">
                         <SparklesIcon className="w-6 h-6 text-violet-400" />
-                        <h3 className="text-xl font-bold text-violet-400">AI Recommendation</h3>
+                        <h3 className="text-lg sm:text-xl font-bold text-violet-400">AI Recommendation</h3>
                     </div>
                     <div className="prose prose-invert prose-p:text-slate-200 pl-9">
                         <p className="whitespace-pre-wrap">{suggestion}</p>

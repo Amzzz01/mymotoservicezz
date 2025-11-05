@@ -40,22 +40,22 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete }) =
   });
 
   return (
-    <div className="bg-slate-800 rounded-lg shadow-lg p-5 transition-all duration-300 hover:shadow-cyan-500/10 hover:ring-1 hover:ring-slate-700">
+    <div className="bg-slate-800 rounded-lg shadow-lg p-4 sm:p-5 transition-all duration-300 hover:shadow-cyan-500/10 hover:ring-1 hover:ring-slate-700">
       <div className="flex justify-between items-start">
         <div className="flex-grow">
             <div className="flex items-center gap-2 text-slate-200 font-semibold mb-2">
                 <MotoIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
-                <h3 className="text-lg">{record.motorcycleName || 'N/A'} <span className="text-slate-400 font-normal">({record.motorcycleType || 'Unknown Type'})</span></h3>
+                <h3 className="text-base sm:text-lg">{record.motorcycleName || 'N/A'} <span className="text-slate-400 font-normal text-sm sm:text-base">({record.motorcycleType || 'Unknown Type'})</span></h3>
             </div>
             
             <div className="pl-7">
-                <p className="text-slate-100 text-lg mb-3">{record.description}</p>
-                <div className="flex items-center gap-3 text-sm text-slate-400">
+                <p className="text-slate-100 text-base sm:text-lg mb-2">{record.description}</p>
+                <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3 text-sm text-slate-400">
                     <div className="flex items-center gap-1.5">
                         <CalendarIcon className="w-4 h-4 text-slate-500" />
                         <span>{formattedDate}</span>
                     </div>
-                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-600 hidden sm:inline">|</span>
                     <div className="flex items-center gap-1.5">
                         <GaugeIcon className="w-4 h-4 text-slate-500" />
                         <span>{record.kilometers.toLocaleString('en-US')} km</span>

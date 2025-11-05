@@ -1,6 +1,6 @@
 import React from 'react';
 import { MaintenanceRecord } from './types';
-import { useLocalStorage } from './hooks/useLocalStorage';
+import { useFirestoreRecords } from './hooks/useFirestoreRecords';
 import MaintenanceForm from './components/MaintenanceForm';
 import MaintenanceList from './components/MaintenanceList';
 import AISuggestion from './components/AISuggestion';
@@ -23,26 +23,38 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 
 function App() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, loading: authLoading } = useAuth();
+  const { records, loading: recordsLoading, error, addRecord, deleteRecord } = useFirestoreRecords(currentUser?.uid || '');
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-cyan-400 text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return <AuthPage />;
   }
 
-  const userRecordsKey = `motorcycle-maintenance-${currentUser.username}`;
-  const [records, setRecords] = useLocalStorage<MaintenanceRecord[]>(userRecordsKey, []);
-
-  const addRecord = (record: Omit<MaintenanceRecord, 'id'>) => {
-    const newRecord: MaintenanceRecord = {
-      ...record,
-      id: Date.now().toString(),
-    };
-    setRecords(prevRecords => [newRecord, ...prevRecords]);
+  const handleAddRecord = async (record: Omit<MaintenanceRecord, 'id'>) => {
+    try {
+      await addRecord(record, currentUser.uid);
+    } catch (error) {
+      console.error('Failed to add record:', error);
+      alert('Failed to add maintenance record. Please try again.');
+    }
   };
 
-  const deleteRecord = (id: string) => {
+  const handleDeleteRecord = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
-        setRecords(prevRecords => prevRecords.filter(record => record.id !== id));
+      try {
+        await deleteRecord(id);
+      } catch (error) {
+        console.error('Failed to delete record:', error);
+        alert('Failed to delete record. Please try again.');
+      }
     }
   };
 
@@ -57,7 +69,9 @@ function App() {
             </h1>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
-            <span className="text-sm text-slate-300 hidden sm:block">Welcome, <span className="font-bold">{currentUser.username}</span>!</span>
+            <span className="text-sm text-slate-300 hidden sm:block">
+              Welcome, <span className="font-bold">{currentUser.email}</span>!
+            </span>
              <button onClick={logout} className="flex items-center gap-2 text-slate-300 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-slate-700/50" aria-label="Logout">
                 <LogoutIcon className="w-5 h-5" />
                 <span className="text-sm font-medium hidden md:block">Logout</span>
@@ -68,9 +82,22 @@ function App() {
 
       <main className="container mx-auto p-3 sm:p-6 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <MaintenanceForm onAddRecord={addRecord} />
+          {error && (
+            <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
+          
+          <MaintenanceForm onAddRecord={handleAddRecord} />
           <AISuggestion records={records} />
-          <MaintenanceList records={records} onDeleteRecord={deleteRecord} />
+          
+          {recordsLoading ? (
+            <div className="text-center py-8 text-slate-400">
+              <p>Loading your maintenance records...</p>
+            </div>
+          ) : (
+            <MaintenanceList records={records} onDeleteRecord={handleDeleteRecord} />
+          )}
         </div>
       </main>
       <footer className="text-center p-4 text-slate-500 text-sm">

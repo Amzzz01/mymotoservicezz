@@ -1,12 +1,19 @@
-import React, { createContext, ReactNode } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { User } from '../types';
+import React, { createContext, ReactNode, useState, useEffect } from 'react';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut,
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from '../firebase';
 
 interface AuthContextType {
-  currentUser: User | null;
-  login: (username: string, password: string) => boolean;
-  register: (user: User) => boolean;
-  logout: () => void;
+  currentUser: FirebaseUser | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  loading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,34 +23,51 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [users, setUsers] = useLocalStorage<User[]>('moto-users', []);
-  const [currentUser, setCurrentUser] = useLocalStorage<User | null>('moto-currentUser', null);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const register = (user: User): boolean => {
-    const userExists = users.some(u => u.username === user.username);
-    if (userExists) {
-      return false; // Username already taken
-    }
-    setUsers([...users, user]);
-    return true;
-  };
-
-  const login = (username: string, password: string): boolean => {
-    const user = users.find(u => u.username === username && u.password === password);
-    if (user) {
+  useEffect(() => {
+    // Listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      setLoading(false);
+    });
+
+    // Cleanup subscription
+    return unsubscribe;
+  }, []);
+
+  const register = async (email: string, password: string): Promise<boolean> => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
       return true;
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      return false;
     }
-    return false; // Invalid credentials
   };
 
-  const logout = () => {
-    setCurrentUser(null);
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return true;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return false;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, register, logout }}>
-      {children}
+    <AuthContext.Provider value={{ currentUser, login, register, logout, loading }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

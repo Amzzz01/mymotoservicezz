@@ -35,7 +35,14 @@ const AISuggestion: React.FC<AISuggestionProps> = ({ records }) => {
         setSuggestion('');
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            
+            if (!apiKey) {
+                setError("Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your environment variables.");
+                return;
+            }
+
+            const ai = new GoogleGenAI({ apiKey });
 
             const sortedRecords = [...records].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             const latestRecord = sortedRecords[0];

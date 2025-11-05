@@ -1,0 +1,5 @@
+{
+  "name": "MyMotoLog",
+  "description": "A simple and elegant application to track your motorcycle's maintenance history. Log service dates, repairs performed, and odometer readings to keep your bike in top condition.",
+  "requestFramePermissions": []
+}

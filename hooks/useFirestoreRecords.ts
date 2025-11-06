@@ -100,16 +100,28 @@ export function useFirestoreRecords(userId: string, vehicleId?: string) {
     };
   };
 
-  const addRecord = async (record: Omit<MaintenanceRecord, 'id'>, userId: string) => {
+  const addRecord = async (record: Omit<MaintenanceRecord, 'id'>) => {
     try {
-      await addDoc(collection(db, 'maintenanceRecords'), {
-        ...record,
-        userId,
-        createdAt: serverTimestamp()
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      // Remove undefined values - Firestore doesn't accept them
+      const cleanRecord: any = { userId, createdAt: serverTimestamp() };
+      
+      Object.keys(record).forEach(key => {
+        const value = (record as any)[key];
+        if (value !== undefined) {
+          cleanRecord[key] = value;
+        }
       });
-    } catch (err) {
+
+      console.log('Adding record with data:', cleanRecord); // Debug log
+
+      await addDoc(collection(db, 'maintenanceRecords'), cleanRecord);
+    } catch (err: any) {
       console.error('Error adding record:', err);
-      throw new Error('Failed to add maintenance record');
+      throw new Error('Failed to add maintenance record: ' + (err.message || 'Unknown error'));
     }
   };
 

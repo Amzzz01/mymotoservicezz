@@ -101,27 +101,37 @@ export function useVehicles(userId: string) {
 
   const deleteVehicle = async (id: string) => {
     try {
-      // Delete associated maintenance records
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      // Delete associated maintenance records - ADD userId to query
       const recordsQuery = query(
         collection(db, 'maintenanceRecords'),
-        where('vehicleId', '==', id)
+        where('vehicleId', '==', id),
+        where('userId', '==', userId)  // IMPORTANT: Filter by userId
       );
       const recordsSnapshot = await getDocs(recordsQuery);
       
       if (recordsSnapshot.docs.length > 0) {
-        const deleteRecordsPromises = recordsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        const deleteRecordsPromises = recordsSnapshot.docs.map(docSnap => 
+          deleteDoc(doc(db, 'maintenanceRecords', docSnap.id))
+        );
         await Promise.all(deleteRecordsPromises);
       }
       
-      // Delete associated reminders
+      // Delete associated reminders - ADD userId to query
       const remindersQuery = query(
         collection(db, 'reminders'),
-        where('vehicleId', '==', id)
+        where('vehicleId', '==', id),
+        where('userId', '==', userId)  // IMPORTANT: Filter by userId
       );
       const remindersSnapshot = await getDocs(remindersQuery);
       
       if (remindersSnapshot.docs.length > 0) {
-        const deleteRemindersPromises = remindersSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        const deleteRemindersPromises = remindersSnapshot.docs.map(docSnap => 
+          deleteDoc(doc(db, 'reminders', docSnap.id))
+        );
         await Promise.all(deleteRemindersPromises);
       }
       

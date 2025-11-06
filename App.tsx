@@ -47,15 +47,26 @@ function App() {
 
   const handleAddRecord = async (record: Omit<MaintenanceRecord, 'id'>) => {
     try {
-      await addRecord(record, currentUser.uid);
+      if (!currentUser?.uid) {
+        alert('You must be logged in to add records.');
+        return;
+      }
+
+      if (!activeVehicle) {
+        alert('Please select or add a vehicle first.');
+        return;
+      }
+
+      // Add the record - userId will be added in the hook
+      await addRecord(record);
       
       // Update vehicle odometer if the new reading is higher
-      if (activeVehicle && record.kilometers > activeVehicle.currentOdometer) {
+      if (record.kilometers > activeVehicle.currentOdometer) {
         await updateVehicle(activeVehicle.id, { currentOdometer: record.kilometers });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add record:', error);
-      alert('Failed to add maintenance record. Please try again.');
+      alert(error.message || 'Failed to add maintenance record. Please try again.');
     }
   };
 
@@ -63,9 +74,9 @@ function App() {
     if (window.confirm('Are you sure you want to delete this record?')) {
       try {
         await deleteRecord(id);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to delete record:', error);
-        alert('Failed to delete record. Please try again.');
+        alert(error.message || 'Failed to delete record. Please try again.');
       }
     }
   };

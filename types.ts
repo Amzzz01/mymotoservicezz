@@ -5,9 +5,77 @@ export interface MaintenanceRecord {
   kilometers: number;
   motorcycleName: string;
   motorcycleType: string;
+  // Cost tracking
+  partsCost?: number;
+  laborCost?: number;
+  // Photos and notes
+  photos?: string[]; // Array of base64 or URLs
+  notes?: string;
+  vehicleId: string; // Link to specific vehicle
+}
+
+export interface Vehicle {
+  id: string;
+  userId: string;
+  name: string; // e.g., "Nightster"
+  type: string; // e.g., "Harley-Davidson Sportster"
+  year?: number;
+  model?: string;
+  currentOdometer: number;
+  purchaseDate?: string;
+  purchaseOdometer?: number;
+  isActive: boolean; // For switching between vehicles
+  createdAt: string;
+}
+
+export interface Reminder {
+  id: string;
+  vehicleId: string;
+  userId: string;
+  title: string;
+  description?: string;
+  // Time-based reminder
+  dueDate?: string; // ISO date string
+  repeatInterval?: 'monthly' | 'quarterly' | 'biannually' | 'yearly' | 'custom';
+  customIntervalDays?: number;
+  // Mileage-based reminder
+  dueMileage?: number;
+  mileageInterval?: number; // e.g., every 5000 km
+  // Status
+  isActive: boolean;
+  lastTriggered?: string;
+  dismissed?: boolean;
+  createdAt: string;
+}
+
+export interface MaintenanceScheduleItem {
+  id: string;
+  vehicleId: string;
+  serviceType: string; // e.g., "Oil Change", "Brake Inspection"
+  description: string;
+  recommendedMileage: number;
+  recommendedInterval: number; // in km
+  isCompleted: boolean;
+  lastCompletedDate?: string;
+  lastCompletedMileage?: number;
+  priority: 'low' | 'medium' | 'high';
+}
+
+export interface VehicleModelTemplate {
+  make: string;
+  model: string;
+  scheduleItems: Omit<MaintenanceScheduleItem, 'id' | 'vehicleId' | 'isCompleted' | 'lastCompletedDate' | 'lastCompletedMileage'>[];
 }
 
 export interface User {
   username: string;
   password: string;
+}
+
+export interface CostSummary {
+  totalParts: number;
+  totalLabor: number;
+  totalCost: number;
+  recordCount: number;
+  averageCostPerService: number;
 }

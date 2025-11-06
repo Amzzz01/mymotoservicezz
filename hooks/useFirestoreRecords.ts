@@ -6,17 +6,25 @@ import {
   onSnapshot, 
   addDoc, 
   deleteDoc, 
+  updateDoc,
   doc,
   serverTimestamp,
   orderBy 
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { MaintenanceRecord } from '../types';
+import { MaintenanceRecord, CostSummary } from '../types';
 
-export function useFirestoreRecords(userId: string) {
+export function useFirestoreRecords(userId: string, vehicleId?: string) {
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [costSummary, setCostSummary] = useState<CostSummary>({
+    totalParts: 0,
+    totalLabor: 0,
+    totalCost: 0,
+    recordCount: 0,
+    averageCostPerService: 0
+  });
 
   useEffect(() => {
     if (!userId) {
@@ -27,14 +35,22 @@ export function useFirestoreRecords(userId: string) {
 
     setLoading(true);
     
-    // Create a query to get records for this user, ordered by date descending
-    const q = query(
-      collection(db, 'maintenanceRecords'),
-      where('userId', '==', userId),
-      orderBy('date', 'desc')
-    );
+    let q;
+    
+    // Filter by vehicle if specified
+    if (vehicleId) {
+      q = query(
+        collection(db, 'maintenanceRecords'),
+        where('userId', '==', userId),
+        where('vehicleId', '==', vehicleId)
+      );
+    } else {
+      q = query(
+        collection(db, 'maintenanceRecords'),
+        where('userId', '==', userId)
+      );
+    }
 
-    // Subscribe to real-time updates
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -45,20 +61,44 @@ export function useFirestoreRecords(userId: string) {
             ...doc.data()
           } as MaintenanceRecord);
         });
+        
+        // Sort locally by date (descending)
+        recordsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
         setRecords(recordsData);
+        
+        // Calculate cost summary
+        const summary = calculateCostSummary(recordsData);
+        setCostSummary(summary);
+        
         setLoading(false);
         setError(null);
       },
       (err) => {
         console.error('Error fetching records:', err);
-        setError('Failed to load maintenance records');
+        setError('Failed to load maintenance records: ' + err.message);
         setLoading(false);
       }
     );
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [userId]);
+  }, [userId, vehicleId]);
+
+  const calculateCostSummary = (records: MaintenanceRecord[]): CostSummary => {
+    const totalParts = records.reduce((sum, r) => sum + (r.partsCost || 0), 0);
+    const totalLabor = records.reduce((sum, r) => sum + (r.laborCost || 0), 0);
+    const totalCost = totalParts + totalLabor;
+    const recordCount = records.length;
+    const averageCostPerService = recordCount > 0 ? totalCost / recordCount : 0;
+
+    return {
+      totalParts,
+      totalLabor,
+      totalCost,
+      recordCount,
+      averageCostPerService
+    };
+  };
 
   const addRecord = async (record: Omit<MaintenanceRecord, 'id'>, userId: string) => {
     try {
@@ -73,6 +113,15 @@ export function useFirestoreRecords(userId: string) {
     }
   };
 
+  const updateRecord = async (id: string, updates: Partial<MaintenanceRecord>) => {
+    try {
+      await updateDoc(doc(db, 'maintenanceRecords', id), updates);
+    } catch (err) {
+      console.error('Error updating record:', err);
+      throw new Error('Failed to update maintenance record');
+    }
+  };
+
   const deleteRecord = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'maintenanceRecords', id));
@@ -82,5 +131,13 @@ export function useFirestoreRecords(userId: string) {
     }
   };
 
-  return { records, loading, error, addRecord, deleteRecord };
+  return { 
+    records, 
+    loading, 
+    error, 
+    costSummary,
+    addRecord, 
+    updateRecord,
+    deleteRecord 
+  };
 }

@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MaintenanceRecord } from './types';
 import { useFirestoreRecords } from './hooks/useFirestoreRecords';
+import { useVehicles } from './hooks/useVehicles';
+import { useReminders } from './hooks/useReminders';
 import MaintenanceForm from './components/MaintenanceForm';
 import MaintenanceList from './components/MaintenanceList';
 import AISuggestion from './components/AISuggestion';
+import VehicleManager from './components/VehicleManager';
+import CostDashboard from './components/CostDashboard';
+import ReminderManager from './components/ReminderManager';
 import { useAuth } from './hooks/useAuth';
 import AuthPage from './components/AuthPage';
 
@@ -21,12 +26,14 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
-
 function App() {
   const { currentUser, logout, loading: authLoading } = useAuth();
-  const { records, loading: recordsLoading, error, addRecord, deleteRecord } = useFirestoreRecords(currentUser?.uid || '');
+  const { vehicles, activeVehicle, loading: vehiclesLoading, addVehicle, updateVehicle, deleteVehicle, setActive } = useVehicles(currentUser?.uid || '');
+  const { records, loading: recordsLoading, error, costSummary, addRecord, deleteRecord } = useFirestoreRecords(currentUser?.uid || '', activeVehicle?.id);
+  const { reminders, loading: remindersLoading, addReminder, updateReminder, deleteReminder, dismissReminder } = useReminders(currentUser?.uid || '', activeVehicle?.id);
+  const [activeTab, setActiveTab] = useState<'overview' | 'reminders' | 'vehicles'>('overview');
 
-  if (authLoading) {
+  if (authLoading || vehiclesLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-cyan-400 text-xl">Loading...</div>
@@ -41,6 +48,11 @@ function App() {
   const handleAddRecord = async (record: Omit<MaintenanceRecord, 'id'>) => {
     try {
       await addRecord(record, currentUser.uid);
+      
+      // Update vehicle odometer if the new reading is higher
+      if (activeVehicle && record.kilometers > activeVehicle.currentOdometer) {
+        await updateVehicle(activeVehicle.id, { currentOdometer: record.kilometers });
+      }
     } catch (error) {
       console.error('Failed to add record:', error);
       alert('Failed to add maintenance record. Please try again.');
@@ -69,37 +81,138 @@ function App() {
             </h1>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
+            {activeVehicle && (
+              <div className="hidden md:block text-right">
+                <div className="text-xs text-slate-400">Active Vehicle</div>
+                <div className="text-sm font-bold text-cyan-400">{activeVehicle.name}</div>
+              </div>
+            )}
             <span className="text-sm text-slate-300 hidden sm:block">
               Welcome, <span className="font-bold">{currentUser.email}</span>!
             </span>
-             <button onClick={logout} className="flex items-center gap-2 text-slate-300 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-slate-700/50" aria-label="Logout">
-                <LogoutIcon className="w-5 h-5" />
-                <span className="text-sm font-medium hidden md:block">Logout</span>
-             </button>
+            <button 
+              onClick={logout} 
+              className="flex items-center gap-2 text-slate-300 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-slate-700/50" 
+              aria-label="Logout"
+            >
+              <LogoutIcon className="w-5 h-5" />
+              <span className="text-sm font-medium hidden md:block">Logout</span>
+            </button>
           </div>
         </div>
       </header>
 
+      {/* Tab Navigation */}
+      <div className="container mx-auto px-3 sm:px-6 pt-6">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'overview'
+                ? 'bg-cyan-500 text-slate-900 shadow-lg'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            📊 Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('reminders')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'reminders'
+                ? 'bg-violet-500 text-white shadow-lg'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            🔔 Reminders
+            {reminders.filter(r => !r.dismissed && r.isActive).length > 0 && (
+              <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                {reminders.filter(r => !r.dismissed && r.isActive).length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('vehicles')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'vehicles'
+                ? 'bg-emerald-500 text-white shadow-lg'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            🏍️ Vehicles ({vehicles.length})
+          </button>
+        </div>
+      </div>
+
       <main className="container mx-auto p-3 sm:p-6 md:p-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {error && (
             <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg mb-4">
               {error}
             </div>
           )}
-          
-          <MaintenanceForm onAddRecord={handleAddRecord} />
-          <AISuggestion records={records} />
-          
-          {recordsLoading ? (
-            <div className="text-center py-8 text-slate-400">
-              <p>Loading your maintenance records...</p>
-            </div>
-          ) : (
-            <MaintenanceList records={records} onDeleteRecord={handleDeleteRecord} />
+
+          {activeTab === 'overview' && (
+            <>
+              {activeVehicle ? (
+                <>
+                  <CostDashboard costSummary={costSummary} />
+                  <MaintenanceForm 
+                    onAddRecord={handleAddRecord} 
+                    vehicles={vehicles}
+                    activeVehicle={activeVehicle}
+                  />
+                  <AISuggestion records={records} />
+                  {recordsLoading ? (
+                    <div className="text-center py-8 text-slate-400">
+                      <p>Loading your maintenance records...</p>
+                    </div>
+                  ) : (
+                    <MaintenanceList records={records} onDeleteRecord={handleDeleteRecord} />
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12 bg-slate-800 rounded-lg">
+                  <h2 className="text-2xl font-bold text-slate-300 mb-4">Welcome to MyMotoLog!</h2>
+                  <p className="text-slate-400 mb-6">Get started by adding your first vehicle.</p>
+                  <button
+                    onClick={() => setActiveTab('vehicles')}
+                    className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-3 px-6 rounded-lg shadow-lg transition-colors"
+                  >
+                    Add Your First Vehicle
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTab === 'reminders' && (
+            <ReminderManager
+              reminders={reminders}
+              vehicles={vehicles}
+              activeVehicle={activeVehicle}
+              onAddReminder={addReminder}
+              onUpdateReminder={updateReminder}
+              onDeleteReminder={deleteReminder}
+              onDismissReminder={dismissReminder}
+              userId={currentUser.uid}
+            />
+          )}
+
+          {activeTab === 'vehicles' && (
+            <VehicleManager
+              vehicles={vehicles}
+              activeVehicle={activeVehicle}
+              onAddVehicle={addVehicle}
+              onUpdateVehicle={updateVehicle}
+              onDeleteVehicle={deleteVehicle}
+              onSetActive={setActive}
+              userId={currentUser.uid}
+              records={records}
+            />
           )}
         </div>
       </main>
+
       <footer className="text-center p-4 text-slate-500 text-sm">
         <p>Built for the ride.</p>
       </footer>

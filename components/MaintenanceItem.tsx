@@ -40,6 +40,8 @@ const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onEdit }) => {
   const [showDetails, setShowDetails] = React.useState(false);
+  const [selectedPhoto, setSelectedPhoto] = React.useState<string | null>(null);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = React.useState<number>(0);
   
   const formattedDate = new Date(record.date).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -50,126 +52,242 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
 
   const hasAdditionalInfo = record.notes || record.photos || record.partsCost || record.laborCost;
 
+  const handlePhotoClick = (photo: string, index: number) => {
+    setSelectedPhoto(photo);
+    setSelectedPhotoIndex(index);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedPhoto(null);
+  };
+
+  const handleDownload = () => {
+    if (selectedPhoto) {
+      const link = document.createElement('a');
+      link.href = selectedPhoto;
+      link.download = `service-photo-${record.date}-${selectedPhotoIndex + 1}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handlePrevPhoto = () => {
+    if (record.photos && selectedPhotoIndex > 0) {
+      const newIndex = selectedPhotoIndex - 1;
+      setSelectedPhotoIndex(newIndex);
+      setSelectedPhoto(record.photos[newIndex]);
+    }
+  };
+
+  const handleNextPhoto = () => {
+    if (record.photos && selectedPhotoIndex < record.photos.length - 1) {
+      const newIndex = selectedPhotoIndex + 1;
+      setSelectedPhotoIndex(newIndex);
+      setSelectedPhoto(record.photos[newIndex]);
+    }
+  };
+
   return (
-    <div className="bg-slate-800 rounded-lg shadow-lg p-4 sm:p-5 transition-all duration-300 hover:shadow-cyan-500/10 hover:ring-1 hover:ring-slate-700">
-      <div className="flex justify-between items-start">
-        <div className="flex-grow">
-            <div className="flex items-center gap-2 text-slate-200 font-semibold mb-2">
-                <MotoIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
-                <h3 className="text-base sm:text-lg">{record.motorcycleName || 'N/A'} <span className="text-slate-400 font-normal text-sm sm:text-base">({record.motorcycleType || 'Unknown Type'})</span></h3>
-            </div>
-            
-            <div className="pl-7">
-                <p className="text-slate-100 text-base sm:text-lg mb-2">{record.description}</p>
-                <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3 text-sm text-slate-400">
-                    <div className="flex items-center gap-1.5">
-                        <CalendarIcon className="w-4 h-4 text-slate-500" />
-                        <span>{formattedDate}</span>
-                    </div>
-                    <span className="text-slate-600 hidden sm:inline">|</span>
-                    <div className="flex items-center gap-1.5">
-                        <GaugeIcon className="w-4 h-4 text-slate-500" />
-                        <span>{record.kilometers.toLocaleString('en-US')} km</span>
-                    </div>
-                    {(record.partsCost || record.laborCost) && (
-                      <>
-                        <span className="text-slate-600 hidden sm:inline">|</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-cyan-400 font-semibold">
-                            RM {((record.partsCost || 0) + (record.laborCost || 0)).toFixed(2)}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                </div>
-
-                {/* View Details Button */}
-                {hasAdditionalInfo && (
-                  <div className="mt-3">
-                    <button
-                      onClick={() => setShowDetails(!showDetails)}
-                      className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
-                    >
-                      {showDetails ? '▼' : '▶'} {showDetails ? 'Hide Details' : 'View Details'}
-                    </button>
+    <>
+      <div className="bg-slate-800 rounded-lg shadow-lg p-4 sm:p-5 transition-all duration-300 hover:shadow-cyan-500/10 hover:ring-1 hover:ring-slate-700">
+        <div className="flex justify-between items-start">
+          <div className="flex-grow">
+              <div className="flex items-center gap-2 text-slate-200 font-semibold mb-2">
+                  <MotoIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                  <h3 className="text-base sm:text-lg">{record.motorcycleName || 'N/A'} <span className="text-slate-400 font-normal text-sm sm:text-base">({record.motorcycleType || 'Unknown Type'})</span></h3>
+              </div>
+              
+              <div className="pl-7">
+                  <p className="text-slate-100 text-base sm:text-lg mb-2">{record.description}</p>
+                  <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3 text-sm text-slate-400">
+                      <div className="flex items-center gap-1.5">
+                          <CalendarIcon className="w-4 h-4 text-slate-500" />
+                          <span>{formattedDate}</span>
+                      </div>
+                      <span className="text-slate-600 hidden sm:inline">|</span>
+                      <div className="flex items-center gap-1.5">
+                          <GaugeIcon className="w-4 h-4 text-slate-500" />
+                          <span>{record.kilometers.toLocaleString('en-US')} km</span>
+                      </div>
+                      {(record.partsCost || record.laborCost) && (
+                        <>
+                          <span className="text-slate-600 hidden sm:inline">|</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-cyan-400 font-semibold">
+                              RM {((record.partsCost || 0) + (record.laborCost || 0)).toFixed(2)}
+                            </span>
+                          </div>
+                        </>
+                      )}
                   </div>
-                )}
 
-                {/* Expanded Details */}
-                {showDetails && hasAdditionalInfo && (
-                  <div className="mt-4 pt-4 border-t border-slate-700 space-y-3">
-                    {/* Cost Breakdown */}
-                    {(record.partsCost || record.laborCost) && (
-                      <div className="bg-slate-900/50 rounded-md p-3">
-                        <h4 className="text-sm font-semibold text-slate-300 mb-2">Cost Breakdown</h4>
-                        <div className="space-y-1 text-sm">
-                          {record.partsCost && (
-                            <div className="flex justify-between">
-                              <span className="text-slate-400">Parts:</span>
-                              <span className="text-slate-200 font-medium">RM {record.partsCost.toFixed(2)}</span>
+                  {/* View Details Button */}
+                  {hasAdditionalInfo && (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => setShowDetails(!showDetails)}
+                        className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
+                      >
+                        {showDetails ? '▼' : '▶'} {showDetails ? 'Hide Details' : 'View Details'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Expanded Details */}
+                  {showDetails && hasAdditionalInfo && (
+                    <div className="mt-4 pt-4 border-t border-slate-700 space-y-3">
+                      {/* Cost Breakdown */}
+                      {(record.partsCost || record.laborCost) && (
+                        <div className="bg-slate-900/50 rounded-md p-3">
+                          <h4 className="text-sm font-semibold text-slate-300 mb-2">Cost Breakdown</h4>
+                          <div className="space-y-1 text-sm">
+                            {record.partsCost && (
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Parts:</span>
+                                <span className="text-slate-200 font-medium">RM {record.partsCost.toFixed(2)}</span>
+                              </div>
+                            )}
+                            {record.laborCost && (
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Labor:</span>
+                                <span className="text-slate-200 font-medium">RM {record.laborCost.toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between pt-2 border-t border-slate-700">
+                              <span className="text-slate-300 font-semibold">Total:</span>
+                              <span className="text-cyan-400 font-bold">RM {((record.partsCost || 0) + (record.laborCost || 0)).toFixed(2)}</span>
                             </div>
-                          )}
-                          {record.laborCost && (
-                            <div className="flex justify-between">
-                              <span className="text-slate-400">Labor:</span>
-                              <span className="text-slate-200 font-medium">RM {record.laborCost.toFixed(2)}</span>
-                            </div>
-                          )}
-                          <div className="flex justify-between pt-2 border-t border-slate-700">
-                            <span className="text-slate-300 font-semibold">Total:</span>
-                            <span className="text-cyan-400 font-bold">RM {((record.partsCost || 0) + (record.laborCost || 0)).toFixed(2)}</span>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Notes */}
-                    {record.notes && (
-                      <div className="bg-slate-900/50 rounded-md p-3">
-                        <h4 className="text-sm font-semibold text-slate-300 mb-2">Notes</h4>
-                        <p className="text-sm text-slate-400 whitespace-pre-wrap">{record.notes}</p>
-                      </div>
-                    )}
-
-                    {/* Photos */}
-                    {record.photos && record.photos.length > 0 && (
-                      <div className="bg-slate-900/50 rounded-md p-3">
-                        <h4 className="text-sm font-semibold text-slate-300 mb-2">Photos ({record.photos.length})</h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                          {record.photos.map((photo, index) => (
-                            <img 
-                              key={index} 
-                              src={photo} 
-                              alt={`Service photo ${index + 1}`} 
-                              className="w-full h-24 object-cover rounded-md cursor-pointer hover:opacity-80 transition-opacity"
-                              onClick={() => window.open(photo, '_blank')}
-                            />
-                          ))}
+                      {/* Notes */}
+                      {record.notes && (
+                        <div className="bg-slate-900/50 rounded-md p-3">
+                          <h4 className="text-sm font-semibold text-slate-300 mb-2">Notes</h4>
+                          <p className="text-sm text-slate-400 whitespace-pre-wrap">{record.notes}</p>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-            </div>
-        </div>
-        <div className="flex gap-2 flex-shrink-0 ml-2">
-          <button
-            onClick={() => onEdit(record)}
-            className="text-slate-500 hover:text-blue-400 transition-colors p-1 rounded-full"
-            aria-label="Edit record"
-          >
-            <EditIcon className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => onDelete(record.id)}
-            className="text-slate-500 hover:text-red-400 transition-colors p-1 rounded-full"
-            aria-label="Delete record"
-          >
-            <TrashIcon className="w-5 h-5" />
-          </button>
+                      )}
+
+                      {/* Photos */}
+                      {record.photos && record.photos.length > 0 && (
+                        <div className="bg-slate-900/50 rounded-md p-3">
+                          <h4 className="text-sm font-semibold text-slate-300 mb-2">Photos ({record.photos.length})</h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                            {record.photos.map((photo, index) => (
+                              <div key={index} className="relative group">
+                                <img 
+                                  src={photo} 
+                                  alt={`Service photo ${index + 1}`} 
+                                  className="w-full h-24 object-cover rounded-md cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() => handlePhotoClick(photo, index)}
+                                />
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
+                                  <span className="text-white text-xs font-medium">Click to view</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+              </div>
+          </div>
+          <div className="flex gap-2 flex-shrink-0 ml-2">
+            <button
+              onClick={() => onEdit(record)}
+              className="text-slate-500 hover:text-blue-400 transition-colors p-1 rounded-full"
+              aria-label="Edit record"
+            >
+              <EditIcon className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => onDelete(record.id)}
+              className="text-slate-500 hover:text-red-400 transition-colors p-1 rounded-full"
+              aria-label="Delete record"
+            >
+              <TrashIcon className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Photo Viewer Modal */}
+      {selectedPhoto && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={handleCloseModal}
+        >
+          <div className="relative max-w-6xl max-h-full" onClick={(e) => e.stopPropagation()}>
+            {/* Close Button */}
+            <button
+              onClick={handleCloseModal}
+              className="absolute -top-12 right-0 text-white hover:text-cyan-400 transition-colors"
+              aria-label="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Photo Counter */}
+            {record.photos && record.photos.length > 1 && (
+              <div className="absolute -top-12 left-0 text-white text-sm">
+                Photo {selectedPhotoIndex + 1} of {record.photos.length}
+              </div>
+            )}
+
+            {/* Main Image */}
+            <img 
+              src={selectedPhoto} 
+              alt="Service photo" 
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+
+            {/* Navigation Arrows */}
+            {record.photos && record.photos.length > 1 && (
+              <>
+                {selectedPhotoIndex > 0 && (
+                  <button
+                    onClick={handlePrevPhoto}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
+                    aria-label="Previous photo"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+                {selectedPhotoIndex < record.photos.length - 1 && (
+                  <button
+                    onClick={handleNextPhoto}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
+                    aria-label="Next photo"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Download Button */}
+            <button
+              onClick={handleDownload}
+              className="absolute bottom-4 right-4 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded-lg shadow-lg transition-colors flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

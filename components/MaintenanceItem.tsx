@@ -37,7 +37,6 @@ const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
-
 const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onEdit }) => {
   const [showDetails, setShowDetails] = React.useState(false);
   const [selectedPhoto, setSelectedPhoto] = React.useState<string | null>(null);
@@ -47,7 +46,7 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    timeZone: 'UTC', // Ensure date is not shifted by local timezone
+    timeZone: 'UTC',
   });
 
   const hasAdditionalInfo = record.notes || record.photos || record.partsCost || record.laborCost;
@@ -57,9 +56,7 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
     setSelectedPhotoIndex(index);
   };
 
-  const handleCloseModal = () => {
-    setSelectedPhoto(null);
-  };
+  const handleCloseModal = () => setSelectedPhoto(null);
 
   const handleDownload = () => {
     if (selectedPhoto) {
@@ -122,7 +119,6 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
                       )}
                   </div>
 
-                  {/* View Details Button */}
                   {hasAdditionalInfo && (
                     <div className="mt-3">
                       <button
@@ -134,10 +130,8 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
                     </div>
                   )}
 
-                  {/* Expanded Details */}
                   {showDetails && hasAdditionalInfo && (
                     <div className="mt-4 pt-4 border-t border-slate-700 space-y-3">
-                      {/* Cost Breakdown */}
                       {(record.partsCost || record.laborCost) && (
                         <div className="bg-slate-900/50 rounded-md p-3">
                           <h4 className="text-sm font-semibold text-slate-300 mb-2">Cost Breakdown</h4>
@@ -162,7 +156,6 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
                         </div>
                       )}
 
-                      {/* Notes */}
                       {record.notes && (
                         <div className="bg-slate-900/50 rounded-md p-3">
                           <h4 className="text-sm font-semibold text-slate-300 mb-2">Notes</h4>
@@ -170,18 +163,20 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
                         </div>
                       )}
 
-                      {/* Photos */}
                       {record.photos && record.photos.length > 0 && (
                         <div className="bg-slate-900/50 rounded-md p-3">
                           <h4 className="text-sm font-semibold text-slate-300 mb-2">Photos ({record.photos.length})</h4>
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                             {record.photos.map((photo, index) => (
-                              <div key={index} className="relative group">
+                              <div 
+                                key={index} 
+                                className="relative group cursor-pointer"
+                                onClick={() => handlePhotoClick(photo, index)}
+                              >
                                 <img 
                                   src={photo} 
                                   alt={`Service photo ${index + 1}`} 
-                                  className="w-full h-24 object-cover rounded-md cursor-pointer hover:opacity-80 transition-opacity"
-                                  onClick={() => handlePhotoClick(photo, index)}
+                                  className="w-full h-24 object-cover rounded-md hover:opacity-80 transition-opacity"
                                 />
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
                                   <span className="text-white text-xs font-medium">Click to view</span>
@@ -214,17 +209,15 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
         </div>
       </div>
 
-      {/* Photo Viewer Modal */}
       {selectedPhoto && (
         <div 
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={handleCloseModal}
         >
-          <div className="relative max-w-6xl max-h-full" onClick={(e) => e.stopPropagation()}>
-            {/* Close Button */}
+          <div className="relative max-w-6xl max-h-full flex flex-col items-center">
             <button
               onClick={handleCloseModal}
-              className="absolute -top-12 right-0 text-white hover:text-cyan-400 transition-colors"
+              className="absolute -top-12 right-0 text-white hover:text-cyan-400 transition-colors z-10"
               aria-label="Close"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -232,58 +225,56 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
               </svg>
             </button>
 
-            {/* Photo Counter */}
             {record.photos && record.photos.length > 1 && (
               <div className="absolute -top-12 left-0 text-white text-sm">
                 Photo {selectedPhotoIndex + 1} of {record.photos.length}
               </div>
             )}
 
-            {/* Main Image */}
-            <img 
-              src={selectedPhoto} 
-              alt="Service photo" 
-              className="max-w-full max-h-[80vh] object-contain rounded-lg"
-            />
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <img 
+                src={selectedPhoto} 
+                alt="Service photo" 
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+              />
 
-            {/* Navigation Arrows */}
-            {record.photos && record.photos.length > 1 && (
-              <>
-                {selectedPhotoIndex > 0 && (
-                  <button
-                    onClick={handlePrevPhoto}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
-                    aria-label="Previous photo"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                )}
-                {selectedPhotoIndex < record.photos.length - 1 && (
-                  <button
-                    onClick={handleNextPhoto}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
-                    aria-label="Next photo"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                )}
-              </>
-            )}
+              {record.photos && record.photos.length > 1 && (
+                <>
+                  {selectedPhotoIndex > 0 && (
+                    <button
+                      onClick={handlePrevPhoto}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
+                      aria-label="Previous photo"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  )}
+                  {selectedPhotoIndex < record.photos.length - 1 && (
+                    <button
+                      onClick={handleNextPhoto}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
+                      aria-label="Next photo"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
+                </>
+              )}
 
-            {/* Download Button */}
-            <button
-              onClick={handleDownload}
-              className="absolute bottom-4 right-4 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded-lg shadow-lg transition-colors flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Download
-            </button>
+              <button
+                onClick={handleDownload}
+                className="absolute bottom-4 right-4 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded-lg shadow-lg transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download
+              </button>
+            </div>
           </div>
         </div>
       )}

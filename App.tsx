@@ -271,7 +271,7 @@ function App() {
       </main>
 
       <footer className="text-center p-4 text-slate-500 text-sm">
-        <p>Built for the ride.</p>
+        <p>Built for your motorcycle maintenance needs.</p>
       </footer>
     </div>
   );

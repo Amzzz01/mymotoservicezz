@@ -4,6 +4,7 @@ import { MaintenanceRecord } from '../types';
 interface MaintenanceItemProps {
   record: MaintenanceRecord;
   onDelete: (id: string) => void;
+  onEdit: (record: MaintenanceRecord) => void;
 }
 
 const CalendarIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -24,6 +25,12 @@ const TrashIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
+const EditIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+      <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+    </svg>
+);
+
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
       <path d="M9.01 4.31a2 2 0 00-3.52.27l-.16 1.01-.01.16a8.4 8.4 0 00-2.03.62.75.75 0 00-.5 1.2l1.24 1.25a7.51 7.51 0 00-.3 4.98l-1.6 3.2A.75.75 0 003 18h1.22l.33-1.22a4.5 4.5 0 014.24-3.11l.13-.01.99.99a4.5 4.5 0 011.69 3.35L12 18h1a.75.75 0 00.74-.63l.1-1.04a7.5 7.5 0 001.3-1.62l.24-.37.36.36a.75.75 0 001.06-1.06l-4-4a.75.75 0 00-1.06 0l-.36.36-.37.24a7.5 7.5 0 00-1.62 1.3l-1.04.1A2.25 2.25 0 016.9 9.8l1.32-1.32a.75.75 0 00.32-1.07 8.42 8.42 0 00.12-2.12l.16-.01 1.01-.16a2 2 0 00.27-3.52zM15 11a1 1 0 112 0 1 1 0 01-2 0z"/>
@@ -31,7 +38,7 @@ const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 
-const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete }) => {
+const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onEdit }) => {
   const formattedDate = new Date(record.date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -60,16 +67,35 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete }) =
                         <GaugeIcon className="w-4 h-4 text-slate-500" />
                         <span>{record.kilometers.toLocaleString('en-US')} km</span>
                     </div>
+                    {(record.partsCost || record.laborCost) && (
+                      <>
+                        <span className="text-slate-600 hidden sm:inline">|</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-cyan-400 font-semibold">
+                            RM {((record.partsCost || 0) + (record.laborCost || 0)).toFixed(2)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                 </div>
             </div>
         </div>
-        <button
-          onClick={() => onDelete(record.id)}
-          className="text-slate-500 hover:text-red-400 transition-colors p-1 rounded-full flex-shrink-0 ml-2"
-          aria-label="Delete record"
-        >
-          <TrashIcon className="w-5 h-5" />
-        </button>
+        <div className="flex gap-2 flex-shrink-0 ml-2">
+          <button
+            onClick={() => onEdit(record)}
+            className="text-slate-500 hover:text-blue-400 transition-colors p-1 rounded-full"
+            aria-label="Edit record"
+          >
+            <EditIcon className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => onDelete(record.id)}
+            className="text-slate-500 hover:text-red-400 transition-colors p-1 rounded-full"
+            aria-label="Delete record"
+          >
+            <TrashIcon className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

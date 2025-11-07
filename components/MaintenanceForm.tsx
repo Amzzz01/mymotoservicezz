@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MaintenanceRecord, Vehicle } from '../types';
 
 interface MaintenanceFormProps {
   onAddRecord: (record: Omit<MaintenanceRecord, 'id'>) => void;
+  onUpdateRecord: (id: string, record: Omit<MaintenanceRecord, 'id'>) => void;
   vehicles: Vehicle[];
   activeVehicle: Vehicle | null;
+  editingRecord?: MaintenanceRecord | null;
+  onCancelEdit?: () => void;
 }
 
 const PlusIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -25,18 +28,38 @@ const TrashIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord, vehicles, activeVehicle }) => {
+const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ 
+  onAddRecord, 
+  onUpdateRecord,
+  vehicles, 
+  activeVehicle, 
+  editingRecord = null,
+  onCancelEdit
+}) => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
   const [kilometers, setKilometers] = useState('');
-  const [motorcycleName, setMotorcycleName] = useState('');
-  const [motorcycleType, setMotorcycleType] = useState('');
   const [partsCost, setPartsCost] = useState('');
   const [laborCost, setLaborCost] = useState('');
   const [notes, setNotes] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [isFormVisible, setIsFormVisible] = useState(false);
+
+  // Load editing record data when editingRecord changes
+  useEffect(() => {
+    if (editingRecord) {
+      setDate(editingRecord.date);
+      setDescription(editingRecord.description);
+      setKilometers(editingRecord.kilometers.toString());
+      setPartsCost(editingRecord.partsCost ? editingRecord.partsCost.toString() : '');
+      setLaborCost(editingRecord.laborCost ? editingRecord.laborCost.toString() : '');
+      setNotes(editingRecord.notes || '');
+      setPhotos(editingRecord.photos || []);
+      setIsFormVisible(true);
+      setError('');
+    }
+  }, [editingRecord]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -65,6 +88,23 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord, vehicles
 
   const removePhoto = (index: number) => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCancel = () => {
+    setIsFormVisible(false);
+    setError('');
+    setPhotos([]);
+    
+    // Reset form if editing
+    if (editingRecord && onCancelEdit) {
+      onCancelEdit();
+      setDescription('');
+      setKilometers('');
+      setPartsCost('');
+      setLaborCost('');
+      setNotes('');
+      setPhotos([]);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -98,7 +138,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord, vehicles
       return;
     }
 
-    onAddRecord({
+    const recordData = {
       date,
       description,
       kilometers: kmNumber,
@@ -109,7 +149,16 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord, vehicles
       laborCost: laborCost ? parseFloat(laborCost) : undefined,
       notes: notes || undefined,
       photos: photos.length > 0 ? photos : undefined
-    });
+    };
+
+    if (editingRecord) {
+      // Update existing record
+      onUpdateRecord(editingRecord.id, recordData);
+      if (onCancelEdit) onCancelEdit();
+    } else {
+      // Add new record
+      onAddRecord(recordData);
+    }
 
     // Reset form
     setDescription('');
@@ -145,7 +194,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord, vehicles
       ) : (
         <div className="bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl animate-fade-in">
           <h2 className="text-xl font-bold mb-4 text-cyan-400">
-            New Maintenance Record - {activeVehicle.name}
+            {editingRecord ? 'Edit' : 'New'} Maintenance Record - {activeVehicle.name}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Basic Info */}
@@ -227,27 +276,17 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord, vehicles
                   />
                 </div>
               </div>
-              {(partsCost || laborCost) && (
-                <div className="mt-2 text-right">
-                  <span className="text-sm text-slate-400">Total: </span>
-                  <span className="text-lg font-bold text-cyan-400">
-                    RM {((parseFloat(partsCost || '0') + parseFloat(laborCost || '0')).toFixed(2))}
-                  </span>
-                </div>
-              )}
             </div>
 
             {/* Photos */}
             <div className="border-t border-slate-700 pt-4">
-              <h3 className="text-sm font-semibold text-slate-300 mb-3">Photos (Optional)</h3>
-              <div className="space-y-3">
-                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-slate-600 rounded-lg cursor-pointer hover:border-cyan-500 transition-colors">
-                  <div className="flex flex-col items-center gap-2">
-                    <PhotoIcon className="w-8 h-8 text-slate-500" />
-                    <span className="text-sm text-slate-400">
-                      Click to upload photos (max 5, 2MB each)
-                    </span>
-                  </div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Photos (Optional, Max 5)
+              </label>
+              <div className="flex items-center gap-4">
+                <label className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 px-4 py-2 rounded-md border border-slate-600 transition-colors inline-flex items-center gap-2">
+                  <PhotoIcon className="w-5 h-5" />
+                  <span className="text-sm">Upload Photos</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -256,28 +295,24 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord, vehicles
                     className="hidden"
                   />
                 </label>
-
-                {photos.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {photos.map((photo, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={photo}
-                          alt={`Upload ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removePhoto(index)}
-                          className="absolute top-1 right-1 bg-red-600 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <span className="text-xs text-slate-400">{photos.length}/5 photos</span>
               </div>
+              {photos.length > 0 && (
+                <div className="mt-3 grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {photos.map((photo, index) => (
+                    <div key={index} className="relative group">
+                      <img src={photo} alt={`Upload ${index + 1}`} className="w-full h-20 object-cover rounded-md" />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(index)}
+                        className="absolute top-1 right-1 bg-red-600 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Notes */}
@@ -304,11 +339,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord, vehicles
             <div className="flex justify-end gap-4 pt-2">
               <button
                 type="button"
-                onClick={() => {
-                  setIsFormVisible(false);
-                  setError('');
-                  setPhotos([]);
-                }}
+                onClick={handleCancel}
                 className="py-2 px-4 rounded-md text-slate-300 hover:bg-slate-700 transition-colors"
               >
                 Cancel
@@ -317,7 +348,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onAddRecord, vehicles
                 type="submit"
                 className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded-md shadow-md shadow-cyan-500/20 transition-colors"
               >
-                Save Record
+                {editingRecord ? 'Update Record' : 'Save Record'}
               </button>
             </div>
           </form>

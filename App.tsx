@@ -29,9 +29,10 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 function App() {
   const { currentUser, logout, loading: authLoading } = useAuth();
   const { vehicles, activeVehicle, loading: vehiclesLoading, addVehicle, updateVehicle, deleteVehicle, setActive } = useVehicles(currentUser?.uid || '');
-  const { records, loading: recordsLoading, error, costSummary, addRecord, deleteRecord } = useFirestoreRecords(currentUser?.uid || '', activeVehicle?.id);
+  const { records, loading: recordsLoading, error, costSummary, addRecord, updateRecord, deleteRecord } = useFirestoreRecords(currentUser?.uid || '', activeVehicle?.id);
   const { reminders, loading: remindersLoading, addReminder, updateReminder, deleteReminder, dismissReminder } = useReminders(currentUser?.uid || '', activeVehicle?.id);
   const [activeTab, setActiveTab] = useState<'overview' | 'reminders' | 'vehicles'>('overview');
+  const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
 
   if (authLoading || vehiclesLoading) {
     return (
@@ -68,6 +69,44 @@ function App() {
       console.error('Failed to add record:', error);
       alert(error.message || 'Failed to add maintenance record. Please try again.');
     }
+  };
+
+  const handleUpdateRecord = async (id: string, record: Omit<MaintenanceRecord, 'id'>) => {
+    try {
+      if (!currentUser?.uid) {
+        alert('You must be logged in to update records.');
+        return;
+      }
+
+      if (!activeVehicle) {
+        alert('Please select or add a vehicle first.');
+        return;
+      }
+
+      // Update the record
+      await updateRecord(id, record);
+      
+      // Update vehicle odometer if the new reading is higher
+      if (record.kilometers > activeVehicle.currentOdometer) {
+        await updateVehicle(activeVehicle.id, { currentOdometer: record.kilometers });
+      }
+      
+      // Clear editing state
+      setEditingRecord(null);
+    } catch (error: any) {
+      console.error('Failed to update record:', error);
+      alert(error.message || 'Failed to update maintenance record. Please try again.');
+    }
+  };
+
+  const handleEditRecord = (record: MaintenanceRecord) => {
+    setEditingRecord(record);
+    // Scroll to top to show the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRecord(null);
   };
 
   const handleDeleteRecord = async (id: string) => {
@@ -168,9 +207,12 @@ function App() {
                 <>
                   <CostDashboard costSummary={costSummary} />
                   <MaintenanceForm 
-                    onAddRecord={handleAddRecord} 
+                    onAddRecord={handleAddRecord}
+                    onUpdateRecord={handleUpdateRecord} 
                     vehicles={vehicles}
                     activeVehicle={activeVehicle}
+                    editingRecord={editingRecord}
+                    onCancelEdit={handleCancelEdit}
                   />
                   <AISuggestion records={records} />
                   {recordsLoading ? (
@@ -178,7 +220,11 @@ function App() {
                       <p>Loading your maintenance records...</p>
                     </div>
                   ) : (
-                    <MaintenanceList records={records} onDeleteRecord={handleDeleteRecord} />
+                    <MaintenanceList 
+                      records={records} 
+                      onDeleteRecord={handleDeleteRecord}
+                      onEditRecord={handleEditRecord}
+                    />
                   )}
                 </>
               ) : (

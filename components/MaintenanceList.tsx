@@ -5,9 +5,10 @@ import MaintenanceItem from './MaintenanceItem';
 interface MaintenanceListProps {
   records: MaintenanceRecord[];
   onDeleteRecord: (id: string) => void;
+  onEditRecord: (record: MaintenanceRecord) => void;
 }
 
-const MaintenanceList: React.FC<MaintenanceListProps> = ({ records, onDeleteRecord }) => {
+const MaintenanceList: React.FC<MaintenanceListProps> = ({ records, onDeleteRecord, onEditRecord }) => {
   const sortedRecords = [...records].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   if (records.length === 0) {
@@ -24,7 +25,12 @@ const MaintenanceList: React.FC<MaintenanceListProps> = ({ records, onDeleteReco
         <h2 className="text-xl sm:text-2xl font-bold mb-4 text-slate-300 border-b-2 border-slate-700 pb-2">Service History</h2>
         <div className="space-y-4">
             {sortedRecords.map((record) => (
-                <MaintenanceItem key={record.id} record={record} onDelete={onDeleteRecord} />
+                <MaintenanceItem 
+                  key={record.id} 
+                  record={record} 
+                  onDelete={onDeleteRecord}
+                  onEdit={onEditRecord}
+                />
             ))}
         </div>
     </div>

@@ -127,7 +127,19 @@ export function useFirestoreRecords(userId: string, vehicleId?: string) {
 
   const updateRecord = async (id: string, updates: Partial<MaintenanceRecord>) => {
     try {
-      await updateDoc(doc(db, 'maintenanceRecords', id), updates);
+      // Remove undefined values - Firestore doesn't accept them
+      const cleanUpdates: any = {};
+      
+      Object.keys(updates).forEach(key => {
+        const value = (updates as any)[key];
+        if (value !== undefined) {
+          cleanUpdates[key] = value;
+        }
+      });
+
+      console.log('Updating record with data:', cleanUpdates); // Debug log
+
+      await updateDoc(doc(db, 'maintenanceRecords', id), cleanUpdates);
     } catch (err) {
       console.error('Error updating record:', err);
       throw new Error('Failed to update maintenance record');

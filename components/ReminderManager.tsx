@@ -29,6 +29,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
   userId
 }) => {
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -49,21 +50,89 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
       return;
     }
 
-    const reminderData: Omit<Reminder, 'id' | 'createdAt'> = {
+    // Validate that at least one reminder type is set
+    const hasTimeReminder = formData.isTimeBased && formData.dueDate;
+    const hasMileageReminder = formData.isMileageBased && formData.dueMileage;
+    
+    if (!hasTimeReminder && !hasMileageReminder) {
+      alert('Please set at least one reminder: date or mileage');
+      return;
+    }
+
+    // Build reminder data, only including fields that have values
+    const reminderData: any = {
       userId,
       vehicleId: formData.vehicleId,
       title: formData.title,
-      description: formData.description || undefined,
-      dueDate: formData.isTimeBased && formData.dueDate ? formData.dueDate : undefined,
-      repeatInterval: formData.repeatInterval || undefined,
-      dueMileage: formData.isMileageBased && formData.dueMileage ? parseInt(formData.dueMileage) : undefined,
-      mileageInterval: formData.mileageInterval ? parseInt(formData.mileageInterval) : undefined,
       isActive: true,
       dismissed: false
     };
 
-    await onAddReminder(reminderData);
+    // Add optional fields only if they have values
+    if (formData.description) {
+      reminderData.description = formData.description;
+    }
+
+    // Add time-based fields only if checkbox is checked and has values
+    if (formData.isTimeBased && formData.dueDate) {
+      reminderData.dueDate = formData.dueDate;
+      
+      if (formData.repeatInterval) {
+        reminderData.repeatInterval = formData.repeatInterval as 'monthly' | 'quarterly' | 'biannually' | 'yearly';
+      }
+    }
+
+    // Add mileage-based fields only if checkbox is checked and has values
+    if (formData.isMileageBased && formData.dueMileage) {
+      reminderData.dueMileage = parseInt(formData.dueMileage);
+      
+      if (formData.mileageInterval) {
+        reminderData.mileageInterval = parseInt(formData.mileageInterval);
+      }
+    }
+
+    if (editingId) {
+      // Update existing reminder
+      await onUpdateReminder(editingId, reminderData);
+      setEditingId(null);
+    } else {
+      // Add new reminder
+      await onAddReminder(reminderData);
+    }
+    
     setShowForm(false);
+    setFormData({
+      title: '',
+      description: '',
+      vehicleId: activeVehicle?.id || '',
+      dueDate: '',
+      dueMileage: '',
+      repeatInterval: '',
+      mileageInterval: '',
+      isTimeBased: true,
+      isMileageBased: false
+    });
+  };
+
+  const handleEdit = (reminder: Reminder) => {
+    setEditingId(reminder.id);
+    setFormData({
+      title: reminder.title,
+      description: reminder.description || '',
+      vehicleId: reminder.vehicleId,
+      dueDate: reminder.dueDate || '',
+      dueMileage: reminder.dueMileage ? reminder.dueMileage.toString() : '',
+      repeatInterval: (reminder.repeatInterval || '') as '' | 'monthly' | 'quarterly' | 'biannually' | 'yearly',
+      mileageInterval: reminder.mileageInterval ? reminder.mileageInterval.toString() : '',
+      isTimeBased: !!reminder.dueDate,
+      isMileageBased: !!reminder.dueMileage
+    });
+    setShowForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    setShowForm(false);
+    setEditingId(null);
     setFormData({
       title: '',
       description: '',
@@ -113,7 +182,9 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
 
       {showForm && (
         <div className="bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl mb-6">
-          <h3 className="text-lg font-bold mb-4 text-violet-400">New Reminder</h3>
+          <h3 className="text-lg font-bold mb-4 text-violet-400">
+            {editingId ? 'Edit Reminder' : 'New Reminder'}
+          </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">Title *</label>
@@ -230,7 +301,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
             <div className="flex justify-end gap-4 pt-2">
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={handleCancelEdit}
                 className="py-2 px-4 rounded-md text-slate-300 hover:bg-slate-700"
               >
                 Cancel
@@ -239,7 +310,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
                 type="submit"
                 className="bg-violet-500 hover:bg-violet-400 text-white font-bold py-2 px-4 rounded-md"
               >
-                Add Reminder
+                {editingId ? 'Update Reminder' : 'Add Reminder'}
               </button>
             </div>
           </form>
@@ -290,6 +361,12 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(reminder)}
+                      className="text-xs bg-blue-900 hover:bg-blue-800 text-blue-300 px-3 py-1 rounded"
+                    >
+                      Edit
+                    </button>
                     <button
                       onClick={() => onDismissReminder(reminder.id)}
                       className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded"

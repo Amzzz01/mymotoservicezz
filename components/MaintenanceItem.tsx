@@ -39,12 +39,16 @@ const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 
 const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onEdit }) => {
+  const [showDetails, setShowDetails] = React.useState(false);
+  
   const formattedDate = new Date(record.date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     timeZone: 'UTC', // Ensure date is not shifted by local timezone
   });
+
+  const hasAdditionalInfo = record.notes || record.photos || record.partsCost || record.laborCost;
 
   return (
     <div className="bg-slate-800 rounded-lg shadow-lg p-4 sm:p-5 transition-all duration-300 hover:shadow-cyan-500/10 hover:ring-1 hover:ring-slate-700">
@@ -78,6 +82,74 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
                       </>
                     )}
                 </div>
+
+                {/* View Details Button */}
+                {hasAdditionalInfo && (
+                  <div className="mt-3">
+                    <button
+                      onClick={() => setShowDetails(!showDetails)}
+                      className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
+                    >
+                      {showDetails ? '▼' : '▶'} {showDetails ? 'Hide Details' : 'View Details'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Expanded Details */}
+                {showDetails && hasAdditionalInfo && (
+                  <div className="mt-4 pt-4 border-t border-slate-700 space-y-3">
+                    {/* Cost Breakdown */}
+                    {(record.partsCost || record.laborCost) && (
+                      <div className="bg-slate-900/50 rounded-md p-3">
+                        <h4 className="text-sm font-semibold text-slate-300 mb-2">Cost Breakdown</h4>
+                        <div className="space-y-1 text-sm">
+                          {record.partsCost && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Parts:</span>
+                              <span className="text-slate-200 font-medium">RM {record.partsCost.toFixed(2)}</span>
+                            </div>
+                          )}
+                          {record.laborCost && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Labor:</span>
+                              <span className="text-slate-200 font-medium">RM {record.laborCost.toFixed(2)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between pt-2 border-t border-slate-700">
+                            <span className="text-slate-300 font-semibold">Total:</span>
+                            <span className="text-cyan-400 font-bold">RM {((record.partsCost || 0) + (record.laborCost || 0)).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {record.notes && (
+                      <div className="bg-slate-900/50 rounded-md p-3">
+                        <h4 className="text-sm font-semibold text-slate-300 mb-2">Notes</h4>
+                        <p className="text-sm text-slate-400 whitespace-pre-wrap">{record.notes}</p>
+                      </div>
+                    )}
+
+                    {/* Photos */}
+                    {record.photos && record.photos.length > 0 && (
+                      <div className="bg-slate-900/50 rounded-md p-3">
+                        <h4 className="text-sm font-semibold text-slate-300 mb-2">Photos ({record.photos.length})</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {record.photos.map((photo, index) => (
+                            <img 
+                              key={index} 
+                              src={photo} 
+                              alt={`Service photo ${index + 1}`} 
+                              className="w-full h-24 object-cover rounded-md cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => window.open(photo, '_blank')}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
             </div>
         </div>
         <div className="flex gap-2 flex-shrink-0 ml-2">

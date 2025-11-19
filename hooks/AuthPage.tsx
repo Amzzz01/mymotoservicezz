@@ -120,7 +120,7 @@ const AuthPage: React.FC = () => {
             </p>
         </div>
          <footer className="text-center p-4 text-slate-500 text-sm mt-8">
-            <p>Built for the ride.</p>
+            <p>Built for the ride records.</p>
         </footer>
     </div>
   );

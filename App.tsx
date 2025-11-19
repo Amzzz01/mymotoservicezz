@@ -9,12 +9,13 @@ import AISuggestion from './components/AISuggestion';
 import VehicleManager from './components/VehicleManager';
 import CostDashboard from './components/CostDashboard';
 import ReminderManager from './components/ReminderManager';
+import AnalyticsDashboard from './components/AnalyticsDashboard';  
 import { useAuth } from './hooks/useAuth';
 import AuthPage from './components/AuthPage';
 import { useApp } from './context/AppContext';
 import SettingsButton from './components/SettingsButton';
 import Footer from './components/Footer';
-import InstallPrompt from './components/InstallPrompt';  // ✅ Import added
+import InstallPrompt from './components/InstallPrompt';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -31,7 +32,8 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 function App() {
   const { currentUser, logout } = useAuth();
   const { t } = useApp();
-  const [activeTab, setActiveTab] = useState<'overview' | 'reminders' | 'vehicles'>('overview');
+  // ✅ UPDATED: Added 'analytics' to tab types
+  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'reminders' | 'vehicles'>('overview');
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
 
   // Custom hooks for data management
@@ -190,6 +192,18 @@ function App() {
           >
             📊 {t.overview}
           </button>
+          
+          {/* ✅ NEW: Analytics Tab */}
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'analytics'
+                ? 'bg-purple-500 text-white shadow-lg'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+              }`}
+          >
+            📈 {t.analytics || 'Analytics'}
+          </button>
+
           <button
             onClick={() => setActiveTab('reminders')}
             className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'reminders'
@@ -267,6 +281,14 @@ function App() {
                 </div>
               )}
             </>
+          )}
+
+          {/* ✅ NEW: Analytics Tab Content */}
+          {activeTab === 'analytics' && (
+            <AnalyticsDashboard 
+              records={records} 
+              activeVehicle={activeVehicle}
+            />
           )}
 
           {activeTab === 'reminders' && (

@@ -119,6 +119,39 @@ export interface Translations {
   madeWith: string;
   forRiders: string;
   footerDisclaimer: string;
+
+  // Analytics
+  analytics: string;
+  analyticsSubtitle: string;
+  noAnalyticsData: string;
+  addRecordsForAnalytics: string;
+  servicePatterns: string;
+  predictions: string;
+  costEfficiency: string;
+  costPerKm: string;
+  monthlyAverage: string;
+  totalDistance: string;
+  basedOnHistory: string;
+  totalCostLabel: string;
+  partsPerKm: string;
+  laborPerKm: string;
+  serviceBreakdown: string;
+  costTrend: string;
+  serviceTimeline: string;
+  serviceFrequency: string;
+  serviceCount: string;
+  avgInterval: string;
+  avgCost: string;
+  lastPerformed: string;
+  predictiveMaintenance: string;
+  predictiveSubtitle: string;
+  predictedAt: string;
+  distanceRemaining: string;
+  overdue: string;
+  noPredictions: string;
+  needMoreDataForPredictions: string;
+  frequency: string;
+  serviceType: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -241,6 +274,39 @@ export const translations: Record<Language, Translations> = {
     madeWith: 'Made with',
     forRiders: 'for riders',
     footerDisclaimer: 'Keep your ride safe and well-maintained. Regular maintenance ensures optimal performance and longevity.',
+
+    // Analytics
+    analytics: 'Analytics',
+    analyticsSubtitle: 'Data-driven insights for your motorcycle maintenance',
+    noAnalyticsData: 'No Analytics Data Available',
+    addRecordsForAnalytics: 'Add maintenance records to see analytics and insights',
+    servicePatterns: 'Service Patterns',
+    predictions: 'Predictions',
+    costEfficiency: 'Cost Efficiency',
+    costPerKm: 'Cost per Kilometer',
+    monthlyAverage: 'Monthly Average',
+    totalDistance: 'Total Distance',
+    basedOnHistory: 'Based on your history',
+    totalCostLabel: 'Total',
+    partsPerKm: 'Parts Cost/km',
+    laborPerKm: 'Labor Cost/km',
+    serviceBreakdown: 'Service Breakdown',
+    costTrend: 'Cost Trend Over Time',
+    serviceTimeline: 'Service Timeline',
+    serviceFrequency: 'Service Frequency & Intervals',
+    serviceCount: 'Services',
+    avgInterval: 'Avg Interval',
+    avgCost: 'Avg Cost',
+    lastPerformed: 'Last Performed',
+    predictiveMaintenance: 'Predictive Maintenance',
+    predictiveSubtitle: 'Based on your maintenance history, here are predicted upcoming services',
+    predictedAt: 'Predicted at',
+    distanceRemaining: 'Distance remaining',
+    overdue: 'overdue',
+    noPredictions: 'No Predictions Available',
+    needMoreDataForPredictions: 'Add more maintenance records (at least 2 of the same service type) to see predictive alerts',
+    frequency: 'Frequency',
+    serviceType: 'Service Type',
   },
   ms: {
     // Header
@@ -361,6 +427,39 @@ export const translations: Record<Language, Translations> = {
     madeWith: 'Dibuat dengan',
     forRiders: 'untuk penunggang',
     footerDisclaimer: 'Pastikan tunggangan anda selamat dan diselenggara dengan baik. Penyelenggaraan berkala memastikan prestasi optimum dan jangka hayat panjang.',
+
+    // Analytics
+    analytics: 'Analitik',
+    analyticsSubtitle: 'Pandangan berdasarkan data untuk penyelenggaraan motosikal anda',
+    noAnalyticsData: 'Tiada Data Analitik',
+    addRecordsForAnalytics: 'Tambah rekod penyelenggaraan untuk melihat analitik',
+    servicePatterns: 'Corak Servis',
+    predictions: 'Ramalan',
+    costEfficiency: 'Kecekapan Kos',
+    costPerKm: 'Kos per Kilometer',
+    monthlyAverage: 'Purata Bulanan',
+    totalDistance: 'Jumlah Jarak',
+    basedOnHistory: 'Berdasarkan sejarah anda',
+    totalCostLabel: 'Jumlah',
+    partsPerKm: 'Kos Alat Ganti/km',
+    laborPerKm: 'Kos Buruh/km',
+    serviceBreakdown: 'Pecahan Servis',
+    costTrend: 'Trend Kos Sepanjang Masa',
+    serviceTimeline: 'Garis Masa Servis',
+    serviceFrequency: 'Kekerapan & Selang Servis',
+    serviceCount: 'Servis',
+    avgInterval: 'Selang Purata',
+    avgCost: 'Kos Purata',
+    lastPerformed: 'Terakhir Dilakukan',
+    predictiveMaintenance: 'Penyelenggaraan Ramalan',
+    predictiveSubtitle: 'Berdasarkan sejarah penyelenggaraan anda, berikut adalah servis yang akan datang',
+    predictedAt: 'Diramal pada',
+    distanceRemaining: 'Jarak berbaki',
+    overdue: 'tertunggak',
+    noPredictions: 'Tiada Ramalan Tersedia',
+    needMoreDataForPredictions: 'Tambah lebih banyak rekod penyelenggaraan (sekurang-kurangnya 2 jenis servis yang sama) untuk melihat amaran ramalan',
+    frequency: 'Kekerapan',
+    serviceType: 'Jenis Servis',
   },
 };
 

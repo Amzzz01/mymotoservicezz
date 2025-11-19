@@ -14,10 +14,11 @@ import AuthPage from './components/AuthPage';
 import { useApp } from './context/AppContext';
 import SettingsButton from './components/SettingsButton';
 import Footer from './components/Footer';
+import InstallPrompt from './components/InstallPrompt';  // ✅ Import added
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M18.586 4H5.414A2.914 2.914 0 002.5 6.914v1.072A8.004 8.004 0 004 12.5v4.619a1 1 0 001.32.949l3.41-1.364A1 1 0 009 17.76V16h6v1.76a1 1 0 01-.27.648l-3.41 1.364a1 1 0 00-1.32.95V22h2a1 1 0 001-1v-1.115a8.04 8.04 0 003-3.033V15a1 1 0 00-1-1h-1v-1.5a8.004 8.004 0 001.5-4.514V6.914A2.914 2.914 0 0018.586 4zM8 12c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm8 0c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"/>
+    <path d="M18.586 4H5.414A2.914 2.914 0 002.5 6.914v1.072A8.004 8.004 0 004 12.5v4.619a1 1 0 001.32.949l3.41-1.364A1 1 0 009 17.76V16h6v1.76a1 1 0 01-.27.648l-3.41 1.364a1 1 0 00-1.32.95V22h2a1 1 0 001-1v-1.115a8.04 8.04 0 003-3.033V15a1 1 0 00-1-1h-1v-1.5a8.004 8.004 0 001.5-4.514V6.914A2.914 2.914 0 0018.586 4zM8 12c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm8 0c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z" />
   </svg>
 );
 
@@ -35,15 +36,15 @@ function App() {
 
   // Custom hooks for data management
   const { vehicles, activeVehicle, addVehicle, updateVehicle, deleteVehicle, setActive, error: vehiclesError } = useVehicles(currentUser?.uid);
-  
-  const { 
-    records, 
-    addRecord, 
-    updateRecord, 
-    deleteRecord, 
+
+  const {
+    records,
+    addRecord,
+    updateRecord,
+    deleteRecord,
     loading: recordsLoading,
     error: recordsError,
-    costSummary 
+    costSummary
   } = useFirestoreRecords(currentUser?.uid, activeVehicle?.id);
 
   const {
@@ -74,7 +75,7 @@ function App() {
 
       // Add the record
       await addRecord(record);
-      
+
       // Update vehicle odometer if the new reading is higher
       if (record.kilometers > activeVehicle.currentOdometer) {
         await updateVehicle(activeVehicle.id, { currentOdometer: record.kilometers });
@@ -99,12 +100,12 @@ function App() {
 
       // Update the record
       await updateRecord(id, record);
-      
+
       // Update vehicle odometer if the new reading is higher
       if (record.kilometers > activeVehicle.currentOdometer) {
         await updateVehicle(activeVehicle.id, { currentOdometer: record.kilometers });
       }
-      
+
       // Clear editing state
       setEditingRecord(null);
     } catch (error: any) {
@@ -155,7 +156,7 @@ function App() {
                 <div className="text-sm font-bold text-cyan-600 dark:text-cyan-400">{activeVehicle.name}</div>
               </div>
             )}
-            
+
             {/* User email - hide on mobile */}
             <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 hidden md:block">
               {t.welcome}, <span className="font-bold">{currentUser.email}</span>!
@@ -165,9 +166,9 @@ function App() {
             <SettingsButton />
 
             {/* Logout Button */}
-            <button 
-              onClick={logout} 
-              className="flex items-center gap-1 sm:gap-2 text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50" 
+            <button
+              onClick={logout}
+              className="flex items-center gap-1 sm:gap-2 text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50"
               aria-label={t.logout}
             >
               <LogoutIcon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -182,21 +183,19 @@ function App() {
         <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 scrollbar-hide">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
-              activeTab === 'overview'
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'overview'
                 ? 'bg-cyan-500 text-white shadow-lg'
                 : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
-            }`}
+              }`}
           >
             📊 {t.overview}
           </button>
           <button
             onClick={() => setActiveTab('reminders')}
-            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
-              activeTab === 'reminders'
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'reminders'
                 ? 'bg-violet-500 text-white shadow-lg'
                 : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
-            }`}
+              }`}
           >
             🔔 {t.reminders}
             {reminders.filter(r => !r.dismissed && r.isActive).length > 0 && (
@@ -207,11 +206,10 @@ function App() {
           </button>
           <button
             onClick={() => setActiveTab('vehicles')}
-            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
-              activeTab === 'vehicles'
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'vehicles'
                 ? 'bg-emerald-500 text-white shadow-lg'
                 : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
-            }`}
+              }`}
           >
             🏍️ {t.vehicles} ({vehicles.length})
           </button>
@@ -231,9 +229,9 @@ function App() {
               {activeVehicle ? (
                 <>
                   <CostDashboard costSummary={costSummary} />
-                  <MaintenanceForm 
+                  <MaintenanceForm
                     onAddRecord={handleAddRecord}
-                    onUpdateRecord={handleUpdateRecord} 
+                    onUpdateRecord={handleUpdateRecord}
                     vehicles={vehicles}
                     activeVehicle={activeVehicle}
                     editingRecord={editingRecord}
@@ -245,8 +243,8 @@ function App() {
                       <p>{t.loadingRecords}</p>
                     </div>
                   ) : (
-                    <MaintenanceList 
-                      records={records} 
+                    <MaintenanceList
+                      records={records}
                       onDeleteRecord={handleDeleteRecord}
                       onEditRecord={handleEditRecord}
                     />
@@ -300,6 +298,9 @@ function App() {
       </main>
 
       <Footer />
+      
+      {/* ✅ PWA Install Prompt - Added at the end */}
+      <InstallPrompt />
     </div>
   );
 }

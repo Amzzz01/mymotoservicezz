@@ -9,12 +9,6 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
       "src": "/icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
@@ -69,12 +63,5 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["utilities", "productivity", "lifestyle"],
-  "screenshots": [
-    {
-      "src": "/screenshot1.png",
-      "sizes": "540x720",
-      "type": "image/png"
-    }
-  ]
+  "categories": ["utilities", "productivity", "lifestyle"]
 }

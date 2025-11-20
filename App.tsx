@@ -251,7 +251,13 @@ function App() {
                     editingRecord={editingRecord}
                     onCancelEdit={handleCancelEdit}
                   />
-                  <AISuggestion records={records} />
+                  {/* ✅ UPDATED: Added new props for reminder integration */}
+                  <AISuggestion 
+                    records={records} 
+                    activeVehicle={activeVehicle}
+                    onAddReminder={addReminder}
+                    userId={currentUser.uid}
+                  />
                   {recordsLoading ? (
                     <div className="text-center py-8 text-slate-600 dark:text-slate-400">
                       <p>{t.loadingRecords}</p>

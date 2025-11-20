@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { MaintenanceRecord } from '../types';
+import { MaintenanceRecord, Reminder, Vehicle } from '../types';
 
 interface AISuggestionProps {
   records: MaintenanceRecord[];
+  activeVehicle: Vehicle | null;
+  onAddReminder: (reminder: Omit<Reminder, 'id' | 'createdAt'>) => Promise<void>;
+  userId: string;
 }
 
 const LightbulbIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -18,11 +21,58 @@ const SparklesIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
+const PlusIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+    </svg>
+);
 
-const AISuggestion: React.FC<AISuggestionProps> = ({ records }) => {
+interface ParsedSuggestion {
+    recommendedMileage: number;
+    services: Array<{
+        title: string;
+        description: string;
+    }>;
+}
+
+const AISuggestion: React.FC<AISuggestionProps> = ({ records, activeVehicle, onAddReminder, userId }) => {
     const [suggestion, setSuggestion] = useState('');
+    const [parsedSuggestion, setParsedSuggestion] = useState<ParsedSuggestion | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isAddingReminders, setIsAddingReminders] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+    const parseSuggestionText = (text: string): ParsedSuggestion | null => {
+        try {
+            // Extract recommended mileage
+            const mileageMatch = text.match(/(\d{1,3}(?:,\d{3})*)\s*kilometers?/i);
+            const recommendedMileage = mileageMatch ? parseInt(mileageMatch[1].replace(/,/g, '')) : 0;
+
+            // Extract service items (numbered list)
+            const serviceMatches = text.matchAll(/\d+\.\s*([^:]+):\s*([^\n]+)/g);
+            const services: Array<{ title: string; description: string }> = [];
+
+            for (const match of serviceMatches) {
+                services.push({
+                    title: match[1].trim(),
+                    description: match[2].trim()
+                });
+            }
+
+            if (services.length === 0) {
+                return null;
+            }
+
+            return {
+                recommendedMileage,
+                services
+            };
+        } catch (err) {
+            console.error('Error parsing suggestion:', err);
+            return null;
+        }
+    };
 
     const handleGetSuggestion = async () => {
         if (!records || records.length === 0) {
@@ -33,6 +83,8 @@ const AISuggestion: React.FC<AISuggestionProps> = ({ records }) => {
         setIsLoading(true);
         setError(null);
         setSuggestion('');
+        setParsedSuggestion(null);
+        setSuccessMessage(null);
 
         try {
             const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -71,13 +123,63 @@ const AISuggestion: React.FC<AISuggestionProps> = ({ records }) => {
                 contents: prompt,
             });
 
-            setSuggestion(response.text);
+            const suggestionText = response.text;
+            setSuggestion(suggestionText);
+
+            // Parse the suggestion to extract structured data
+            const parsed = parseSuggestionText(suggestionText);
+            setParsedSuggestion(parsed);
 
         } catch (e) {
             console.error(e);
             setError("Sorry, I couldn't generate a suggestion right now. Please try again later.");
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleAddAllToReminders = async () => {
+        if (!parsedSuggestion || !activeVehicle) {
+            setError("Unable to add reminders. Please ensure you have an active vehicle selected.");
+            return;
+        }
+
+        setIsAddingReminders(true);
+        setError(null);
+        setSuccessMessage(null);
+
+        try {
+            let successCount = 0;
+            const { recommendedMileage, services } = parsedSuggestion;
+
+            // Create a reminder for each service item
+            for (const service of services) {
+                const reminderData: Omit<Reminder, 'id' | 'createdAt'> = {
+                    userId,
+                    vehicleId: activeVehicle.id,
+                    title: service.title,
+                    description: service.description,
+                    dueMileage: recommendedMileage,
+                    isActive: true,
+                    dismissed: false
+                };
+
+                await onAddReminder(reminderData);
+                successCount++;
+            }
+
+            setSuccessMessage(`✅ Successfully added ${successCount} reminder${successCount > 1 ? 's' : ''} for your next service at ${recommendedMileage.toLocaleString()} km!`);
+            
+            // Clear success message after 5 seconds
+            setTimeout(() => {
+                setSuccessMessage(null);
+            }, 5000);
+
+        } catch (err) {
+            console.error('Error adding reminders:', err);
+            setError("Failed to add reminders. Please try again.");
+        } finally {
+            setIsAddingReminders(false);
         }
     };
 
@@ -102,8 +204,14 @@ const AISuggestion: React.FC<AISuggestionProps> = ({ records }) => {
             )}
 
             {error && (
-                <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg text-center" role="alert">
+                <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg text-center mb-4" role="alert">
                     <p>{error}</p>
+                </div>
+            )}
+
+            {successMessage && (
+                <div className="bg-green-900/50 border border-green-700 text-green-300 px-4 py-3 rounded-lg text-center mb-4 animate-fade-in" role="alert">
+                    <p>{successMessage}</p>
                 </div>
             )}
 
@@ -113,9 +221,31 @@ const AISuggestion: React.FC<AISuggestionProps> = ({ records }) => {
                         <SparklesIcon className="w-6 h-6 text-violet-400" />
                         <h3 className="text-lg sm:text-xl font-bold text-violet-400">AI Recommendation</h3>
                     </div>
-                    <div className="prose prose-invert prose-p:text-slate-200 pl-9">
+                    <div className="prose prose-invert prose-p:text-slate-200 pl-9 mb-4">
                         <p className="whitespace-pre-wrap">{suggestion}</p>
                     </div>
+                    
+                    {parsedSuggestion && parsedSuggestion.services.length > 0 && activeVehicle && (
+                        <div className="flex justify-center mt-6 pt-4 border-t border-slate-700">
+                            <button
+                                onClick={handleAddAllToReminders}
+                                disabled={isAddingReminders}
+                                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none text-sm sm:text-base"
+                            >
+                                {isAddingReminders ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        Adding to Reminders...
+                                    </>
+                                ) : (
+                                    <>
+                                        <PlusIcon className="w-5 h-5" />
+                                        Add All to Reminders
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

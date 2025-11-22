@@ -9,7 +9,7 @@ import AISuggestion from './components/AISuggestion';
 import VehicleManager from './components/VehicleManager';
 import CostDashboard from './components/CostDashboard';
 import ReminderManager from './components/ReminderManager';
-import AnalyticsDashboard from './components/AnalyticsDashboard';  
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 import { useAuth } from './hooks/useAuth';
 import AuthPage from './components/AuthPage';
 import { useApp } from './context/AppContext';
@@ -143,7 +143,11 @@ function App() {
         <div className="container mx-auto flex items-center justify-between gap-2">
           {/* Logo and Title - Mobile optimized */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            <MotoIcon className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-cyan-500 dark:text-cyan-400" />
+            <img
+              src="/icons/icon-192x192.png"
+              alt="MyMotoLog"
+              className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full"
+            />
             <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 dark:text-slate-100 tracking-wider">
               {t.appName}
             </h1>
@@ -186,19 +190,19 @@ function App() {
           <button
             onClick={() => setActiveTab('overview')}
             className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'overview'
-                ? 'bg-cyan-500 text-white shadow-lg'
-                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+              ? 'bg-cyan-500 text-white shadow-lg'
+              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
               }`}
           >
             📊 {t.overview}
           </button>
-          
+
           {/* ✅ NEW: Analytics Tab */}
           <button
             onClick={() => setActiveTab('analytics')}
             className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'analytics'
-                ? 'bg-purple-500 text-white shadow-lg'
-                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+              ? 'bg-purple-500 text-white shadow-lg'
+              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
               }`}
           >
             📈 {t.analytics || 'Analytics'}
@@ -207,8 +211,8 @@ function App() {
           <button
             onClick={() => setActiveTab('reminders')}
             className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'reminders'
-                ? 'bg-violet-500 text-white shadow-lg'
-                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+              ? 'bg-violet-500 text-white shadow-lg'
+              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
               }`}
           >
             🔔 {t.reminders}
@@ -221,8 +225,8 @@ function App() {
           <button
             onClick={() => setActiveTab('vehicles')}
             className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'vehicles'
-                ? 'bg-emerald-500 text-white shadow-lg'
-                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+              ? 'bg-emerald-500 text-white shadow-lg'
+              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
               }`}
           >
             🏍️ {t.vehicles} ({vehicles.length})
@@ -252,8 +256,8 @@ function App() {
                     onCancelEdit={handleCancelEdit}
                   />
                   {/* ✅ UPDATED: Added new props for reminder integration */}
-                  <AISuggestion 
-                    records={records} 
+                  <AISuggestion
+                    records={records}
                     activeVehicle={activeVehicle}
                     onAddReminder={addReminder}
                     userId={currentUser.uid}
@@ -291,8 +295,8 @@ function App() {
 
           {/* ✅ NEW: Analytics Tab Content */}
           {activeTab === 'analytics' && (
-            <AnalyticsDashboard 
-              records={records} 
+            <AnalyticsDashboard
+              records={records}
               activeVehicle={activeVehicle}
             />
           )}
@@ -326,7 +330,7 @@ function App() {
       </main>
 
       <Footer />
-      
+
       {/* ✅ PWA Install Prompt - Added at the end */}
       <InstallPrompt />
     </div>

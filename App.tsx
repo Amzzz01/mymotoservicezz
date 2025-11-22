@@ -298,6 +298,8 @@ function App() {
             <AnalyticsDashboard
               records={records}
               activeVehicle={activeVehicle}
+              onAddReminder={addReminder}
+              userId={currentUser.uid}
             />
           )}
 

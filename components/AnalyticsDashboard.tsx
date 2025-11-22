@@ -254,12 +254,12 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={serviceBreakdown}
+                      data={serviceBreakdown as any[]}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ serviceType, percentage }) =>
-                        `${serviceType} (${percentage.toFixed(1)}%)`
+                      label={(entry: any) =>
+                        `${entry.serviceType} (${entry.percentage.toFixed(1)}%)`
                       }
                       outerRadius={100}
                       fill="#8884d8"
@@ -291,7 +291,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={costTrend as any}>
+                  <LineChart data={costTrend as any[]}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                     <XAxis dataKey="month" stroke="#94a3b8" />
                     <YAxis stroke="#94a3b8" />
@@ -329,7 +329,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={timeline as any}>
+                  <BarChart data={timeline as any[]}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                     <XAxis dataKey="month" stroke="#94a3b8" />
                     <YAxis stroke="#94a3b8" />

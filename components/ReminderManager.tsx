@@ -84,23 +84,27 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
 
     // Add mileage-based fields only if checkbox is checked and has values
     if (formData.isMileageBased && formData.dueMileage) {
-      reminderData.dueMileage = parseInt(formData.dueMileage);
+      reminderData.dueMileage = parseFloat(formData.dueMileage);
       
       if (formData.mileageInterval) {
-        reminderData.mileageInterval = parseInt(formData.mileageInterval);
+        reminderData.mileageInterval = parseFloat(formData.mileageInterval);
       }
     }
 
-    if (editingId) {
-      // Update existing reminder
-      await onUpdateReminder(editingId, reminderData);
-      setEditingId(null);
-    } else {
-      // Add new reminder
-      await onAddReminder(reminderData);
+    try {
+      if (editingId) {
+        await onUpdateReminder(editingId, reminderData);
+      } else {
+        await onAddReminder(reminderData);
+      }
+      resetForm();
+    } catch (error) {
+      console.error('Error saving reminder:', error);
+      alert('Failed to save reminder. Please try again.');
     }
-    
-    setShowForm(false);
+  };
+
+  const resetForm = () => {
     setFormData({
       title: '',
       description: '',
@@ -112,74 +116,67 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
       isTimeBased: true,
       isMileageBased: false
     });
+    setEditingId(null);
+    setShowForm(false);
   };
 
   const handleEdit = (reminder: Reminder) => {
-    setEditingId(reminder.id);
     setFormData({
       title: reminder.title,
       description: reminder.description || '',
       vehicleId: reminder.vehicleId,
       dueDate: reminder.dueDate || '',
-      dueMileage: reminder.dueMileage ? reminder.dueMileage.toString() : '',
-      repeatInterval: (reminder.repeatInterval || '') as '' | 'monthly' | 'quarterly' | 'biannually' | 'yearly',
-      mileageInterval: reminder.mileageInterval ? reminder.mileageInterval.toString() : '',
+      dueMileage: reminder.dueMileage?.toString() || '',
+      repeatInterval: reminder.repeatInterval || '',
+      mileageInterval: reminder.mileageInterval?.toString() || '',
       isTimeBased: !!reminder.dueDate,
       isMileageBased: !!reminder.dueMileage
     });
+    setEditingId(reminder.id);
     setShowForm(true);
   };
 
   const handleCancelEdit = () => {
-    setShowForm(false);
-    setEditingId(null);
-    setFormData({
-      title: '',
-      description: '',
-      vehicleId: activeVehicle?.id || '',
-      dueDate: '',
-      dueMileage: '',
-      repeatInterval: '',
-      mileageInterval: '',
-      isTimeBased: true,
-      isMileageBased: false
-    });
+    resetForm();
   };
 
-  const getDueStatus = (reminder: Reminder, vehicle: Vehicle | null) => {
-    if (!vehicle) return 'unknown';
-    
-    let isDue = false;
-    
+  const getDueStatus = (reminder: Reminder, vehicle: Vehicle | undefined): 'due' | 'upcoming' => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check date-based
     if (reminder.dueDate) {
       const dueDate = new Date(reminder.dueDate);
-      const today = new Date();
-      if (dueDate <= today) isDue = true;
+      dueDate.setHours(0, 0, 0, 0);
+      if (dueDate <= today) return 'due';
     }
-    
-    if (reminder.dueMileage && vehicle.currentOdometer >= reminder.dueMileage) {
-      isDue = true;
+
+    // Check mileage-based
+    if (reminder.dueMileage && vehicle?.currentOdometer) {
+      if (vehicle.currentOdometer >= reminder.dueMileage) return 'due';
     }
-    
-    return isDue ? 'due' : 'upcoming';
+
+    return 'upcoming';
   };
 
   const activeReminders = reminders.filter(r => !r.dismissed && r.isActive);
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
+      {/* Header - Mobile optimized */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
         <h2 className="text-xl sm:text-2xl font-bold text-slate-300">Service Reminders</h2>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="bg-violet-500 hover:bg-violet-400 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors text-sm"
+            className="bg-violet-500 hover:bg-violet-400 active:bg-violet-600 text-white font-bold py-2.5 sm:py-2 px-4 rounded-lg shadow-md transition-colors text-sm w-full sm:w-auto"
           >
             + Add Reminder
           </button>
         )}
       </div>
 
+      {/* Form - Mobile optimized */}
       {showForm && (
         <div className="bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl mb-6">
           <h3 className="text-lg font-bold mb-4 text-violet-400">
@@ -193,7 +190,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="e.g., Oil Change"
-                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-violet-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2.5 sm:p-2 text-slate-100 focus:ring-2 focus:ring-violet-500 text-base sm:text-sm"
               />
             </div>
 
@@ -202,7 +199,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
               <select
                 value={formData.vehicleId}
                 onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-violet-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2.5 sm:p-2 text-slate-100 focus:ring-2 focus:ring-violet-500 text-base sm:text-sm"
               >
                 <option value="">Select a vehicle</option>
                 {vehicles.map(v => (
@@ -217,7 +214,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
-                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-violet-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2.5 sm:p-2 text-slate-100 focus:ring-2 focus:ring-violet-500 text-base sm:text-sm"
               />
             </div>
 
@@ -240,7 +237,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
                       type="date"
                       value={formData.dueDate}
                       onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-md p-2.5 sm:p-2 text-slate-100 text-base sm:text-sm"
                     />
                   </div>
                   <div>
@@ -248,7 +245,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
                     <select
                       value={formData.repeatInterval}
                       onChange={(e) => setFormData({ ...formData, repeatInterval: e.target.value as any })}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-md p-2.5 sm:p-2 text-slate-100 text-base sm:text-sm"
                     >
                       <option value="">No repeat</option>
                       <option value="monthly">Monthly</option>
@@ -281,7 +278,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
                       value={formData.dueMileage}
                       onChange={(e) => setFormData({ ...formData, dueMileage: e.target.value })}
                       placeholder="10000"
-                      className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-md p-2.5 sm:p-2 text-slate-100 text-base sm:text-sm"
                     />
                   </div>
                   <div>
@@ -291,24 +288,25 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
                       value={formData.mileageInterval}
                       onChange={(e) => setFormData({ ...formData, mileageInterval: e.target.value })}
                       placeholder="5000"
-                      className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-md p-2.5 sm:p-2 text-slate-100 text-base sm:text-sm"
                     />
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-end gap-4 pt-2">
+            {/* Mobile-optimized form buttons */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-2">
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="py-2 px-4 rounded-md text-slate-300 hover:bg-slate-700"
+                className="py-2.5 sm:py-2 px-4 rounded-md text-slate-300 hover:bg-slate-700 active:bg-slate-600 transition-colors order-2 sm:order-1 w-full sm:w-auto"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="bg-violet-500 hover:bg-violet-400 text-white font-bold py-2 px-4 rounded-md"
+                className="bg-violet-500 hover:bg-violet-400 active:bg-violet-600 text-white font-bold py-2.5 sm:py-2 px-4 rounded-md transition-colors order-1 sm:order-2 w-full sm:w-auto"
               >
                 {editingId ? 'Update Reminder' : 'Add Reminder'}
               </button>
@@ -317,6 +315,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
         </div>
       )}
 
+      {/* Reminder List - Mobile optimized */}
       <div className="space-y-3">
         {activeReminders.length === 0 ? (
           <div className="text-center py-8 text-slate-400 bg-slate-800 rounded-lg">
@@ -330,13 +329,14 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
             return (
               <div
                 key={reminder.id}
-                className={`bg-slate-800 rounded-lg p-4 border-l-4 ${
+                className={`bg-slate-800 rounded-lg p-4 sm:p-5 border-l-4 ${
                   status === 'due' ? 'border-red-500' : 'border-yellow-500'
                 }`}
               >
-                <div className="flex items-start justify-between">
+                {/* Mobile-first layout - stacks vertically on mobile, horizontal on larger screens */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <BellIcon className={`w-5 h-5 ${status === 'due' ? 'text-red-400' : 'text-yellow-400'}`} />
                       <h3 className="font-bold text-slate-100">{reminder.title}</h3>
                       {status === 'due' && (
@@ -360,22 +360,24 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  
+                  {/* Mobile-optimized buttons - stack vertically on mobile, horizontal on tablet+ */}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 w-full sm:w-auto">
                     <button
                       onClick={() => handleEdit(reminder)}
-                      className="text-xs bg-blue-900 hover:bg-blue-800 text-blue-300 px-3 py-1 rounded"
+                      className="text-sm sm:text-xs bg-blue-900 hover:bg-blue-800 active:bg-blue-700 text-blue-300 px-4 py-2.5 sm:px-3 sm:py-2 rounded-md sm:rounded font-medium transition-colors w-full sm:w-auto touch-manipulation"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => onDismissReminder(reminder.id)}
-                      className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded"
+                      className="text-sm sm:text-xs bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-slate-300 px-4 py-2.5 sm:px-3 sm:py-2 rounded-md sm:rounded font-medium transition-colors w-full sm:w-auto touch-manipulation"
                     >
                       Dismiss
                     </button>
                     <button
                       onClick={() => onDeleteReminder(reminder.id)}
-                      className="text-xs bg-red-900 hover:bg-red-800 text-red-300 px-3 py-1 rounded"
+                      className="text-sm sm:text-xs bg-red-900 hover:bg-red-800 active:bg-red-700 text-red-300 px-4 py-2.5 sm:px-3 sm:py-2 rounded-md sm:rounded font-medium transition-colors w-full sm:w-auto touch-manipulation"
                     >
                       Delete
                     </button>

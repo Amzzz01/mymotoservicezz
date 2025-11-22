@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M18.586 4H5.414A2.914 2.914 0 002.5 6.914v1.072A8.004 8.004 0 004 12.5v4.619a1 1 0 001.32.949l3.41-1.364A1 1 0 019 17.76V16h6v1.76a1 1 0 01-.27.648l-3.41 1.364a1 1 0 00-1.32.95V22h2a1 1 0 001-1v-1.115a8.04 8.04 0 003-3.033V15a1 1 0 00-1-1h-1v-1.5a8.004 8.004 0 001.5-4.514V6.914A2.914 2.914 0 0018.586 4zM8 12c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm8 0c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"/>
+    <path d="M18.586 4H5.414A2.914 2.914 0 002.5 6.914v1.072A8.004 8.004 0 004 12.5v4.619a1 1 0 001.32.949l3.41-1.364A1 1 0 019 17.76V16h6v1.76a1 1 0 01-.27.648l-3.41 1.364a1 1 0 00-1.32.95V22h2a1 1 0 001-1v-1.115a8.04 8.04 0 003-3.033V15a1 1 0 00-1-1h-1v-1.5a8.004 8.004 0 001.5-4.514V6.914A2.914 2.914 0 0018.586 4zM8 12c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm8 0c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z" />
   </svg>
 );
 
@@ -61,7 +61,11 @@ const AuthPage: React.FC = () => {
       <div className="flex-1 flex flex-col items-center justify-center p-4 font-sans">
         {/* Logo and Title */}
         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8">
-          <MotoIcon className="w-10 h-10 sm:w-12 sm:h-12 text-cyan-500 dark:text-cyan-400" />
+          <img
+            src="/icons/icon-192x192.png"
+            alt="MyMotoLog"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full"
+          />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-100 tracking-wider">
             MyMotoLog
           </h1>
@@ -72,13 +76,13 @@ const AuthPage: React.FC = () => {
           <h2 className="text-xl sm:text-2xl font-bold text-center text-slate-800 dark:text-slate-100 mb-6">
             {isLogin ? 'Log In' : 'Register'}
           </h2>
-          
+
           {error && (
             <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-md mb-4 text-sm">
               {error}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -95,7 +99,7 @@ const AuthPage: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Password
@@ -111,7 +115,7 @@ const AuthPage: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="pt-2">
               <button
                 type="submit"
@@ -122,11 +126,11 @@ const AuthPage: React.FC = () => {
               </button>
             </div>
           </form>
-          
+
           <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
             {isLogin ? "Don't have an account?" : 'Already have an account?'}
-            <button 
-              onClick={() => { setIsLogin(!isLogin); setError(''); }} 
+            <button
+              onClick={() => { setIsLogin(!isLogin); setError(''); }}
               className="font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 ml-1"
               disabled={loading}
             >

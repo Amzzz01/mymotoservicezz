@@ -26,6 +26,13 @@ export interface Vehicle {
   purchaseOdometer?: number;
   isActive: boolean; // For switching between vehicles
   createdAt: string;
+  // New fields
+  registrationNumber?: string; // Vehicle registration/plate number
+  tyrePressureFront?: number; // Front tyre pressure in PSI
+  tyrePressureRear?: number; // Rear tyre pressure in PSI
+  roadTaxExpiry?: string; // Road tax expiry date (ISO format)
+  customIcon?: string; // Custom icon/image URL or emoji
+  iconType?: 'emoji' | 'image'; // Type of custom icon
 }
 
 export interface Reminder {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Vehicle, MaintenanceRecord } from '../types';
 
 interface VehicleManagerProps {
@@ -14,9 +14,12 @@ interface VehicleManagerProps {
 
 const MotorcycleIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M18.586 4H5.414A2.914 2.914 0 002.5 6.914v1.072A8.004 8.004 0 004 12.5v4.619a1 1 0 001.32.949l3.41-1.364A1 1 0 019 17.76V16h6v1.76a1 1 0 01-.27.648l-3.41 1.364a1 1 0 00-1.32.95V22h2a1 1 0 001-1v-1.115a8.04 8.04 0 003-3.033V15a1 1 0 00-1-1h-1v-1.5a8.004 8.004 0 001.5-4.514V6.914A2.914 2.914 0 0018.586 4zM8 12c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm8 0c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"/>
+    <path d="M18.586 4H5.414A2.914 2.914 0 002.5 6.914v1.072A8.004 8.004 0 004 12.5v4.619a1 1 0 001.32.949l3.41-1.364A1 1 0 009 17.76V16h6v1.76a1 1 0 01-.27.648l-3.41 1.364a1 1 0 00-1.32.95V22h2a1 1 0 001-1v-1.115a8.04 8.04 0 003-3.033V15a1 1 0 00-1-1h-1v-1.5a8.004 8.004 0 001.5-4.514V6.914A2.914 2.914 0 0018.586 4zM8 12c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm8 0c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"/>
   </svg>
 );
+
+// Motorcycle emoji options
+const MOTORCYCLE_EMOJIS = ['🏍️', '🛵', '🏁', '⚙️', '🔧', '🛠️', '⚡', '🔥', '💨', '🌟', '⭐', '🎯'];
 
 const VehicleManager: React.FC<VehicleManagerProps> = ({
   vehicles,
@@ -37,8 +40,17 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
     model: '',
     currentOdometer: '',
     purchaseDate: '',
-    purchaseOdometer: ''
+    purchaseOdometer: '',
+    registrationNumber: '',
+    tyrePressureFront: '',
+    tyrePressureRear: '',
+    roadTaxExpiry: '',
+    customIcon: '🏍️',
+    iconType: 'emoji' as 'emoji' | 'image'
   });
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [iconImage, setIconImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
 
   const resetForm = () => {
@@ -49,10 +61,36 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
       model: '',
       currentOdometer: '',
       purchaseDate: '',
-      purchaseOdometer: ''
+      purchaseOdometer: '',
+      registrationNumber: '',
+      tyrePressureFront: '',
+      tyrePressureRear: '',
+      roadTaxExpiry: '',
+      customIcon: '🏍️',
+      iconType: 'emoji'
     });
     setEditingId(null);
     setError('');
+    setIconImage(null);
+    setShowEmojiPicker(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        setError('Image size must be less than 2MB');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setIconImage(base64String);
+        setFormData({ ...formData, customIcon: base64String, iconType: 'image' });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,13 +108,32 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
       return;
     }
 
+    // Validate tyre pressures if provided
+    if (formData.tyrePressureFront) {
+      const frontPressure = parseFloat(formData.tyrePressureFront);
+      if (isNaN(frontPressure) || frontPressure < 0 || frontPressure > 100) {
+        setError('Front tyre pressure must be between 0 and 100 PSI.');
+        return;
+      }
+    }
+
+    if (formData.tyrePressureRear) {
+      const rearPressure = parseFloat(formData.tyrePressureRear);
+      if (isNaN(rearPressure) || rearPressure < 0 || rearPressure > 100) {
+        setError('Rear tyre pressure must be between 0 and 100 PSI.');
+        return;
+      }
+    }
+
     try {
       const vehicleData: any = {
         userId,
         name: formData.name.trim(),
         type: formData.type.trim(),
         currentOdometer: odometerValue,
-        isActive: vehicles.length === 0
+        isActive: vehicles.length === 0,
+        customIcon: formData.customIcon || '🏍️',
+        iconType: formData.iconType
       };
 
       // Add optional fields only if they have values
@@ -102,6 +159,28 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
         }
       }
 
+      if (formData.registrationNumber && formData.registrationNumber.trim()) {
+        vehicleData.registrationNumber = formData.registrationNumber.trim().toUpperCase();
+      }
+
+      if (formData.tyrePressureFront) {
+        const frontPressure = parseFloat(formData.tyrePressureFront);
+        if (!isNaN(frontPressure)) {
+          vehicleData.tyrePressureFront = frontPressure;
+        }
+      }
+
+      if (formData.tyrePressureRear) {
+        const rearPressure = parseFloat(formData.tyrePressureRear);
+        if (!isNaN(rearPressure)) {
+          vehicleData.tyrePressureRear = rearPressure;
+        }
+      }
+
+      if (formData.roadTaxExpiry) {
+        vehicleData.roadTaxExpiry = formData.roadTaxExpiry;
+      }
+
       if (editingId) {
         await onUpdateVehicle(editingId, vehicleData);
       } else {
@@ -124,14 +203,22 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
       model: vehicle.model || '',
       currentOdometer: vehicle.currentOdometer.toString(),
       purchaseDate: vehicle.purchaseDate || '',
-      purchaseOdometer: vehicle.purchaseOdometer?.toString() || ''
+      purchaseOdometer: vehicle.purchaseOdometer?.toString() || '',
+      registrationNumber: vehicle.registrationNumber || '',
+      tyrePressureFront: vehicle.tyrePressureFront?.toString() || '',
+      tyrePressureRear: vehicle.tyrePressureRear?.toString() || '',
+      roadTaxExpiry: vehicle.roadTaxExpiry || '',
+      customIcon: vehicle.customIcon || '🏍️',
+      iconType: vehicle.iconType || 'emoji'
     });
+    if (vehicle.iconType === 'image' && vehicle.customIcon) {
+      setIconImage(vehicle.customIcon);
+    }
     setEditingId(vehicle.id);
     setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
-    // Prevent deleting if it's the last vehicle and there are maintenance records
     const vehicleRecords = records?.filter(r => r.vehicleId === id) || [];
     
     const confirmMessage = vehicleRecords.length > 0
@@ -146,6 +233,36 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
         alert(err.message || 'Failed to delete vehicle. Please try again.');
       }
     }
+  };
+
+  const isRoadTaxExpiringSoon = (expiryDate: string) => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return daysUntilExpiry <= 30 && daysUntilExpiry >= 0;
+  };
+
+  const isRoadTaxExpired = (expiryDate: string) => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    return expiry < today;
+  };
+
+  const renderVehicleIcon = (vehicle: Vehicle) => {
+    if (vehicle.iconType === 'image' && vehicle.customIcon) {
+      return (
+        <img 
+          src={vehicle.customIcon} 
+          alt={vehicle.name}
+          className="w-6 h-6 rounded object-cover flex-shrink-0"
+        />
+      );
+    } else if (vehicle.customIcon) {
+      return (
+        <span className="text-2xl flex-shrink-0">{vehicle.customIcon}</span>
+      );
+    }
+    return <MotorcycleIcon className="w-6 h-6 text-cyan-400 flex-shrink-0" />;
   };
 
   return (
@@ -167,97 +284,228 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
           <h3 className="text-lg font-bold mb-4 text-cyan-400">
             {editingId ? 'Edit Vehicle' : 'Add New Vehicle'}
           </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., My Harley"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Custom Icon Section */}
+            <div className="bg-slate-700/50 p-4 rounded-lg">
+              <label className="block text-sm font-medium text-slate-300 mb-3">
+                Vehicle Icon
+              </label>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center border-2 border-slate-600">
+                    {formData.iconType === 'image' && iconImage ? (
+                      <img src={iconImage} alt="Vehicle icon" className="w-14 h-14 rounded object-cover" />
+                    ) : (
+                      <span className="text-4xl">{formData.customIcon}</span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm transition-colors"
+                    >
+                      {formData.iconType === 'emoji' ? '✏️ Change Emoji' : '😀 Use Emoji'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm transition-colors"
+                    >
+                      📸 Upload Image
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label htmlFor="type" className="block text-sm font-medium text-slate-300 mb-1">
-                  Type *
-                </label>
-                <input
-                  type="text"
-                  id="type"
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  placeholder="e.g., Harley-Davidson Sportster"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                />
+              
+              {showEmojiPicker && (
+                <div className="mt-3 grid grid-cols-6 sm:grid-cols-8 gap-2">
+                  {MOTORCYCLE_EMOJIS.map(emoji => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => {
+                        setFormData({ ...formData, customIcon: emoji, iconType: 'emoji' });
+                        setIconImage(null);
+                        setShowEmojiPicker(false);
+                      }}
+                      className="w-12 h-12 text-2xl hover:bg-slate-600 rounded transition-colors flex items-center justify-center"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Basic Information */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wide">Basic Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">
+                    Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., My Harley"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="type" className="block text-sm font-medium text-slate-300 mb-1">
+                    Type *
+                  </label>
+                  <input
+                    type="text"
+                    id="type"
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    placeholder="e.g., Harley-Davidson Sportster"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="year" className="block text-sm font-medium text-slate-300 mb-1">
+                    Year
+                  </label>
+                  <input
+                    type="number"
+                    id="year"
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    placeholder="2023"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="model" className="block text-sm font-medium text-slate-300 mb-1">
+                    Model
+                  </label>
+                  <input
+                    type="text"
+                    id="model"
+                    value={formData.model}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    placeholder="Nightster"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="registrationNumber" className="block text-sm font-medium text-slate-300 mb-1">
+                    Registration Number
+                  </label>
+                  <input
+                    type="text"
+                    id="registrationNumber"
+                    value={formData.registrationNumber}
+                    onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
+                    placeholder="e.g., ABC1234"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 uppercase"
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="year" className="block text-sm font-medium text-slate-300 mb-1">
-                  Year
-                </label>
-                <input
-                  type="number"
-                  id="year"
-                  value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                  placeholder="2023"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                />
+            </div>
+
+            {/* Odometer Information */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wide">Odometer Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="currentOdometer" className="block text-sm font-medium text-slate-300 mb-1">
+                    Current Odometer (km) *
+                  </label>
+                  <input
+                    type="number"
+                    id="currentOdometer"
+                    value={formData.currentOdometer}
+                    onChange={(e) => setFormData({ ...formData, currentOdometer: e.target.value })}
+                    placeholder="5000"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="purchaseOdometer" className="block text-sm font-medium text-slate-300 mb-1">
+                    Purchase Odometer (km)
+                  </label>
+                  <input
+                    type="number"
+                    id="purchaseOdometer"
+                    value={formData.purchaseOdometer}
+                    onChange={(e) => setFormData({ ...formData, purchaseOdometer: e.target.value })}
+                    placeholder="0"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="purchaseDate" className="block text-sm font-medium text-slate-300 mb-1">
+                    Purchase Date
+                  </label>
+                  <input
+                    type="date"
+                    id="purchaseDate"
+                    value={formData.purchaseDate}
+                    onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="model" className="block text-sm font-medium text-slate-300 mb-1">
-                  Model
-                </label>
-                <input
-                  type="text"
-                  id="model"
-                  value={formData.model}
-                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                  placeholder="Nightster"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="currentOdometer" className="block text-sm font-medium text-slate-300 mb-1">
-                  Current Odometer (km) *
-                </label>
-                <input
-                  type="number"
-                  id="currentOdometer"
-                  value={formData.currentOdometer}
-                  onChange={(e) => setFormData({ ...formData, currentOdometer: e.target.value })}
-                  placeholder="5000"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="purchaseOdometer" className="block text-sm font-medium text-slate-300 mb-1">
-                  Purchase Odometer (km)
-                </label>
-                <input
-                  type="number"
-                  id="purchaseOdometer"
-                  value={formData.purchaseOdometer}
-                  onChange={(e) => setFormData({ ...formData, purchaseOdometer: e.target.value })}
-                  placeholder="0"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="purchaseDate" className="block text-sm font-medium text-slate-300 mb-1">
-                  Purchase Date
-                </label>
-                <input
-                  type="date"
-                  id="purchaseDate"
-                  value={formData.purchaseDate}
-                  onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                />
+            </div>
+
+            {/* Tyre & Road Tax Information */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wide">Tyre & Road Tax</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label htmlFor="tyrePressureFront" className="block text-sm font-medium text-slate-300 mb-1">
+                    Front Tyre Pressure (PSI)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    id="tyrePressureFront"
+                    value={formData.tyrePressureFront}
+                    onChange={(e) => setFormData({ ...formData, tyrePressureFront: e.target.value })}
+                    placeholder="32"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="tyrePressureRear" className="block text-sm font-medium text-slate-300 mb-1">
+                    Rear Tyre Pressure (PSI)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    id="tyrePressureRear"
+                    value={formData.tyrePressureRear}
+                    onChange={(e) => setFormData({ ...formData, tyrePressureRear: e.target.value })}
+                    placeholder="36"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="roadTaxExpiry" className="block text-sm font-medium text-slate-300 mb-1">
+                    Road Tax Expiry Date
+                  </label>
+                  <input
+                    type="date"
+                    id="roadTaxExpiry"
+                    value={formData.roadTaxExpiry}
+                    onChange={(e) => setFormData({ ...formData, roadTaxExpiry: e.target.value })}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
               </div>
             </div>
 
@@ -296,9 +544,9 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
             }`}
             onClick={() => onSetActive(vehicle.id)}
           >
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
-                <MotorcycleIcon className="w-6 h-6 text-cyan-400 flex-shrink-0" />
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-3">
+                {renderVehicleIcon(vehicle)}
                 <div>
                   <h3 className="font-bold text-slate-100">{vehicle.name}</h3>
                   <p className="text-sm text-slate-400">{vehicle.type}</p>
@@ -315,10 +563,51 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                 </span>
               )}
             </div>
-            <div className="mt-3 text-sm text-slate-300">
-              <p>Odometer: {vehicle.currentOdometer.toLocaleString()} km</p>
+
+            {/* Vehicle Details */}
+            <div className="space-y-2 text-sm text-slate-300 border-t border-slate-700 pt-3">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Odometer:</span>
+                <span className="font-semibold">{vehicle.currentOdometer.toLocaleString()} km</span>
+              </div>
+              
+              {vehicle.registrationNumber && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Registration:</span>
+                  <span className="font-mono font-semibold">{vehicle.registrationNumber}</span>
+                </div>
+              )}
+
+              {(vehicle.tyrePressureFront || vehicle.tyrePressureRear) && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Tyre Pressure:</span>
+                  <span className="text-xs">
+                    {vehicle.tyrePressureFront && <span>F: {vehicle.tyrePressureFront} PSI</span>}
+                    {vehicle.tyrePressureFront && vehicle.tyrePressureRear && <span className="mx-1">|</span>}
+                    {vehicle.tyrePressureRear && <span>R: {vehicle.tyrePressureRear} PSI</span>}
+                  </span>
+                </div>
+              )}
+
+              {vehicle.roadTaxExpiry && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Road Tax:</span>
+                  <span className={`text-xs font-semibold ${
+                    isRoadTaxExpired(vehicle.roadTaxExpiry)
+                      ? 'text-red-400'
+                      : isRoadTaxExpiringSoon(vehicle.roadTaxExpiry)
+                      ? 'text-yellow-400'
+                      : 'text-green-400'
+                  }`}>
+                    {isRoadTaxExpired(vehicle.roadTaxExpiry) && '⚠️ Expired '}
+                    {isRoadTaxExpiringSoon(vehicle.roadTaxExpiry) && !isRoadTaxExpired(vehicle.roadTaxExpiry) && '⚠️ '}
+                    {new Date(vehicle.roadTaxExpiry).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="mt-3 flex gap-2">
+
+            <div className="mt-3 flex gap-2 pt-3 border-t border-slate-700">
               <button
                 onClick={(e) => {
                   e.stopPropagation();

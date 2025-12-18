@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { MaintenanceRecord, Vehicle } from '../types';
+import { MaintenanceRecord, Vehicle, ParsedReceiptData } from '../types';
+import ReceiptScanner from './ReceiptScanner';
 
 interface MaintenanceFormProps {
   onAddRecord: (record: Omit<MaintenanceRecord, 'id'>) => void;
@@ -28,6 +29,18 @@ const TrashIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+const CameraIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+    <path fillRule="evenodd" d="M1 8a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 018.07 3h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0016.07 6H17a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V8zm13.5 3a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM10 14a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+  </svg>
+);
+
+const EditIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+    <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+  </svg>
+);
+
 const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ 
   onAddRecord, 
   onUpdateRecord,
@@ -45,6 +58,8 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
   const [photos, setPhotos] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [showReceiptScanner, setShowReceiptScanner] = useState(false);
+  const [showChoiceScreen, setShowChoiceScreen] = useState(false); // New state for choice screen
 
   // Load editing record data when editingRecord changes
   useEffect(() => {
@@ -57,9 +72,39 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
       setNotes(editingRecord.notes || '');
       setPhotos(editingRecord.photos || []);
       setIsFormVisible(true);
+      setShowReceiptScanner(false);
+      setShowChoiceScreen(false); // Close choice screen when editing
       setError('');
     }
   }, [editingRecord]);
+
+  const handleReceiptScanned = (data: ParsedReceiptData, imageFile: File) => {
+    // Pre-fill form with scanned data
+    setDate(data.date);
+    setDescription(data.serviceDescription);
+    setPartsCost(data.partsCost.toString());
+    setLaborCost(data.laborCost.toString());
+    
+    // Add notes if available
+    if (data.notes) {
+      setNotes(notes ? `${notes}\n\n${data.notes}` : data.notes);
+    }
+    
+    // Convert image to base64 and add to photos
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setPhotos([...photos, base64String]);
+    };
+    reader.readAsDataURL(imageFile);
+    
+    // Close scanner, show form
+    setShowReceiptScanner(false);
+    setIsFormVisible(true);
+    
+    // Clear any errors
+    setError('');
+  };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -92,6 +137,8 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
 
   const handleCancel = () => {
     setIsFormVisible(false);
+    setShowReceiptScanner(false);
+    setShowChoiceScreen(false); // Also close choice screen
     setError('');
     setPhotos([]);
     
@@ -181,17 +228,104 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
 
   return (
     <div className="mb-8">
-      {!isFormVisible ? (
+      {/* Single "Add Maintenance Record" Button - Shows First */}
+      {!isFormVisible && !showReceiptScanner && !showChoiceScreen ? (
         <div className="text-center">
           <button
-            onClick={() => setIsFormVisible(true)}
+            onClick={() => setShowChoiceScreen(true)}
             className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg shadow-lg shadow-cyan-500/20 transition-all duration-300 transform hover:scale-105 text-sm sm:text-base"
           >
             <PlusIcon className="w-5 h-5" />
             Add New Maintenance Record
           </button>
         </div>
-      ) : (
+      ) : null}
+
+      {/* Choice Screen Modal - Scan or Manual Entry */}
+      {showChoiceScreen && !isFormVisible && !showReceiptScanner ? (
+        <>
+          {/* Backdrop Overlay */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 animate-fade-in"
+            onClick={() => setShowChoiceScreen(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div className="bg-slate-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl animate-slide-up sm:animate-fade-in overflow-hidden">
+              {/* Modal Header */}
+              <div className="bg-slate-700 px-6 py-4 border-b border-slate-600">
+                <h3 className="text-lg font-bold text-cyan-400">Add Maintenance Record</h3>
+                <p className="text-sm text-slate-400 mt-1">Choose your preferred method</p>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-4">
+                {/* Scan Receipt Option */}
+                <button
+                  onClick={() => {
+                    setShowChoiceScreen(false);
+                    setShowReceiptScanner(true);
+                  }}
+                  className="w-full flex items-center gap-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold p-5 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                    <CameraIcon className="w-8 h-8" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <div className="text-lg font-bold">Scan Receipt</div>
+                    <div className="text-sm opacity-90">Auto-fill from photo</div>
+                  </div>
+                  <svg className="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Manual Entry Option */}
+                <button
+                  onClick={() => {
+                    setShowChoiceScreen(false);
+                    setIsFormVisible(true);
+                  }}
+                  className="w-full flex items-center gap-4 bg-slate-700 hover:bg-slate-600 text-white font-bold p-5 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <div className="bg-slate-600 p-3 rounded-lg">
+                    <EditIcon className="w-8 h-8" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <div className="text-lg font-bold">Manual Entry</div>
+                    <div className="text-sm opacity-90">Type details yourself</div>
+                  </div>
+                  <svg className="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 bg-slate-700 border-t border-slate-600">
+                <button
+                  onClick={() => setShowChoiceScreen(false)}
+                  className="w-full py-3 text-slate-300 hover:text-white font-medium transition-colors rounded-lg hover:bg-slate-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : null}
+
+      {/* Receipt Scanner Component */}
+      {showReceiptScanner && (
+        <ReceiptScanner
+          onReceiptScanned={handleReceiptScanned}
+          onCancel={() => setShowReceiptScanner(false)}
+        />
+      )}
+
+      {/* Maintenance Form */}
+      {isFormVisible && (
         <div className="bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl animate-fade-in">
           <h2 className="text-xl font-bold mb-4 text-cyan-400">
             {editingRecord ? 'Edit' : 'New'} Maintenance Record - {activeVehicle.name}

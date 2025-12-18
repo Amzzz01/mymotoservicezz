@@ -86,3 +86,90 @@ export interface CostSummary {
   recordCount: number;
   averageCostPerService: number;
 }
+
+// Mindee Receipt OCR Types
+
+export interface MindeeReceiptData {
+  date?: {
+    value: string;
+    confidence: number;
+  };
+  time?: {
+    value: string;
+    confidence: number;
+  };
+  total_amount?: {
+    value: number;
+    confidence: number;
+  };
+  total_net?: {
+    value: number;
+    confidence: number;
+  };
+  total_tax?: {
+    value: number;
+    confidence: number;
+  };
+  supplier_name?: {
+    value: string;
+    confidence: number;
+  };
+  supplier_address?: {
+    value: string;
+    confidence: number;
+  };
+  category?: {
+    value: string;
+    confidence: number;
+  };
+  subcategory?: {
+    value: string;
+    confidence: number;
+  };
+  currency?: string;
+  line_items?: Array<{
+    description: string;
+    quantity?: number;
+    unit_price?: number;
+    total_amount?: number;
+  }>;
+  taxes?: Array<{
+    code: string;
+    rate?: number;
+    amount?: number;
+    base?: number;
+  }>;
+}
+
+export interface MindeeApiResponse {
+  document: {
+    id: string;
+    inference: {
+      prediction: MindeeReceiptData;
+      processing_time: number;
+    };
+  };
+}
+
+export interface ReceiptScanQuota {
+  month: string; // Format: "YYYY-MM"
+  scansUsed: number;
+  limit: number;
+  lastReset: Date;
+  lastUpdated: Date;
+}
+
+export interface ParsedReceiptData {
+  date: string;
+  serviceDescription: string;
+  partsCost: number;
+  laborCost: number;
+  totalCost: number;
+  supplierName?: string;
+  notes?: string;
+  confidence: {
+    date: number;
+    amount: number;
+    overall: number;
+  };
+}

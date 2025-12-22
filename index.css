@@ -2,9 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add these animations to your index.css or tailwind.config.js */
+/* ======================================
+   CUSTOM ANIMATIONS FOR MYMOTOLOG
+   ====================================== */
 
-/* Fade In Animation */
+/* Fade In Animation - For backdrop overlays */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -15,10 +17,10 @@
 }
 
 .animate-fade-in {
-  animation: fade-in 0.2s ease-out;
+  animation: fade-in 0.3s ease-out;
 }
 
-/* Slide Up Animation (for mobile bottom sheet) */
+/* Slide Up Animation - For mobile bottom sheet modals */
 @keyframes slide-up {
   from {
     transform: translateY(100%);
@@ -32,26 +34,182 @@
   animation: slide-up 0.3s ease-out;
 }
 
-/* Alternative: Add to tailwind.config.js */
-/*
-module.exports = {
-  theme: {
-    extend: {
-      keyframes: {
-        'fade-in': {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        'slide-up': {
-          '0%': { transform: 'translateY(100%)' },
-          '100%': { transform: 'translateY(0)' },
-        },
-      },
-      animation: {
-        'fade-in': 'fade-in 0.2s ease-out',
-        'slide-up': 'slide-up 0.3s ease-out',
-      },
-    },
-  },
+/* Slide In Right Animation - For popup notifications */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
-*/
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out;
+}
+
+/* Pulse Animation - For notification badges */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Hide scrollbar but keep functionality - For horizontal tab navigation */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* ======================================
+   GLOBAL STYLES
+   ====================================== */
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent horizontal overflow on mobile */
+body {
+  overflow-x: hidden;
+}
+
+/* Custom focus styles for better accessibility */
+*:focus-visible {
+  outline: 2px solid theme('colors.cyan.500');
+  outline-offset: 2px;
+}
+
+/* ======================================
+   UTILITY CLASSES
+   ====================================== */
+
+/* Glass morphism effect for cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Dark mode glass effect */
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(to right, theme('colors.cyan.500'), theme('colors.blue.500'));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ======================================
+   RESPONSIVE DESIGN HELPERS
+   ====================================== */
+
+/* Ensure images don't break layout */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Better tap targets for mobile (minimum 44x44px) */
+button,
+a,
+input[type="button"],
+input[type="submit"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ======================================
+   DARK MODE TRANSITIONS
+   ====================================== */
+
+/* Smooth color transitions for dark mode */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Disable transitions for elements that shouldn't animate */
+.no-transition {
+  transition: none !important;
+}
+
+/* ======================================
+   PRINT STYLES
+   ====================================== */
+
+@media print {
+  /* Hide non-essential elements when printing */
+  header,
+  footer,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure content fits on page */
+  body {
+    font-size: 12pt;
+  }
+
+  /* Print backgrounds */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ======================================
+   CUSTOM SCROLLBAR (Optional)
+   ====================================== */
+
+/* For browsers that support custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: theme('colors.slate.100');
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: theme('colors.slate.800');
+}
+
+::-webkit-scrollbar-thumb {
+  background: theme('colors.slate.400');
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.slate.500');
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: theme('colors.slate.600');
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.slate.500');
+}

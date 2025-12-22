@@ -152,6 +152,15 @@ export interface Translations {
   needMoreDataForPredictions: string;
   frequency: string;
   serviceType: string;
+
+  // ✅ NEW: Announcements
+  announcements: string;
+  newUpdates: string;
+  noAnnouncements: string;
+  markAllAsRead: string;
+  markAsRead: string;
+  selectVehicle: string;
+  vehicles_count: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -307,6 +316,15 @@ export const translations: Record<Language, Translations> = {
     needMoreDataForPredictions: 'Add more maintenance records (at least 2 of the same service type) to see predictive alerts',
     frequency: 'Frequency',
     serviceType: 'Service Type',
+
+    // ✅ NEW: Announcements
+    announcements: 'Announcements',
+    newUpdates: 'New Updates',
+    noAnnouncements: 'No announcements yet',
+    markAllAsRead: 'Mark all as read',
+    markAsRead: 'Mark as read',
+    selectVehicle: 'Select Vehicle',
+    vehicles_count: 'vehicles',
   },
   ms: {
     // Header
@@ -460,6 +478,14 @@ export const translations: Record<Language, Translations> = {
     needMoreDataForPredictions: 'Tambah lebih banyak rekod penyelenggaraan (sekurang-kurangnya 2 jenis servis yang sama) untuk melihat amaran ramalan',
     frequency: 'Kekerapan',
     serviceType: 'Jenis Servis',
+
+    announcements: 'Pengumuman',
+    newUpdates: 'Kemas Kini Baharu',
+    noAnnouncements: 'Tiada pengumuman lagi',
+    markAllAsRead: 'Tandakan semua sebagai dibaca',
+    markAsRead: 'Tandakan sebagai dibaca',
+    selectVehicle: 'Pilih Kenderaan',
+    vehicles_count: 'kenderaan',
   },
 };
 

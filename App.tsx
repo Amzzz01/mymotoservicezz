@@ -16,6 +16,9 @@ import { useApp } from './context/AppContext';
 import SettingsButton from './components/SettingsButton';
 import Footer from './components/Footer';
 import InstallPrompt from './components/InstallPrompt';
+// ✅ NEW IMPORTS
+import VehicleSelector from './components/VehicleSelector';
+import AnnouncementSystem from './components/AnnouncementSystem';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -32,7 +35,6 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 function App() {
   const { currentUser, logout } = useAuth();
   const { t } = useApp();
-  // ✅ UPDATED: Added 'analytics' to tab types
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'reminders' | 'vehicles'>('overview');
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
 
@@ -153,20 +155,22 @@ function App() {
             </h1>
           </div>
 
-          {/* Right side controls - Mobile optimized */}
+          {/* ✅ UPDATED: Right side controls with new components */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Active vehicle indicator - hide on small screens */}
-            {activeVehicle && (
-              <div className="hidden lg:block text-right">
-                <div className="text-xs text-slate-500 dark:text-slate-400">{t.activeVehicle}</div>
-                <div className="text-sm font-bold text-cyan-600 dark:text-cyan-400">{activeVehicle.name}</div>
-              </div>
-            )}
+            {/* ✅ NEW: Vehicle Selector (replaces static vehicle indicator) */}
+            <VehicleSelector
+              vehicles={vehicles}
+              activeVehicle={activeVehicle}
+              onSelectVehicle={setActive}
+            />
 
             {/* User email - hide on mobile */}
             <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 hidden md:block">
               {t.welcome}, <span className="font-bold">{currentUser.email}</span>!
             </span>
+
+            {/* ✅ NEW: Announcement System */}
+            <AnnouncementSystem userId={currentUser.uid} />
 
             {/* Settings Button */}
             <SettingsButton />
@@ -197,7 +201,6 @@ function App() {
             📊 {t.overview}
           </button>
 
-          {/* ✅ NEW: Analytics Tab */}
           <button
             onClick={() => setActiveTab('analytics')}
             className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'analytics'
@@ -222,6 +225,7 @@ function App() {
               </span>
             )}
           </button>
+
           <button
             onClick={() => setActiveTab('vehicles')}
             className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'vehicles'
@@ -255,7 +259,6 @@ function App() {
                     editingRecord={editingRecord}
                     onCancelEdit={handleCancelEdit}
                   />
-                  {/* ✅ UPDATED: Added new props for reminder integration */}
                   <AISuggestion
                     records={records}
                     activeVehicle={activeVehicle}
@@ -293,7 +296,6 @@ function App() {
             </>
           )}
 
-          {/* ✅ NEW: Analytics Tab Content */}
           {activeTab === 'analytics' && (
             <AnalyticsDashboard
               records={records}
@@ -333,7 +335,6 @@ function App() {
 
       <Footer />
 
-      {/* ✅ PWA Install Prompt - Added at the end */}
       <InstallPrompt />
     </div>
   );

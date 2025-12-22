@@ -173,3 +173,20 @@ export interface ParsedReceiptData {
     overall: number;
   };
 }
+
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  type: 'feature' | 'update' | 'maintenance' | 'info';
+  version?: string;
+  date: string; // ISO date string
+  priority: 'low' | 'medium' | 'high';
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface ViewedAnnouncement {
+  announcementId: string;
+  viewedAt: string;
+}

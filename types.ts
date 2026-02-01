@@ -190,3 +190,12 @@ export interface ViewedAnnouncement {
   announcementId: string;
   viewedAt: string;
 }
+
+export interface ScannedReceiptData {
+  date?: string;
+  cost?: number;
+  serviceType?: string;
+  description?: string;  // NOW: Detailed list of items/services
+  vendor?: string;        // NEW: Shop/vendor name
+  mileage?: number;
+}

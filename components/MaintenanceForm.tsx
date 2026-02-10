@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MaintenanceRecord, Vehicle, ParsedReceiptData } from '../types';
 import ReceiptScanner from './ReceiptScanner';
+import { useApp } from '../context/AppContext';
 
 interface MaintenanceFormProps {
   onAddRecord: (record: Omit<MaintenanceRecord, 'id'>) => void;
@@ -41,14 +42,15 @@ const EditIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ 
-  onAddRecord, 
+const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
+  onAddRecord,
   onUpdateRecord,
-  vehicles, 
-  activeVehicle, 
+  vehicles,
+  activeVehicle,
   editingRecord = null,
   onCancelEdit
 }) => {
+  const { t } = useApp();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
   const [kilometers, setKilometers] = useState('');
@@ -59,7 +61,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
   const [error, setError] = useState('');
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [showReceiptScanner, setShowReceiptScanner] = useState(false);
-  const [showChoiceScreen, setShowChoiceScreen] = useState(false); // New state for choice screen
+  const [showChoiceScreen, setShowChoiceScreen] = useState(false);
 
   // Load editing record data when editingRecord changes
   useEffect(() => {
@@ -73,7 +75,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
       setPhotos(editingRecord.photos || []);
       setIsFormVisible(true);
       setShowReceiptScanner(false);
-      setShowChoiceScreen(false); // Close choice screen when editing
+      setShowChoiceScreen(false);
       setError('');
     }
   }, [editingRecord]);
@@ -84,12 +86,12 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
     setDescription(data.serviceDescription);
     setPartsCost(data.partsCost.toString());
     setLaborCost(data.laborCost.toString());
-    
+
     // Add notes if available
     if (data.notes) {
       setNotes(notes ? `${notes}\n\n${data.notes}` : data.notes);
     }
-    
+
     // Convert image to base64 and add to photos
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -97,11 +99,11 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
       setPhotos([...photos, base64String]);
     };
     reader.readAsDataURL(imageFile);
-    
+
     // Close scanner, show form
     setShowReceiptScanner(false);
     setIsFormVisible(true);
-    
+
     // Clear any errors
     setError('');
   };
@@ -112,14 +114,14 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
 
     // Limit to 5 photos
     if (photos.length + files.length > 5) {
-      setError('Maximum 5 photos allowed');
+      setError(t.maxPhotosAllowed);
       return;
     }
 
     Array.from(files).forEach((file: File) => {
       // Check file size (max 2MB per photo)
       if (file.size > 2 * 1024 * 1024) {
-        setError('Each photo must be less than 2MB');
+        setError(t.photoSizeLimit);
         return;
       }
 
@@ -138,10 +140,10 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
   const handleCancel = () => {
     setIsFormVisible(false);
     setShowReceiptScanner(false);
-    setShowChoiceScreen(false); // Also close choice screen
+    setShowChoiceScreen(false);
     setError('');
     setPhotos([]);
-    
+
     // Reset form if editing
     if (editingRecord && onCancelEdit) {
       onCancelEdit();
@@ -159,29 +161,29 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
     setError('');
 
     if (!activeVehicle) {
-      setError('Please select or add a vehicle first.');
+      setError(t.pleaseSelectVehicle);
       return;
     }
 
     if (!date || !description || !kilometers) {
-      setError('Date, description, and kilometers are required.');
+      setError(t.dateDescKmRequired);
       return;
     }
 
     const kmNumber = parseInt(kilometers, 10);
     if (isNaN(kmNumber) || kmNumber < 0) {
-      setError('Kilometers must be a positive number.');
+      setError(t.invalidKilometers);
       return;
     }
 
     // Validate costs if provided
     if (partsCost && (isNaN(parseFloat(partsCost)) || parseFloat(partsCost) < 0)) {
-      setError('Parts cost must be a valid positive number.');
+      setError(t.partsCostInvalid);
       return;
     }
 
     if (laborCost && (isNaN(parseFloat(laborCost)) || parseFloat(laborCost) < 0)) {
-      setError('Labor cost must be a valid positive number.');
+      setError(t.laborCostInvalid);
       return;
     }
 
@@ -220,8 +222,8 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
 
   if (!activeVehicle) {
     return (
-      <div className="mb-8 text-center py-8 bg-slate-800 rounded-lg">
-        <p className="text-slate-400">Please add a vehicle first to start tracking maintenance.</p>
+      <div className="mb-8 text-center py-8 bg-white dark:bg-slate-800 rounded-lg">
+        <p className="text-slate-500 dark:text-slate-400">{t.addVehicleFirst}</p>
       </div>
     );
   }
@@ -236,7 +238,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
             className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg shadow-lg shadow-cyan-500/20 transition-all duration-300 transform hover:scale-105 text-sm sm:text-base"
           >
             <PlusIcon className="w-5 h-5" />
-            Add New Maintenance Record
+            {t.addNewMaintenanceRecord}
           </button>
         </div>
       ) : null}
@@ -245,18 +247,18 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
       {showChoiceScreen && !isFormVisible && !showReceiptScanner ? (
         <>
           {/* Backdrop Overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40 animate-fade-in"
             onClick={() => setShowChoiceScreen(false)}
           />
-          
+
           {/* Modal Content */}
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div className="bg-slate-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl animate-slide-up sm:animate-fade-in overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl animate-slide-up sm:animate-fade-in overflow-hidden">
               {/* Modal Header */}
-              <div className="bg-slate-700 px-6 py-4 border-b border-slate-600">
-                <h3 className="text-lg font-bold text-cyan-400">Add Maintenance Record</h3>
-                <p className="text-sm text-slate-400 mt-1">Choose your preferred method</p>
+              <div className="bg-slate-100 dark:bg-slate-700 px-6 py-4 border-b border-slate-200 dark:border-slate-600">
+                <h3 className="text-lg font-bold text-cyan-600 dark:text-cyan-400">{t.addMaintenanceRecord}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t.chooseMethod}</p>
               </div>
 
               {/* Modal Body */}
@@ -273,8 +275,8 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
                     <CameraIcon className="w-8 h-8" />
                   </div>
                   <div className="text-left flex-1">
-                    <div className="text-lg font-bold">Scan Receipt</div>
-                    <div className="text-sm opacity-90">Auto-fill from photo</div>
+                    <div className="text-lg font-bold">{t.scanReceipt}</div>
+                    <div className="text-sm opacity-90">{t.autoFillFromPhoto}</div>
                   </div>
                   <svg className="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -287,14 +289,14 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
                     setShowChoiceScreen(false);
                     setIsFormVisible(true);
                   }}
-                  className="w-full flex items-center gap-4 bg-slate-700 hover:bg-slate-600 text-white font-bold p-5 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center gap-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold p-5 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <div className="bg-slate-600 p-3 rounded-lg">
+                  <div className="bg-slate-200 dark:bg-slate-600 p-3 rounded-lg">
                     <EditIcon className="w-8 h-8" />
                   </div>
                   <div className="text-left flex-1">
-                    <div className="text-lg font-bold">Manual Entry</div>
-                    <div className="text-sm opacity-90">Type details yourself</div>
+                    <div className="text-lg font-bold">{t.manualEntry}</div>
+                    <div className="text-sm opacity-90">{t.typeDetailsYourself}</div>
                   </div>
                   <svg className="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -303,12 +305,12 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 bg-slate-700 border-t border-slate-600">
+              <div className="px-6 py-4 bg-slate-100 dark:bg-slate-700 border-t border-slate-200 dark:border-slate-600">
                 <button
                   onClick={() => setShowChoiceScreen(false)}
-                  className="w-full py-3 text-slate-300 hover:text-white font-medium transition-colors rounded-lg hover:bg-slate-600"
+                  className="w-full py-3 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white font-medium transition-colors rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600"
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
               </div>
             </div>
@@ -326,28 +328,28 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
 
       {/* Maintenance Form */}
       {isFormVisible && (
-        <div className="bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl animate-fade-in">
-          <h2 className="text-xl font-bold mb-4 text-cyan-400">
-            {editingRecord ? 'Edit' : 'New'} Maintenance Record - {activeVehicle.name}
+        <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl animate-fade-in">
+          <h2 className="text-xl font-bold mb-4 text-cyan-600 dark:text-cyan-400">
+            {editingRecord ? t.editMaintenanceRecord : t.addMaintenanceRecord} - {activeVehicle.name}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="date" className="block text-sm font-medium text-slate-300 mb-1">
-                  Date *
+                <label htmlFor="date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  {t.date} *
                 </label>
                 <input
                   type="date"
                   id="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                 />
               </div>
               <div>
-                <label htmlFor="kilometers" className="block text-sm font-medium text-slate-300 mb-1">
-                  Odometer Reading (km) *
+                <label htmlFor="kilometers" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  {t.odometerReading} (km) *
                 </label>
                 <input
                   type="number"
@@ -355,33 +357,33 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
                   value={kilometers}
                   onChange={(e) => setKilometers(e.target.value)}
                   placeholder={`Current: ${activeVehicle.currentOdometer.toLocaleString()} km`}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                 />
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-1">
-                Service Description *
+              <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.serviceDescription} *
               </label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g., Oil change, new chain and sprockets, brake pads replacement"
+                placeholder={t.serviceDescPlaceholder}
                 rows={3}
-                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               />
             </div>
 
             {/* Cost Tracking */}
-            <div className="border-t border-slate-700 pt-4">
-              <h3 className="text-sm font-semibold text-slate-300 mb-3">Cost Breakdown</h3>
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{t.costBreakdown}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="partsCost" className="block text-sm font-medium text-slate-300 mb-1">
-                    Parts Cost (RM)
+                  <label htmlFor="partsCost" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.partsCostLabel}
                   </label>
                   <input
                     type="number"
@@ -391,12 +393,12 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
                     placeholder="0.00"
                     step="0.01"
                     min="0"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="laborCost" className="block text-sm font-medium text-slate-300 mb-1">
-                    Labor Cost (RM)
+                  <label htmlFor="laborCost" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.laborCostLabel}
                   </label>
                   <input
                     type="number"
@@ -406,21 +408,21 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
                     placeholder="0.00"
                     step="0.01"
                     min="0"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
               </div>
             </div>
 
             {/* Photos */}
-            <div className="border-t border-slate-700 pt-4">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Photos (Optional, Max 5)
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                {t.photosOptional}
               </label>
               <div className="flex items-center gap-4">
-                <label className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 px-4 py-2 rounded-md border border-slate-600 transition-colors inline-flex items-center gap-2">
+                <label className="cursor-pointer bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md border border-slate-300 dark:border-slate-600 transition-colors inline-flex items-center gap-2">
                   <PhotoIcon className="w-5 h-5" />
-                  <span className="text-sm">Upload Photos</span>
+                  <span className="text-sm">{t.uploadPhotos}</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -429,13 +431,13 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
                     className="hidden"
                   />
                 </label>
-                <span className="text-xs text-slate-400">{photos.length}/5 photos</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{photos.length}/5 {t.maxPhotos}</span>
               </div>
               {photos.length > 0 && (
                 <div className="mt-3 grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {photos.map((photo, index) => (
                     <div key={index} className="relative group">
-                      <img src={photo} alt={`Upload ${index + 1}`} className="w-full h-20 object-cover rounded-md" />
+                      <img src={photo} alt={`${t.photos} ${index + 1}`} className="w-full h-20 object-cover rounded-md" />
                       <button
                         type="button"
                         onClick={() => removePhoto(index)}
@@ -450,22 +452,22 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
             </div>
 
             {/* Notes */}
-            <div className="border-t border-slate-700 pt-4">
-              <label htmlFor="notes" className="block text-sm font-medium text-slate-300 mb-1">
-                Additional Notes (Optional)
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <label htmlFor="notes" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.additionalNotesOptional}
               </label>
               <textarea
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any additional information, observations, or reminders..."
+                placeholder={t.notesPlaceholder}
                 rows={3}
-                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               />
             </div>
 
             {error && (
-              <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg">
+              <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
@@ -474,15 +476,15 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
               <button
                 type="button"
                 onClick={handleCancel}
-                className="py-2 px-4 rounded-md text-slate-300 hover:bg-slate-700 transition-colors"
+                className="py-2 px-4 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               >
-                Cancel
+                {t.cancel}
               </button>
               <button
                 type="submit"
                 className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded-md shadow-md shadow-cyan-500/20 transition-colors"
               >
-                {editingRecord ? 'Update Record' : 'Save Record'}
+                {editingRecord ? t.updateRecord : t.saveRecord}
               </button>
             </div>
           </form>

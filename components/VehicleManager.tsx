@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Vehicle, MaintenanceRecord } from '../types';
+import { useApp } from '../context/AppContext';
 
 interface VehicleManagerProps {
   vehicles: Vehicle[];
@@ -31,6 +32,7 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
   userId,
   records = []
 }) => {
+  const { t } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -78,11 +80,11 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        setError('Image size must be less than 2MB');
+      if (file.size > 2 * 1024 * 1024) {
+        setError(t.photoSizeLimit);
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
@@ -98,13 +100,13 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
     setError('');
 
     if (!formData.name || !formData.type || !formData.currentOdometer) {
-      setError('Name, type, and current odometer are required.');
+      setError(t.nameTypeOdometerRequired);
       return;
     }
 
     const odometerValue = parseInt(formData.currentOdometer);
     if (isNaN(odometerValue) || odometerValue < 0) {
-      setError('Current odometer must be a valid positive number.');
+      setError(t.odometerMustBeValid);
       return;
     }
 
@@ -112,7 +114,7 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
     if (formData.tyrePressureFront) {
       const frontPressure = parseFloat(formData.tyrePressureFront);
       if (isNaN(frontPressure) || frontPressure < 0 || frontPressure > 100) {
-        setError('Front tyre pressure must be between 0 and 100 PSI.');
+        setError(t.tyrePressureFrontInvalid);
         return;
       }
     }
@@ -120,7 +122,7 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
     if (formData.tyrePressureRear) {
       const rearPressure = parseFloat(formData.tyrePressureRear);
       if (isNaN(rearPressure) || rearPressure < 0 || rearPressure > 100) {
-        setError('Rear tyre pressure must be between 0 and 100 PSI.');
+        setError(t.tyrePressureRearInvalid);
         return;
       }
     }
@@ -191,7 +193,7 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
       setShowForm(false);
     } catch (err: any) {
       console.error('Error saving vehicle:', err);
-      setError(err.message || 'Failed to save vehicle. Please try again.');
+      setError(err.message || t.failedSaveVehicle);
     }
   };
 
@@ -219,18 +221,12 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
   };
 
   const handleDelete = async (id: string) => {
-    const vehicleRecords = records?.filter(r => r.vehicleId === id) || [];
-    
-    const confirmMessage = vehicleRecords.length > 0
-      ? `Are you sure you want to delete this vehicle? This will also delete ${vehicleRecords.length} maintenance record(s).`
-      : 'Are you sure you want to delete this vehicle?';
-    
-    if (window.confirm(confirmMessage)) {
+    if (window.confirm(t.confirmDeleteVehicle)) {
       try {
         await onDeleteVehicle(id);
       } catch (err: any) {
         console.error('Delete error:', err);
-        alert(err.message || 'Failed to delete vehicle. Please try again.');
+        alert(err.message || t.failedDeleteVehicle);
       }
     }
   };
@@ -251,8 +247,8 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
   const renderVehicleIcon = (vehicle: Vehicle) => {
     if (vehicle.iconType === 'image' && vehicle.customIcon) {
       return (
-        <img 
-          src={vehicle.customIcon} 
+        <img
+          src={vehicle.customIcon}
           alt={vehicle.name}
           className="w-6 h-6 rounded object-cover flex-shrink-0"
         />
@@ -262,39 +258,39 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
         <span className="text-2xl flex-shrink-0">{vehicle.customIcon}</span>
       );
     }
-    return <MotorcycleIcon className="w-6 h-6 text-cyan-400 flex-shrink-0" />;
+    return <MotorcycleIcon className="w-6 h-6 text-cyan-500 dark:text-cyan-400 flex-shrink-0" />;
   };
 
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-300">My Vehicles</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-700 dark:text-slate-300">{t.myVehicles}</h2>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
             className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded-lg shadow-md transition-colors text-sm"
           >
-            + Add Vehicle
+            + {t.addVehicle}
           </button>
         )}
       </div>
 
       {showForm && (
-        <div className="bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl mb-6">
-          <h3 className="text-lg font-bold mb-4 text-cyan-400">
-            {editingId ? 'Edit Vehicle' : 'Add New Vehicle'}
+        <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-lg shadow-2xl mb-6">
+          <h3 className="text-lg font-bold mb-4 text-cyan-600 dark:text-cyan-400">
+            {editingId ? t.editVehicle : t.addNewVehicle}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Custom Icon Section */}
-            <div className="bg-slate-700/50 p-4 rounded-lg">
-              <label className="block text-sm font-medium text-slate-300 mb-3">
-                Vehicle Icon
+            <div className="bg-slate-100/50 dark:bg-slate-700/50 p-4 rounded-lg">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                {t.vehicleIcon}
               </label>
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="flex items-center gap-3">
-                  <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center border-2 border-slate-600">
+                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center border-2 border-slate-300 dark:border-slate-600">
                     {formData.iconType === 'image' && iconImage ? (
-                      <img src={iconImage} alt="Vehicle icon" className="w-14 h-14 rounded object-cover" />
+                      <img src={iconImage} alt={t.vehicleIcon} className="w-14 h-14 rounded object-cover" />
                     ) : (
                       <span className="text-4xl">{formData.customIcon}</span>
                     )}
@@ -303,16 +299,16 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm transition-colors"
+                      className="px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded text-sm transition-colors"
                     >
-                      {formData.iconType === 'emoji' ? '✏️ Change Emoji' : '😀 Use Emoji'}
+                      {formData.iconType === 'emoji' ? `✏️ ${t.changeEmoji}` : `😀 ${t.useEmoji}`}
                     </button>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm transition-colors"
+                      className="px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded text-sm transition-colors"
                     >
-                      📸 Upload Image
+                      📸 {t.uploadImage}
                     </button>
                     <input
                       ref={fileInputRef}
@@ -324,7 +320,7 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                   </div>
                 </div>
               </div>
-              
+
               {showEmojiPicker && (
                 <div className="mt-3 grid grid-cols-6 sm:grid-cols-8 gap-2">
                   {MOTORCYCLE_EMOJIS.map(emoji => (
@@ -336,7 +332,7 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                         setIconImage(null);
                         setShowEmojiPicker(false);
                       }}
-                      className="w-12 h-12 text-2xl hover:bg-slate-600 rounded transition-colors flex items-center justify-center"
+                      className="w-12 h-12 text-2xl hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors flex items-center justify-center"
                     >
                       {emoji}
                     </button>
@@ -347,11 +343,11 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
 
             {/* Basic Information */}
             <div>
-              <h4 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wide">Basic Information</h4>
+              <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wide">{t.basicInfo}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">
-                    Name *
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.vehicleName} *
                   </label>
                   <input
                     type="text"
@@ -359,12 +355,12 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., My Harley"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="type" className="block text-sm font-medium text-slate-300 mb-1">
-                    Type *
+                  <label htmlFor="type" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.vehicleModel} *
                   </label>
                   <input
                     type="text"
@@ -372,12 +368,12 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                     placeholder="e.g., Harley-Davidson Sportster"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="year" className="block text-sm font-medium text-slate-300 mb-1">
-                    Year
+                  <label htmlFor="year" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.year}
                   </label>
                   <input
                     type="number"
@@ -385,12 +381,12 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                     placeholder="2023"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="model" className="block text-sm font-medium text-slate-300 mb-1">
-                    Model
+                  <label htmlFor="model" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.vehicleModel}
                   </label>
                   <input
                     type="text"
@@ -398,12 +394,12 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                     placeholder="Nightster"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="registrationNumber" className="block text-sm font-medium text-slate-300 mb-1">
-                    Registration Number
+                  <label htmlFor="registrationNumber" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.registrationNumber}
                   </label>
                   <input
                     type="text"
@@ -411,7 +407,7 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     value={formData.registrationNumber}
                     onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
                     placeholder="e.g., ABC1234"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 uppercase"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 uppercase"
                   />
                 </div>
               </div>
@@ -419,11 +415,11 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
 
             {/* Odometer Information */}
             <div>
-              <h4 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wide">Odometer Information</h4>
+              <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wide">{t.odometerInfo}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="currentOdometer" className="block text-sm font-medium text-slate-300 mb-1">
-                    Current Odometer (km) *
+                  <label htmlFor="currentOdometer" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.currentOdometerKm} *
                   </label>
                   <input
                     type="number"
@@ -431,12 +427,12 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     value={formData.currentOdometer}
                     onChange={(e) => setFormData({ ...formData, currentOdometer: e.target.value })}
                     placeholder="5000"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="purchaseOdometer" className="block text-sm font-medium text-slate-300 mb-1">
-                    Purchase Odometer (km)
+                  <label htmlFor="purchaseOdometer" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.purchaseOdometerKm}
                   </label>
                   <input
                     type="number"
@@ -444,19 +440,19 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     value={formData.purchaseOdometer}
                     onChange={(e) => setFormData({ ...formData, purchaseOdometer: e.target.value })}
                     placeholder="0"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="purchaseDate" className="block text-sm font-medium text-slate-300 mb-1">
-                    Purchase Date
+                  <label htmlFor="purchaseDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.purchaseDate}
                   </label>
                   <input
                     type="date"
                     id="purchaseDate"
                     value={formData.purchaseDate}
                     onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
               </div>
@@ -464,11 +460,11 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
 
             {/* Tyre & Road Tax Information */}
             <div>
-              <h4 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wide">Tyre & Road Tax</h4>
+              <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wide">{t.tyreAndRoadTax}</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label htmlFor="tyrePressureFront" className="block text-sm font-medium text-slate-300 mb-1">
-                    Front Tyre Pressure (PSI)
+                  <label htmlFor="tyrePressureFront" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.frontTyrePressure}
                   </label>
                   <input
                     type="number"
@@ -477,12 +473,12 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     value={formData.tyrePressureFront}
                     onChange={(e) => setFormData({ ...formData, tyrePressureFront: e.target.value })}
                     placeholder="32"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="tyrePressureRear" className="block text-sm font-medium text-slate-300 mb-1">
-                    Rear Tyre Pressure (PSI)
+                  <label htmlFor="tyrePressureRear" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.rearTyrePressure}
                   </label>
                   <input
                     type="number"
@@ -491,25 +487,25 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     value={formData.tyrePressureRear}
                     onChange={(e) => setFormData({ ...formData, tyrePressureRear: e.target.value })}
                     placeholder="36"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="roadTaxExpiry" className="block text-sm font-medium text-slate-300 mb-1">
-                    Road Tax Expiry Date
+                  <label htmlFor="roadTaxExpiry" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.roadTaxExpiry}
                   </label>
                   <input
                     type="date"
                     id="roadTaxExpiry"
                     value={formData.roadTaxExpiry}
                     onChange={(e) => setFormData({ ...formData, roadTaxExpiry: e.target.value })}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
               </div>
             </div>
 
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
 
             <div className="flex justify-end gap-4 pt-2">
               <button
@@ -518,15 +514,15 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                   resetForm();
                   setShowForm(false);
                 }}
-                className="py-2 px-4 rounded-md text-slate-300 hover:bg-slate-700 transition-colors"
+                className="py-2 px-4 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               >
-                Cancel
+                {t.cancel}
               </button>
               <button
                 type="submit"
                 className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded-md shadow-md transition-colors"
               >
-                {editingId ? 'Update Vehicle' : 'Add Vehicle'}
+                {editingId ? t.updateRecord : t.addVehicle}
               </button>
             </div>
           </form>
@@ -537,10 +533,10 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
         {vehicles.map((vehicle) => (
           <div
             key={vehicle.id}
-            className={`bg-slate-800 rounded-lg p-4 cursor-pointer transition-all ${
+            className={`bg-white dark:bg-slate-800 rounded-lg p-4 cursor-pointer transition-all ${
               vehicle.isActive
                 ? 'ring-2 ring-cyan-500 shadow-lg shadow-cyan-500/20'
-                : 'hover:bg-slate-700'
+                : 'hover:bg-slate-50 dark:hover:bg-slate-700'
             }`}
             onClick={() => onSetActive(vehicle.id)}
           >
@@ -548,10 +544,10 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
               <div className="flex items-center gap-3">
                 {renderVehicleIcon(vehicle)}
                 <div>
-                  <h3 className="font-bold text-slate-100">{vehicle.name}</h3>
-                  <p className="text-sm text-slate-400">{vehicle.type}</p>
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100">{vehicle.name}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{vehicle.type}</p>
                   {vehicle.year && vehicle.model && (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
                       {vehicle.year} {vehicle.model}
                     </p>
                   )}
@@ -559,47 +555,47 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
               </div>
               {vehicle.isActive && (
                 <span className="text-xs bg-cyan-500 text-slate-900 px-2 py-1 rounded-full font-bold">
-                  Active
+                  {t.active}
                 </span>
               )}
             </div>
 
             {/* Vehicle Details */}
-            <div className="space-y-2 text-sm text-slate-300 border-t border-slate-700 pt-3">
+            <div className="space-y-2 text-sm text-slate-700 dark:text-slate-300 border-t border-slate-200 dark:border-slate-700 pt-3">
               <div className="flex justify-between">
-                <span className="text-slate-400">Odometer:</span>
+                <span className="text-slate-500 dark:text-slate-400">{t.odometer}:</span>
                 <span className="font-semibold">{vehicle.currentOdometer.toLocaleString()} km</span>
               </div>
-              
+
               {vehicle.registrationNumber && (
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Registration:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t.registration}:</span>
                   <span className="font-mono font-semibold">{vehicle.registrationNumber}</span>
                 </div>
               )}
 
               {(vehicle.tyrePressureFront || vehicle.tyrePressureRear) && (
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Tyre Pressure:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t.tyrePressureLabel}:</span>
                   <span className="text-xs">
-                    {vehicle.tyrePressureFront && <span>F: {vehicle.tyrePressureFront} PSI</span>}
+                    {vehicle.tyrePressureFront && <span>{t.front}: {vehicle.tyrePressureFront} PSI</span>}
                     {vehicle.tyrePressureFront && vehicle.tyrePressureRear && <span className="mx-1">|</span>}
-                    {vehicle.tyrePressureRear && <span>R: {vehicle.tyrePressureRear} PSI</span>}
+                    {vehicle.tyrePressureRear && <span>{t.rear}: {vehicle.tyrePressureRear} PSI</span>}
                   </span>
                 </div>
               )}
 
               {vehicle.roadTaxExpiry && (
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Road Tax:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t.roadTax}:</span>
                   <span className={`text-xs font-semibold ${
                     isRoadTaxExpired(vehicle.roadTaxExpiry)
-                      ? 'text-red-400'
+                      ? 'text-red-500 dark:text-red-400'
                       : isRoadTaxExpiringSoon(vehicle.roadTaxExpiry)
-                      ? 'text-yellow-400'
-                      : 'text-green-400'
+                      ? 'text-yellow-500 dark:text-yellow-400'
+                      : 'text-green-500 dark:text-green-400'
                   }`}>
-                    {isRoadTaxExpired(vehicle.roadTaxExpiry) && '⚠️ Expired '}
+                    {isRoadTaxExpired(vehicle.roadTaxExpiry) && `⚠️ ${t.expired} `}
                     {isRoadTaxExpiringSoon(vehicle.roadTaxExpiry) && !isRoadTaxExpired(vehicle.roadTaxExpiry) && '⚠️ '}
                     {new Date(vehicle.roadTaxExpiry).toLocaleDateString()}
                   </span>
@@ -607,15 +603,15 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
               )}
             </div>
 
-            <div className="mt-3 flex gap-2 pt-3 border-t border-slate-700">
+            <div className="mt-3 flex gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleEdit(vehicle);
                 }}
-                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded transition-colors"
+                className="text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-3 py-1 rounded transition-colors"
               >
-                Edit
+                {t.edit}
               </button>
               {vehicles.length > 1 && (
                 <button
@@ -623,9 +619,9 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                     e.stopPropagation();
                     handleDelete(vehicle.id);
                   }}
-                  className="text-xs bg-red-900 hover:bg-red-800 text-red-300 px-3 py-1 rounded transition-colors"
+                  className="text-xs bg-red-50 dark:bg-red-900 hover:bg-red-100 dark:hover:bg-red-800 text-red-600 dark:text-red-300 px-3 py-1 rounded transition-colors"
                 >
-                  Delete
+                  {t.delete}
                 </button>
               )}
             </div>
@@ -634,8 +630,8 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
       </div>
 
       {vehicles.length === 0 && !showForm && (
-        <div className="text-center py-8 text-slate-400">
-          <p>No vehicles yet. Add your first motorcycle to get started!</p>
+        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+          <p>{t.noVehiclesMsg}</p>
         </div>
       )}
     </div>

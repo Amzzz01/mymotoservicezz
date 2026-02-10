@@ -1,0 +1,112 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if the requesting user is the document owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Helper: check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ─── Vehicles ───
+    match /vehicles/{vehicleId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update: if isAuthenticated()
+        && isOwner(resource.data.userId)
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // ─── Maintenance Records ───
+    match /maintenanceRecords/{recordId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update: if isAuthenticated()
+        && isOwner(resource.data.userId)
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // ─── Reminders ───
+    match /reminders/{reminderId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update: if isAuthenticated()
+        && isOwner(resource.data.userId)
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // ─── Mileage Logs ───
+    match /mileageLogs/{logId} {
+      // Only owners can read their own logs
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+
+      // Create: validate required and optional fields
+      allow create: if isAuthenticated()
+        && isOwner(request.resource.data.userId)
+        // Required fields
+        && request.resource.data.userId is string
+        && request.resource.data.date is string
+        && request.resource.data.odometer is number
+        && request.resource.data.odometer >= 0
+        // Optional: vehicleId
+        && (!('vehicleId' in request.resource.data) || request.resource.data.vehicleId is string)
+        // Optional: isFuelStop / isFillUp
+        && (!('isFuelStop' in request.resource.data) || request.resource.data.isFuelStop is bool)
+        && (!('isFillUp' in request.resource.data) || request.resource.data.isFillUp is bool)
+        // Optional: fuelAmount (positive number, liters)
+        && (!('fuelAmount' in request.resource.data) || (request.resource.data.fuelAmount is number && request.resource.data.fuelAmount > 0))
+        // Optional: fuelCost (positive number, RM)
+        && (!('fuelCost' in request.resource.data) || (request.resource.data.fuelCost is number && request.resource.data.fuelCost > 0))
+        // Optional: fuelPricePerLiter (positive number)
+        && (!('fuelPricePerLiter' in request.resource.data) || (request.resource.data.fuelPricePerLiter is number && request.resource.data.fuelPricePerLiter > 0))
+        // Optional: fuelType (string, max 50 chars)
+        && (!('fuelType' in request.resource.data) || (request.resource.data.fuelType is string && request.resource.data.fuelType.size() <= 50))
+        // Optional: location (string, max 200 chars)
+        && (!('location' in request.resource.data) || (request.resource.data.location is string && request.resource.data.location.size() <= 200))
+        // Optional: notes (string, max 500 chars)
+        && (!('notes' in request.resource.data) || (request.resource.data.notes is string && request.resource.data.notes.size() <= 500));
+
+      // Update: same validations + prevent userId change
+      allow update: if isAuthenticated()
+        && isOwner(resource.data.userId)
+        // Prevent userId from being changed
+        && request.resource.data.userId == resource.data.userId
+        // Required fields still valid after update
+        && request.resource.data.date is string
+        && request.resource.data.odometer is number
+        && request.resource.data.odometer >= 0
+        // Optional field validations (same as create)
+        && (!('vehicleId' in request.resource.data) || request.resource.data.vehicleId is string)
+        && (!('isFuelStop' in request.resource.data) || request.resource.data.isFuelStop is bool)
+        && (!('isFillUp' in request.resource.data) || request.resource.data.isFillUp is bool)
+        && (!('fuelAmount' in request.resource.data) || (request.resource.data.fuelAmount is number && request.resource.data.fuelAmount > 0))
+        && (!('fuelCost' in request.resource.data) || (request.resource.data.fuelCost is number && request.resource.data.fuelCost > 0))
+        && (!('fuelPricePerLiter' in request.resource.data) || (request.resource.data.fuelPricePerLiter is number && request.resource.data.fuelPricePerLiter > 0))
+        && (!('fuelType' in request.resource.data) || (request.resource.data.fuelType is string && request.resource.data.fuelType.size() <= 50))
+        && (!('location' in request.resource.data) || (request.resource.data.location is string && request.resource.data.location.size() <= 200))
+        && (!('notes' in request.resource.data) || (request.resource.data.notes is string && request.resource.data.notes.size() <= 500));
+
+      // Delete: only owner
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // ─── Announcements (read-only for users, admin-managed) ───
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Admin-only via Firebase console or Admin SDK
+    }
+
+    // ─── User Profiles (viewed announcements, preferences) ───
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+  }
+}

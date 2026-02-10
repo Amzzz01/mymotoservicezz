@@ -3,6 +3,7 @@ import { MaintenanceRecord } from './types';
 import { useFirestoreRecords } from './hooks/useFirestoreRecords';
 import { useVehicles } from './hooks/useVehicles';
 import { useReminders } from './hooks/useReminders';
+import { useMileageTracker } from './hooks/useMileageTracker';
 import MaintenanceForm from './components/MaintenanceForm';
 import MaintenanceList from './components/MaintenanceList';
 import AISuggestion from './components/AISuggestion';
@@ -10,13 +11,13 @@ import VehicleManager from './components/VehicleManager';
 import CostDashboard from './components/CostDashboard';
 import ReminderManager from './components/ReminderManager';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
+import MileageTracker from './components/MileageTracker';
 import { useAuth } from './hooks/useAuth';
 import AuthPage from './components/AuthPage';
 import { useApp } from './context/AppContext';
 import SettingsButton from './components/SettingsButton';
 import Footer from './components/Footer';
 import InstallPrompt from './components/InstallPrompt';
-// ✅ NEW IMPORTS
 import VehicleSelector from './components/VehicleSelector';
 import AnnouncementSystem from './components/AnnouncementSystem';
 
@@ -35,7 +36,7 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 function App() {
   const { currentUser, logout } = useAuth();
   const { t } = useApp();
-  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'reminders' | 'vehicles'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'mileage' | 'reminders' | 'vehicles'>('overview');
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
 
   // Custom hooks for data management
@@ -59,7 +60,30 @@ function App() {
     dismissReminder,
   } = useReminders(currentUser?.uid, activeVehicle?.id);
 
+  const {
+    logsWithDistance: mileageLogs,
+    stats: mileageStats,
+    loading: mileageLoading,
+    addLog: addMileageLog,
+    updateLog: updateMileageLog,
+    deleteLog: deleteMileageLog,
+  } = useMileageTracker(currentUser?.uid, activeVehicle?.id);
+
   const error = vehiclesError || recordsError;
+
+  const handleAddMileageLog = async (log: Parameters<typeof addMileageLog>[0]) => {
+    await addMileageLog(log);
+    if (activeVehicle && log.odometer > activeVehicle.currentOdometer) {
+      await updateVehicle(activeVehicle.id, { currentOdometer: log.odometer });
+    }
+  };
+
+  const handleUpdateMileageLog = async (id: string, updates: Parameters<typeof updateMileageLog>[1]) => {
+    await updateMileageLog(id, updates);
+    if (activeVehicle && updates.odometer && updates.odometer > activeVehicle.currentOdometer) {
+      await updateVehicle(activeVehicle.id, { currentOdometer: updates.odometer });
+    }
+  };
 
   if (!currentUser) {
     return <AuthPage />;
@@ -212,6 +236,16 @@ function App() {
           </button>
 
           <button
+            onClick={() => setActiveTab('mileage')}
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'mileage'
+              ? 'bg-amber-500 text-white shadow-lg'
+              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+              }`}
+          >
+            &#9981; {t.mileage || 'Mileage'}
+          </button>
+
+          <button
             onClick={() => setActiveTab('reminders')}
             className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'reminders'
               ? 'bg-violet-500 text-white shadow-lg'
@@ -302,6 +336,20 @@ function App() {
               activeVehicle={activeVehicle}
               onAddReminder={addReminder}
               userId={currentUser.uid}
+            />
+          )}
+
+          {activeTab === 'mileage' && (
+            <MileageTracker
+              logs={mileageLogs}
+              stats={mileageStats}
+              loading={mileageLoading}
+              activeVehicle={activeVehicle}
+              reminders={reminders}
+              maintenanceRecords={records}
+              onAddLog={handleAddMileageLog}
+              onUpdateLog={handleUpdateMileageLog}
+              onDeleteLog={deleteMileageLog}
             />
           )}
 

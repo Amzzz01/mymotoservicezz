@@ -1,5 +1,6 @@
 import React from 'react';
 import { CostSummary } from '../types';
+import { useApp } from '../context/AppContext';
 
 interface CostDashboardProps {
   costSummary: CostSummary;
@@ -19,58 +20,60 @@ const ChartIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const CostDashboard: React.FC<CostDashboardProps> = ({ costSummary }) => {
+  const { t } = useApp();
+
   const formatCurrency = (amount: number) => {
     return `RM ${amount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   return (
     <div className="mb-8">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-slate-300">Cost Overview</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-slate-700 dark:text-slate-300">{t.costOverview}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-violet-600 to-violet-800 rounded-lg p-4 shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <DollarIcon className="w-6 h-6 text-white" />
-            <h3 className="text-sm font-medium text-violet-100">Total Cost</h3>
+            <h3 className="text-sm font-medium text-violet-100">{t.totalCost}</h3>
           </div>
           <p className="text-2xl font-bold text-white">{formatCurrency(costSummary.totalCost)}</p>
-          <p className="text-xs text-violet-200 mt-1">{costSummary.recordCount} services</p>
+          <p className="text-xs text-violet-200 mt-1">{costSummary.recordCount} {t.services}</p>
         </div>
 
         <div className="bg-gradient-to-br from-cyan-600 to-cyan-800 rounded-lg p-4 shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <ChartIcon className="w-6 h-6 text-white" />
-            <h3 className="text-sm font-medium text-cyan-100">Parts Cost</h3>
+            <h3 className="text-sm font-medium text-cyan-100">{t.partsCost}</h3>
           </div>
           <p className="text-2xl font-bold text-white">{formatCurrency(costSummary.totalParts)}</p>
           <p className="text-xs text-cyan-200 mt-1">
-            {costSummary.totalCost > 0 
-              ? `${((costSummary.totalParts / costSummary.totalCost) * 100).toFixed(0)}% of total`
-              : 'No data'}
+            {costSummary.totalCost > 0
+              ? `${((costSummary.totalParts / costSummary.totalCost) * 100).toFixed(0)}% ${t.ofTotal}`
+              : t.noData}
           </p>
         </div>
 
         <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg p-4 shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <DollarIcon className="w-6 h-6 text-white" />
-            <h3 className="text-sm font-medium text-blue-100">Labor Cost</h3>
+            <h3 className="text-sm font-medium text-blue-100">{t.laborCost}</h3>
           </div>
           <p className="text-2xl font-bold text-white">{formatCurrency(costSummary.totalLabor)}</p>
           <p className="text-xs text-blue-200 mt-1">
-            {costSummary.totalCost > 0 
-              ? `${((costSummary.totalLabor / costSummary.totalCost) * 100).toFixed(0)}% of total`
-              : 'No data'}
+            {costSummary.totalCost > 0
+              ? `${((costSummary.totalLabor / costSummary.totalCost) * 100).toFixed(0)}% ${t.ofTotal}`
+              : t.noData}
           </p>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-lg p-4 shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <ChartIcon className="w-6 h-6 text-white" />
-            <h3 className="text-sm font-medium text-emerald-100">Avg per Service</h3>
+            <h3 className="text-sm font-medium text-emerald-100">{t.avgPerService}</h3>
           </div>
           <p className="text-2xl font-bold text-white">
             {formatCurrency(costSummary.averageCostPerService)}
           </p>
-          <p className="text-xs text-emerald-200 mt-1">Based on all records</p>
+          <p className="text-xs text-emerald-200 mt-1">{t.basedOnAllRecords}</p>
         </div>
       </div>
     </div>

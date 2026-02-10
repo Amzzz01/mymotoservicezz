@@ -199,3 +199,30 @@ export interface ScannedReceiptData {
   vendor?: string;        // NEW: Shop/vendor name
   mileage?: number;
 }
+
+export interface MileageLog {
+  id: string;
+  vehicleId: string;
+  userId: string;
+  date: string;           // ISO date
+  odometer: number;       // km reading
+  notes?: string;
+  // Fuel tracking (optional per entry)
+  fuelAmount?: number;    // liters
+  fuelCost?: number;      // total fuel cost (RM)
+  fuelPricePerLiter?: number;
+  isFuelStop: boolean;    // whether this entry includes a fuel fill-up
+  createdAt: string;
+}
+
+export interface MileageStats {
+  totalDistance: number;
+  avgDailyKm: number;
+  avgMonthlyKm: number;
+  // Fuel stats
+  totalFuelCost: number;
+  totalFuelLiters: number;
+  avgFuelEfficiency: number;  // km/L
+  avgFuelCostPerKm: number;
+  fuelLogCount: number;
+}

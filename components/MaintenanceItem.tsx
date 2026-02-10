@@ -1,5 +1,6 @@
 import React from 'react';
 import { MaintenanceRecord } from '../types';
+import { useApp } from '../context/AppContext';
 
 interface MaintenanceItemProps {
   record: MaintenanceRecord;
@@ -38,10 +39,11 @@ const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onEdit }) => {
+  const { t } = useApp();
   const [showDetails, setShowDetails] = React.useState(false);
   const [selectedPhoto, setSelectedPhoto] = React.useState<string | null>(null);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = React.useState<number>(0);
-  
+
   const formattedDate = new Date(record.date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -87,31 +89,31 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
 
   return (
     <>
-      <div className="bg-slate-800 rounded-lg shadow-lg p-4 sm:p-5 transition-all duration-300 hover:shadow-cyan-500/10 hover:ring-1 hover:ring-slate-700">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-4 sm:p-5 transition-all duration-300 hover:shadow-cyan-500/10 hover:ring-1 hover:ring-slate-300 dark:hover:ring-slate-700">
         <div className="flex justify-between items-start">
           <div className="flex-grow">
-              <div className="flex items-center gap-2 text-slate-200 font-semibold mb-2">
-                  <MotoIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
-                  <h3 className="text-base sm:text-lg">{record.motorcycleName || 'N/A'} <span className="text-slate-400 font-normal text-sm sm:text-base">({record.motorcycleType || 'Unknown Type'})</span></h3>
+              <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold mb-2">
+                  <MotoIcon className="w-5 h-5 text-cyan-500 dark:text-cyan-400 flex-shrink-0" />
+                  <h3 className="text-base sm:text-lg">{record.motorcycleName || 'N/A'} <span className="text-slate-500 dark:text-slate-400 font-normal text-sm sm:text-base">({record.motorcycleType || 'Unknown Type'})</span></h3>
               </div>
-              
+
               <div className="pl-7">
-                  <p className="text-slate-100 text-base sm:text-lg mb-2">{record.description}</p>
-                  <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3 text-sm text-slate-400">
+                  <p className="text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2">{record.description}</p>
+                  <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3 text-sm text-slate-500 dark:text-slate-400">
                       <div className="flex items-center gap-1.5">
-                          <CalendarIcon className="w-4 h-4 text-slate-500" />
+                          <CalendarIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                           <span>{formattedDate}</span>
                       </div>
-                      <span className="text-slate-600 hidden sm:inline">|</span>
+                      <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">|</span>
                       <div className="flex items-center gap-1.5">
-                          <GaugeIcon className="w-4 h-4 text-slate-500" />
+                          <GaugeIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                           <span>{record.kilometers.toLocaleString('en-US')} km</span>
                       </div>
                       {(record.partsCost || record.laborCost) && (
                         <>
-                          <span className="text-slate-600 hidden sm:inline">|</span>
+                          <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">|</span>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-cyan-400 font-semibold">
+                            <span className="text-cyan-600 dark:text-cyan-400 font-semibold">
                               RM {((record.partsCost || 0) + (record.laborCost || 0)).toFixed(2)}
                             </span>
                           </div>
@@ -123,63 +125,63 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
                     <div className="mt-3">
                       <button
                         onClick={() => setShowDetails(!showDetails)}
-                        className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
+                        className="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors flex items-center gap-1"
                       >
-                        {showDetails ? '▼' : '▶'} {showDetails ? 'Hide Details' : 'View Details'}
+                        {showDetails ? '▼' : '▶'} {showDetails ? t.hideDetails : t.viewDetails}
                       </button>
                     </div>
                   )}
 
                   {showDetails && hasAdditionalInfo && (
-                    <div className="mt-4 pt-4 border-t border-slate-700 space-y-3">
+                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
                       {(record.partsCost || record.laborCost) && (
-                        <div className="bg-slate-900/50 rounded-md p-3">
-                          <h4 className="text-sm font-semibold text-slate-300 mb-2">Cost Breakdown</h4>
+                        <div className="bg-slate-50 dark:bg-slate-900/50 rounded-md p-3">
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t.costBreakdown}</h4>
                           <div className="space-y-1 text-sm">
                             {record.partsCost && (
                               <div className="flex justify-between">
-                                <span className="text-slate-400">Parts:</span>
-                                <span className="text-slate-200 font-medium">RM {record.partsCost.toFixed(2)}</span>
+                                <span className="text-slate-500 dark:text-slate-400">{t.parts}:</span>
+                                <span className="text-slate-800 dark:text-slate-200 font-medium">RM {record.partsCost.toFixed(2)}</span>
                               </div>
                             )}
                             {record.laborCost && (
                               <div className="flex justify-between">
-                                <span className="text-slate-400">Labor:</span>
-                                <span className="text-slate-200 font-medium">RM {record.laborCost.toFixed(2)}</span>
+                                <span className="text-slate-500 dark:text-slate-400">{t.labor}:</span>
+                                <span className="text-slate-800 dark:text-slate-200 font-medium">RM {record.laborCost.toFixed(2)}</span>
                               </div>
                             )}
-                            <div className="flex justify-between pt-2 border-t border-slate-700">
-                              <span className="text-slate-300 font-semibold">Total:</span>
-                              <span className="text-cyan-400 font-bold">RM {((record.partsCost || 0) + (record.laborCost || 0)).toFixed(2)}</span>
+                            <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
+                              <span className="text-slate-700 dark:text-slate-300 font-semibold">{t.total}:</span>
+                              <span className="text-cyan-600 dark:text-cyan-400 font-bold">RM {((record.partsCost || 0) + (record.laborCost || 0)).toFixed(2)}</span>
                             </div>
                           </div>
                         </div>
                       )}
 
                       {record.notes && (
-                        <div className="bg-slate-900/50 rounded-md p-3">
-                          <h4 className="text-sm font-semibold text-slate-300 mb-2">Notes</h4>
-                          <p className="text-sm text-slate-400 whitespace-pre-wrap">{record.notes}</p>
+                        <div className="bg-slate-50 dark:bg-slate-900/50 rounded-md p-3">
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t.notes}</h4>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 whitespace-pre-wrap">{record.notes}</p>
                         </div>
                       )}
 
                       {record.photos && record.photos.length > 0 && (
-                        <div className="bg-slate-900/50 rounded-md p-3">
-                          <h4 className="text-sm font-semibold text-slate-300 mb-2">Photos ({record.photos.length})</h4>
+                        <div className="bg-slate-50 dark:bg-slate-900/50 rounded-md p-3">
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t.photos} ({record.photos.length})</h4>
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                             {record.photos.map((photo, index) => (
-                              <div 
-                                key={index} 
+                              <div
+                                key={index}
                                 className="relative group cursor-pointer"
                                 onClick={() => handlePhotoClick(photo, index)}
                               >
-                                <img 
-                                  src={photo} 
-                                  alt={`Service photo ${index + 1}`} 
+                                <img
+                                  src={photo}
+                                  alt={`${t.photos} ${index + 1}`}
                                   className="w-full h-24 object-cover rounded-md hover:opacity-80 transition-opacity"
                                 />
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
-                                  <span className="text-white text-xs font-medium">Click to view</span>
+                                  <span className="text-white text-xs font-medium">{t.clickToView}</span>
                                 </div>
                               </div>
                             ))}
@@ -193,15 +195,15 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
           <div className="flex gap-2 flex-shrink-0 ml-2">
             <button
               onClick={() => onEdit(record)}
-              className="text-slate-500 hover:text-blue-400 transition-colors p-1 rounded-full"
-              aria-label="Edit record"
+              className="text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors p-1 rounded-full"
+              aria-label={t.edit}
             >
               <EditIcon className="w-5 h-5" />
             </button>
             <button
               onClick={() => onDelete(record.id)}
-              className="text-slate-500 hover:text-red-400 transition-colors p-1 rounded-full"
-              aria-label="Delete record"
+              className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 rounded-full"
+              aria-label={t.delete}
             >
               <TrashIcon className="w-5 h-5" />
             </button>
@@ -210,7 +212,7 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
       </div>
 
       {selectedPhoto && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={handleCloseModal}
         >
@@ -218,7 +220,7 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
             <button
               onClick={handleCloseModal}
               className="absolute -top-12 right-0 text-white hover:text-cyan-400 transition-colors z-10"
-              aria-label="Close"
+              aria-label={t.close}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -227,14 +229,14 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
 
             {record.photos && record.photos.length > 1 && (
               <div className="absolute -top-12 left-0 text-white text-sm">
-                Photo {selectedPhotoIndex + 1} of {record.photos.length}
+                {t.photos} {selectedPhotoIndex + 1} {t.photoOf} {record.photos.length}
               </div>
             )}
 
             <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <img 
-                src={selectedPhoto} 
-                alt="Service photo" 
+              <img
+                src={selectedPhoto}
+                alt={`${t.photos} ${selectedPhotoIndex + 1}`}
                 className="max-w-full max-h-[80vh] object-contain rounded-lg"
               />
 
@@ -244,7 +246,7 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
                     <button
                       onClick={handlePrevPhoto}
                       className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
-                      aria-label="Previous photo"
+                      aria-label={t.previousPhoto}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -255,7 +257,7 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
                     <button
                       onClick={handleNextPhoto}
                       className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
-                      aria-label="Next photo"
+                      aria-label={t.nextPhoto}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -272,7 +274,7 @@ const MaintenanceItem: React.FC<MaintenanceItemProps> = ({ record, onDelete, onE
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Download
+                {t.download}
               </button>
             </div>
           </div>

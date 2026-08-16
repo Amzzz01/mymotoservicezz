@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { MaintenanceRecord, Vehicle, Reminder } from '../types';
 import { useApp } from '../context/AppContext';
+import Spinner from './Spinner';
 import {
   LineChart,
   Line,
@@ -533,7 +534,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                           >
                             {isAdding ? (
                               <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <Spinner size="sm" variant="white" />
                                 Adding...
                               </>
                             ) : successMsg ? (

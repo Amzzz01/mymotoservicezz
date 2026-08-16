@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { MaintenanceRecord, Reminder, Vehicle } from '../types';
+import Spinner from './Spinner';
 
 interface AISuggestionProps {
   records: MaintenanceRecord[];
@@ -234,7 +235,7 @@ const AISuggestion: React.FC<AISuggestionProps> = ({ records, activeVehicle, onA
                             >
                                 {isAddingReminders ? (
                                     <>
-                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <Spinner size="sm" variant="white" />
                                         Adding to Reminders...
                                     </>
                                 ) : (

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { MileageLog, MileageStats, MaintenanceRecord, Vehicle, Reminder } from '../types';
 import { useApp } from '../context/AppContext';
+import SkeletonList from './SkeletonList';
 
 interface MileageTrackerProps {
   logs: (MileageLog & { distanceSinceLast: number | null })[];
@@ -413,9 +414,7 @@ const MileageTracker: React.FC<MileageTrackerProps> = ({
         </h3>
 
         {loading ? (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-            <p>{t.loadingRecords || 'Loading...'}</p>
-          </div>
+          <SkeletonList count={3} />
         ) : logs.length === 0 ? (
           <div className="text-center py-8 text-slate-400 dark:text-slate-500">
             <p className="text-4xl mb-3">&#9981;</p>

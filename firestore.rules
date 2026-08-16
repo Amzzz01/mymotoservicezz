@@ -97,6 +97,30 @@ service cloud.firestore {
       // Delete: only owner
       allow delete: if isAuthenticated() && isOwner(resource.data.userId);
     }
+    
+    // ─── Receipt Scan Quota (global monthly counter) ───
+    match /receiptScans/{monthKey} {
+      // Any authenticated user can read the current quota status
+      allow read: if isAuthenticated();
+
+      // Create: only a fresh quota doc for a new month
+      allow create: if isAuthenticated()
+        && request.resource.data.month is string
+        && request.resource.data.scansUsed is number
+        && request.resource.data.scansUsed == 0
+        && request.resource.data.limit is number
+        && request.resource.data.limit > 0;
+
+      // Update: only allow incrementing scansUsed by exactly 1,
+      // and never allow limit or month to be changed
+      allow update: if isAuthenticated()
+        && request.resource.data.month == resource.data.month
+        && request.resource.data.limit == resource.data.limit
+        && request.resource.data.scansUsed == resource.data.scansUsed + 1;
+
+      // No delete: keep historical quota records
+      allow delete: if false;
+    }
 
     // ─── Announcements (read-only for users, admin-managed) ───
     match /announcements/{announcementId} {

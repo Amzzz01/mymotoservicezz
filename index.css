@@ -75,6 +75,62 @@
 }
 
 /* ======================================
+   LOADING SCREEN ANIMATIONS
+   ====================================== */
+
+/* Circular progress ring - draws itself in a loop (circumference for r=51) */
+@keyframes loading-ring-draw {
+  0% {
+    stroke-dashoffset: 320.4;
+  }
+  60% {
+    stroke-dashoffset: 0;
+  }
+  85% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 320.4;
+  }
+}
+
+.animate-loading-ring {
+  animation: loading-ring-draw 2.2s ease-in-out infinite;
+}
+
+/* Logo breathing pulse, synced with the ring's 2.2s cycle */
+@keyframes logo-breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+.animate-logo-breathe {
+  animation: logo-breathe 2.2s ease-in-out infinite;
+}
+
+/* Odometer digit column - scrolls through 0-9 in a seamless loop */
+@keyframes odometer-spin {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-150px);
+  }
+}
+
+.animate-odometer-spin {
+  animation-name: odometer-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* ======================================
    GLOBAL STYLES
    ====================================== */
 

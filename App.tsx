@@ -20,6 +20,7 @@ import Footer from './components/Footer';
 import InstallPrompt from './components/InstallPrompt';
 import VehicleSelector from './components/VehicleSelector';
 import AnnouncementSystem from './components/AnnouncementSystem';
+import SkeletonList from './components/SkeletonList';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -300,9 +301,7 @@ function App() {
                     userId={currentUser.uid}
                   />
                   {recordsLoading ? (
-                    <div className="text-center py-8 text-slate-600 dark:text-slate-400">
-                      <p>{t.loadingRecords}</p>
-                    </div>
+                    <SkeletonList count={3} />
                   ) : (
                     <MaintenanceList
                       records={records}

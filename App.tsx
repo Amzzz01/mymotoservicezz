@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MaintenanceRecord } from './types';
 import { useFirestoreRecords } from './hooks/useFirestoreRecords';
 import { useVehicles } from './hooks/useVehicles';
@@ -22,6 +22,7 @@ import VehicleSelector from './components/VehicleSelector';
 import AnnouncementSystem from './components/AnnouncementSystem';
 import SkeletonList from './components/SkeletonList';
 import Spinner from './components/Spinner';
+import LoadingScreen from './components/LoadingScreen';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -36,13 +37,27 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 function App() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, loading: authLoading } = useAuth();
   const { t } = useApp();
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'mileage' | 'reminders' | 'vehicles'>('overview');
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
 
   // Custom hooks for data management
   const { vehicles, activeVehicle, addVehicle, updateVehicle, deleteVehicle, setActive, loading: vehiclesLoading, error: vehiclesError } = useVehicles(currentUser?.uid);
+
+  // Splash stays up until auth AND the first vehicles fetch are both ready.
+  // hasBootedRef latches so later vehiclesLoading flips (add/delete vehicle) never re-show it.
+  const appReady = !authLoading && !vehiclesLoading;
+  const hasBootedRef = useRef(false);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    if (appReady && !hasBootedRef.current) {
+      hasBootedRef.current = true;
+      const timer = setTimeout(() => setShowSplash(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [appReady]);
 
   const {
     records,
@@ -87,8 +102,17 @@ function App() {
     }
   };
 
+  if (!appReady) {
+    return <LoadingScreen fadeOut={false} />;
+  }
+
   if (!currentUser) {
-    return <AuthPage />;
+    return (
+      <>
+        {showSplash && <LoadingScreen fadeOut={appReady} />}
+        <AuthPage />
+      </>
+    );
   }
 
   const handleAddRecord = async (record: Omit<MaintenanceRecord, 'id'>) => {
@@ -166,7 +190,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 font-sans transition-colors duration-200">
+    <>
+      {showSplash && <LoadingScreen fadeOut={appReady} />}
+      <div className="min-h-screen bg-slate-100 dark:bg-slate-900 font-sans transition-colors duration-200">
       <header className="bg-white/80 dark:bg-slate-800/50 backdrop-blur-sm p-3 sm:p-4 sticky top-0 z-10 shadow-md dark:shadow-slate-900/50 transition-colors duration-200">
         <div className="container mx-auto flex items-center justify-between gap-2">
           {/* Logo and Title - Mobile optimized */}
@@ -388,7 +414,8 @@ function App() {
       <Footer />
 
       <InstallPrompt />
-    </div>
+      </div>
+    </>
   );
 }
 

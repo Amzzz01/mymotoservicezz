@@ -215,6 +215,9 @@ export interface Translations {
   welcomeMessage: string;
   getStarted: string;
 
+  // Splash Screen
+  splashLoadingData: string;
+
   // Settings
   darkMode: string;
   lightMode: string;
@@ -511,6 +514,9 @@ export const translations: Record<Language, Translations> = {
     welcomeMessage: 'Get started by adding your first vehicle.',
     getStarted: 'Get Started',
 
+    // Splash Screen
+    splashLoadingData: 'Loading your data',
+
     // Settings
     darkMode: 'Dark Mode',
     lightMode: 'Light Mode',
@@ -804,6 +810,9 @@ export const translations: Record<Language, Translations> = {
     welcomeTitle: 'Selamat Datang ke MyMotoLog!',
     welcomeMessage: 'Mulakan dengan menambah kenderaan pertama anda.',
     getStarted: 'Mula',
+
+    // Splash Screen
+    splashLoadingData: 'Memuatkan data anda',
 
     // Settings
     darkMode: 'Mod Gelap',

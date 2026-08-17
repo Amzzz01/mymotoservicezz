@@ -123,6 +123,7 @@ export interface Translations {
   failedSaveVehicle: string;
   confirmDeleteVehicle: string;
   failedDeleteVehicle: string;
+  manageVehicles: string;
 
   // Reminders
   maintenanceReminders: string;
@@ -217,6 +218,16 @@ export interface Translations {
 
   // Splash Screen
   splashLoadingData: string;
+
+  // Overview
+  nextService: string;
+  vehicleInfo: string;
+  recentServiceHistory: string;
+  viewAll: string;
+
+  // Service History
+  searchRecords: string;
+  noSearchResults: string;
 
   // Settings
   darkMode: string;
@@ -421,6 +432,7 @@ export const translations: Record<Language, Translations> = {
     tyrePressureRearInvalid: 'Rear tyre pressure must be between 0 and 100 PSI.',
     failedSaveVehicle: 'Failed to save vehicle. Please try again.',
     confirmDeleteVehicle: 'Are you sure you want to delete this vehicle? All associated maintenance records and reminders will also be deleted.',
+    manageVehicles: 'Manage vehicles',
     failedDeleteVehicle: 'Failed to delete vehicle. Please try again.',
 
     // Reminders
@@ -516,6 +528,16 @@ export const translations: Record<Language, Translations> = {
 
     // Splash Screen
     splashLoadingData: 'Loading your data',
+
+    // Overview
+    nextService: 'Next Service',
+    vehicleInfo: 'Vehicle Info',
+    recentServiceHistory: 'Recent Service History',
+    viewAll: 'View All',
+
+    // Service History
+    searchRecords: 'Search by description or notes...',
+    noSearchResults: 'No records match your search.',
 
     // Settings
     darkMode: 'Dark Mode',
@@ -718,6 +740,7 @@ export const translations: Record<Language, Translations> = {
     tyrePressureRearInvalid: 'Tekanan tayar belakang mesti antara 0 dan 100 PSI.',
     failedSaveVehicle: 'Gagal menyimpan kenderaan. Sila cuba lagi.',
     confirmDeleteVehicle: 'Adakah anda pasti mahu memadamkan kenderaan ini? Semua rekod penyelenggaraan dan peringatan berkaitan juga akan dipadam.',
+    manageVehicles: 'Urus kenderaan',
     failedDeleteVehicle: 'Gagal memadamkan kenderaan. Sila cuba lagi.',
 
     // Reminders
@@ -813,6 +836,16 @@ export const translations: Record<Language, Translations> = {
 
     // Splash Screen
     splashLoadingData: 'Memuatkan data anda',
+
+    // Overview
+    nextService: 'Servis Seterusnya',
+    vehicleInfo: 'Maklumat Kenderaan',
+    recentServiceHistory: 'Sejarah Servis Terkini',
+    viewAll: 'Lihat Semua',
+
+    // Service History
+    searchRecords: 'Cari mengikut penerangan atau nota...',
+    noSearchResults: 'Tiada rekod sepadan dengan carian anda.',
 
     // Settings
     darkMode: 'Mod Gelap',

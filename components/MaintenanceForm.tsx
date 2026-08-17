@@ -10,6 +10,10 @@ interface MaintenanceFormProps {
   activeVehicle: Vehicle | null;
   editingRecord?: MaintenanceRecord | null;
   onCancelEdit?: () => void;
+  /** Nonce from the FAB quick-action sheet: opens the choice screen (Add record) when it changes. */
+  openChoiceTrigger?: number;
+  /** Nonce from the FAB quick-action sheet: opens the receipt scanner directly (Scan receipt) when it changes. */
+  openScannerTrigger?: number;
 }
 
 const PlusIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -48,7 +52,9 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
   vehicles,
   activeVehicle,
   editingRecord = null,
-  onCancelEdit
+  onCancelEdit,
+  openChoiceTrigger,
+  openScannerTrigger
 }) => {
   const { t } = useApp();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -79,6 +85,24 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
       setError('');
     }
   }, [editingRecord]);
+
+  // FAB "Add record" quick action: open the same choice screen the inline button opens.
+  useEffect(() => {
+    if (openChoiceTrigger) {
+      setShowChoiceScreen(true);
+      setIsFormVisible(false);
+      setShowReceiptScanner(false);
+    }
+  }, [openChoiceTrigger]);
+
+  // FAB "Scan receipt" quick action: skip the choice screen and open the scanner directly.
+  useEffect(() => {
+    if (openScannerTrigger) {
+      setShowChoiceScreen(false);
+      setIsFormVisible(false);
+      setShowReceiptScanner(true);
+    }
+  }, [openScannerTrigger]);
 
   const handleReceiptScanned = (data: ParsedReceiptData, imageFile: File) => {
     // Pre-fill form with scanned data
@@ -230,9 +254,10 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
 
   return (
     <div className="mb-8">
-      {/* Single "Add Maintenance Record" Button - Shows First */}
+      {/* Single "Add Maintenance Record" Button - Shows First. Desktop/tablet only:
+          on mobile this is redundant with the BottomNav FAB, which has no md+ equivalent yet. */}
       {!isFormVisible && !showReceiptScanner && !showChoiceScreen ? (
-        <div className="text-center">
+        <div className="hidden md:block text-center">
           <button
             onClick={() => setShowChoiceScreen(true)}
             className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg shadow-lg shadow-cyan-500/20 transition-all duration-300 transform hover:scale-105 text-sm sm:text-base"

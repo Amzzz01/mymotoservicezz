@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Vehicle } from '../types';
+import { useApp } from '../context/AppContext';
 
 interface VehicleSelectorProps {
   vehicles: Vehicle[];
   activeVehicle: Vehicle | null;
   onSelectVehicle: (vehicleId: string) => Promise<void>;
+  onManageVehicles: () => void;
 }
 
 const MotorcycleIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -20,11 +22,20 @@ const CheckIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+const SettingsIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
 const VehicleSelector: React.FC<VehicleSelectorProps> = ({
   vehicles,
   activeVehicle,
-  onSelectVehicle
+  onSelectVehicle,
+  onManageVehicles
 }) => {
+  const { t } = useApp();
   const [showModal, setShowModal] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -137,6 +148,20 @@ const VehicleSelector: React.FC<VehicleSelectorProps> = ({
               );
             })}
           </div>
+
+          {/* Manage Vehicles */}
+          <div className="border-t border-slate-200 dark:border-slate-700 p-4">
+            <button
+              onClick={() => {
+                setShowModal(false);
+                onManageVehicles();
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl min-h-[44px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium transition-colors"
+            >
+              <SettingsIcon className="w-5 h-5" />
+              {t.manageVehicles}
+            </button>
+          </div>
         </div>
       </div>
     </>
@@ -144,37 +169,23 @@ const VehicleSelector: React.FC<VehicleSelectorProps> = ({
 
   return (
     <>
-      {/* Vehicle Selector Button */}
+      {/* Vehicle Selector Button - icon-only, consistent with the other header icon buttons */}
       <button
         onClick={() => setShowModal(true)}
-        className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors"
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors"
         aria-label="Select Vehicle"
       >
         {activeVehicle?.iconType === 'emoji' && activeVehicle.customIcon ? (
-          <span className="text-2xl">{activeVehicle.customIcon}</span>
+          <span className="text-2xl leading-none">{activeVehicle.customIcon}</span>
         ) : activeVehicle?.iconType === 'image' && activeVehicle.customIcon ? (
-          <img 
-            src={activeVehicle.customIcon} 
+          <img
+            src={activeVehicle.customIcon}
             alt={activeVehicle.name}
             className="w-6 h-6 rounded-full object-cover"
           />
         ) : (
-          <MotorcycleIcon className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+          <MotorcycleIcon className="w-5 h-5" />
         )}
-        <div className="hidden lg:block text-left">
-          <div className="text-xs text-slate-500 dark:text-slate-400">Active Vehicle</div>
-          <div className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
-            {activeVehicle?.name || 'Select Vehicle'}
-          </div>
-        </div>
-        <svg 
-          className="w-4 h-4 text-slate-500 dark:text-slate-400 hidden lg:block" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
       </button>
 
       {/* Render modal at document.body level using Portal */}

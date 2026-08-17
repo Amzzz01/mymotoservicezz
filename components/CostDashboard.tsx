@@ -13,9 +13,27 @@ const DollarIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const ChartIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
-    <path fillRule="evenodd" d="M1 11.27c0-.246.033-.492.099-.73l1.523-5.521A2.75 2.75 0 015.273 3h9.454a2.75 2.75 0 012.651 2.019l1.523 5.52c.066.239.099.485.099.731V15a2 2 0 01-2 2H3a2 2 0 01-2-2v-3.73zm3.068-5.852A1.25 1.25 0 015.273 4.5h9.454a1.25 1.25 0 011.205.918l1.523 5.52c.006.02.01.041.015.062H14a1 1 0 00-.86.49l-.606 1.02a1 1 0 01-.86.49H8.236a1 1 0 01-.894-.553l-.448-.894A1 1 0 006 11H2.53l.015-.062 1.523-5.52z" clipRule="evenodd" />
+const ToolIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <g transform="rotate(45 12 12)">
+      <rect x="10.5" y="4" width="3" height="10" rx="1.5" strokeWidth={2} />
+      <circle cx="12" cy="17" r="3" strokeWidth={2} />
+    </g>
+  </svg>
+);
+
+const UserIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <circle cx="12" cy="8" r="3" strokeWidth={2} />
+    <path d="M6 20a6 6 0 0112 0" strokeWidth={2} strokeLinecap="round" />
+  </svg>
+);
+
+const ReceiptIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <rect x="7" y="4" width="10" height="15" rx="1" strokeWidth={2} />
+    <line x1="9.5" y1="9" x2="14.5" y2="9" strokeWidth={2} strokeLinecap="round" />
+    <line x1="9.5" y1="13" x2="14.5" y2="13" strokeWidth={2} strokeLinecap="round" />
   </svg>
 );
 
@@ -29,51 +47,51 @@ const CostDashboard: React.FC<CostDashboardProps> = ({ costSummary }) => {
   return (
     <div className="mb-8">
       <h2 className="text-xl sm:text-2xl font-bold mb-4 text-slate-700 dark:text-slate-300">{t.costOverview}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-violet-600 to-violet-800 rounded-lg p-4 shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarIcon className="w-6 h-6 text-white" />
-            <h3 className="text-sm font-medium text-violet-100">{t.totalCost}</h3>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4">
+          <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
+            <DollarIcon className="w-5 h-5" />
+            <h3 className="text-xs font-medium">{t.totalCost}</h3>
           </div>
-          <p className="text-2xl font-bold text-white">{formatCurrency(costSummary.totalCost)}</p>
-          <p className="text-xs text-violet-200 mt-1">{costSummary.recordCount} {t.services}</p>
+          <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{formatCurrency(costSummary.totalCost)}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{costSummary.recordCount} {t.services}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-cyan-600 to-cyan-800 rounded-lg p-4 shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <ChartIcon className="w-6 h-6 text-white" />
-            <h3 className="text-sm font-medium text-cyan-100">{t.partsCost}</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4">
+          <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
+            <ToolIcon className="w-5 h-5" />
+            <h3 className="text-xs font-medium">{t.partsCost}</h3>
           </div>
-          <p className="text-2xl font-bold text-white">{formatCurrency(costSummary.totalParts)}</p>
-          <p className="text-xs text-cyan-200 mt-1">
+          <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{formatCurrency(costSummary.totalParts)}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {costSummary.totalCost > 0
               ? `${((costSummary.totalParts / costSummary.totalCost) * 100).toFixed(0)}% ${t.ofTotal}`
               : t.noData}
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg p-4 shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarIcon className="w-6 h-6 text-white" />
-            <h3 className="text-sm font-medium text-blue-100">{t.laborCost}</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4">
+          <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
+            <UserIcon className="w-5 h-5" />
+            <h3 className="text-xs font-medium">{t.laborCost}</h3>
           </div>
-          <p className="text-2xl font-bold text-white">{formatCurrency(costSummary.totalLabor)}</p>
-          <p className="text-xs text-blue-200 mt-1">
+          <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{formatCurrency(costSummary.totalLabor)}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {costSummary.totalCost > 0
               ? `${((costSummary.totalLabor / costSummary.totalCost) * 100).toFixed(0)}% ${t.ofTotal}`
               : t.noData}
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-lg p-4 shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <ChartIcon className="w-6 h-6 text-white" />
-            <h3 className="text-sm font-medium text-emerald-100">{t.avgPerService}</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4">
+          <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
+            <ReceiptIcon className="w-5 h-5" />
+            <h3 className="text-xs font-medium">{t.avgPerService}</h3>
           </div>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
             {formatCurrency(costSummary.averageCostPerService)}
           </p>
-          <p className="text-xs text-emerald-200 mt-1">{t.basedOnAllRecords}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t.basedOnAllRecords}</p>
         </div>
       </div>
     </div>

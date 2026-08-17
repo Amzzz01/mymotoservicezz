@@ -5,10 +5,7 @@ import { useVehicles } from './hooks/useVehicles';
 import { useReminders } from './hooks/useReminders';
 import { useMileageTracker } from './hooks/useMileageTracker';
 import MaintenanceForm from './components/MaintenanceForm';
-import MaintenanceList from './components/MaintenanceList';
 import AISuggestion from './components/AISuggestion';
-import VehicleManager from './components/VehicleManager';
-import CostDashboard from './components/CostDashboard';
 import ReminderManager from './components/ReminderManager';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import MileageTracker from './components/MileageTracker';
@@ -19,10 +16,13 @@ import SettingsButton from './components/SettingsButton';
 import Footer from './components/Footer';
 import InstallPrompt from './components/InstallPrompt';
 import VehicleSelector from './components/VehicleSelector';
+import VehicleManagerModal from './components/VehicleManagerModal';
 import AnnouncementSystem from './components/AnnouncementSystem';
-import SkeletonList from './components/SkeletonList';
 import Spinner from './components/Spinner';
 import LoadingScreen from './components/LoadingScreen';
+import BottomNav, { MainTab, QuickAction } from './components/BottomNav';
+import Overview from './components/Overview';
+import ServiceHistory from './components/ServiceHistory';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -39,8 +39,15 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 function App() {
   const { currentUser, logout, loading: authLoading } = useAuth();
   const { t } = useApp();
-  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'mileage' | 'reminders' | 'vehicles'>('overview');
+  const [activeTab, setActiveTab] = useState<MainTab | 'history'>('overview');
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
+  const [showVehicleManager, setShowVehicleManager] = useState(false);
+
+  // FAB quick-action triggers: each is a nonce that increments on every tap, so the
+  // target component's effect fires whether it's already mounted or remounting fresh.
+  const [openChoiceTrigger, setOpenChoiceTrigger] = useState(0);
+  const [openScannerTrigger, setOpenScannerTrigger] = useState(0);
+  const [openReminderFormTrigger, setOpenReminderFormTrigger] = useState(0);
 
   // Custom hooks for data management
   const { vehicles, activeVehicle, addVehicle, updateVehicle, deleteVehicle, setActive, loading: vehiclesLoading, error: vehiclesError } = useVehicles(currentUser?.uid);
@@ -64,7 +71,6 @@ function App() {
     addRecord,
     updateRecord,
     deleteRecord,
-    loading: recordsLoading,
     error: recordsError,
     costSummary
   } = useFirestoreRecords(currentUser?.uid, activeVehicle?.id);
@@ -170,6 +176,8 @@ function App() {
 
   const handleEditRecord = (record: MaintenanceRecord) => {
     setEditingRecord(record);
+    // MaintenanceForm only renders on the overview tab - jump there so the edit form is visible
+    setActiveTab('overview');
     // Scroll to top to show the form
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -189,10 +197,24 @@ function App() {
     }
   };
 
+  const handleQuickAction = (action: QuickAction) => {
+    if (action === 'addReminder') {
+      setActiveTab('reminders');
+      setOpenReminderFormTrigger(n => n + 1);
+    } else {
+      setActiveTab('overview');
+      if (action === 'addRecord') {
+        setOpenChoiceTrigger(n => n + 1);
+      } else {
+        setOpenScannerTrigger(n => n + 1);
+      }
+    }
+  };
+
   return (
     <>
       {showSplash && <LoadingScreen fadeOut={appReady} />}
-      <div className="min-h-screen bg-slate-100 dark:bg-slate-900 font-sans transition-colors duration-200">
+      <div className="min-h-screen min-h-[100dvh] bg-slate-100 dark:bg-slate-900 font-sans transition-colors duration-200">
       <header className="bg-white/80 dark:bg-slate-800/50 backdrop-blur-sm p-3 sm:p-4 sticky top-0 z-10 shadow-md dark:shadow-slate-900/50 transition-colors duration-200">
         <div className="container mx-auto flex items-center justify-between gap-2">
           {/* Logo and Title - Mobile optimized */}
@@ -214,6 +236,7 @@ function App() {
               vehicles={vehicles}
               activeVehicle={activeVehicle}
               onSelectVehicle={setActive}
+              onManageVehicles={() => setShowVehicleManager(true)}
             />
 
             {/* User email - hide on mobile */}
@@ -240,8 +263,8 @@ function App() {
         </div>
       </header>
 
-      {/* Tab Navigation - Mobile optimized with horizontal scroll */}
-      <div className="container mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
+      {/* Tab Navigation - Desktop/tablet only; mobile uses BottomNav instead */}
+      <div className="hidden md:block container mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
         <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 scrollbar-hide">
           <button
             onClick={() => setActiveTab('overview')}
@@ -287,20 +310,10 @@ function App() {
               </span>
             )}
           </button>
-
-          <button
-            onClick={() => setActiveTab('vehicles')}
-            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${activeTab === 'vehicles'
-              ? 'bg-emerald-500 text-white shadow-lg'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
-              }`}
-          >
-            🏍️ {t.vehicles} ({vehicles.length})
-          </button>
         </div>
       </div>
 
-      <main className="container mx-auto p-3 sm:p-6 md:p-8">
+      <main className="container mx-auto p-3 sm:p-6 md:p-8 pb-24 md:pb-8">
         <div className="max-w-6xl mx-auto">
           {error && (
             <div className="bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-300 px-4 py-3 rounded-lg mb-4 text-sm sm:text-base">
@@ -316,7 +329,12 @@ function App() {
                 </div>
               ) : activeVehicle ? (
                 <>
-                  <CostDashboard costSummary={costSummary} />
+                  <Overview
+                    records={records}
+                    activeVehicle={activeVehicle}
+                    costSummary={costSummary}
+                    onViewAll={() => setActiveTab('history')}
+                  />
                   <MaintenanceForm
                     onAddRecord={handleAddRecord}
                     onUpdateRecord={handleUpdateRecord}
@@ -324,6 +342,8 @@ function App() {
                     activeVehicle={activeVehicle}
                     editingRecord={editingRecord}
                     onCancelEdit={handleCancelEdit}
+                    openChoiceTrigger={openChoiceTrigger}
+                    openScannerTrigger={openScannerTrigger}
                   />
                   <AISuggestion
                     records={records}
@@ -331,15 +351,6 @@ function App() {
                     onAddReminder={addReminder}
                     userId={currentUser.uid}
                   />
-                  {recordsLoading ? (
-                    <SkeletonList count={3} />
-                  ) : (
-                    <MaintenanceList
-                      records={records}
-                      onDeleteRecord={handleDeleteRecord}
-                      onEditRecord={handleEditRecord}
-                    />
-                  )}
                 </>
               ) : (
                 <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow-md">
@@ -350,7 +361,7 @@ function App() {
                     {t.welcomeMessage}
                   </p>
                   <button
-                    onClick={() => setActiveTab('vehicles')}
+                    onClick={() => setShowVehicleManager(true)}
                     className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
                   >
                     {t.addFirstVehicle}
@@ -393,27 +404,47 @@ function App() {
               onDeleteReminder={deleteReminder}
               onDismissReminder={dismissReminder}
               userId={currentUser.uid}
+              openFormTrigger={openReminderFormTrigger}
             />
           )}
 
-          {activeTab === 'vehicles' && (
-            <VehicleManager
-              vehicles={vehicles}
-              activeVehicle={activeVehicle}
-              onAddVehicle={addVehicle}
-              onUpdateVehicle={updateVehicle}
-              onDeleteVehicle={deleteVehicle}
-              onSetActive={setActive}
-              userId={currentUser.uid}
+          {activeTab === 'history' && (
+            <ServiceHistory
               records={records}
+              onEditRecord={handleEditRecord}
+              onDeleteRecord={handleDeleteRecord}
+              onBack={() => setActiveTab('overview')}
             />
           )}
         </div>
       </main>
 
-      <Footer />
+      <BottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        reminderCount={reminders.filter(r => !r.dismissed && r.isActive).length}
+        onQuickAction={handleQuickAction}
+      />
+
+      <div className="pb-20 md:pb-0">
+        <Footer />
+      </div>
 
       <InstallPrompt />
+
+      {showVehicleManager && (
+        <VehicleManagerModal
+          vehicles={vehicles}
+          activeVehicle={activeVehicle}
+          onAddVehicle={addVehicle}
+          onUpdateVehicle={updateVehicle}
+          onDeleteVehicle={deleteVehicle}
+          onSetActive={setActive}
+          userId={currentUser.uid}
+          records={records}
+          onClose={() => setShowVehicleManager(false)}
+        />
+      )}
       </div>
     </>
   );

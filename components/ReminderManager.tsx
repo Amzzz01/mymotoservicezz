@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Reminder, Vehicle } from '../types';
 import { useApp } from '../context/AppContext';
 
@@ -11,6 +11,8 @@ interface ReminderManagerProps {
   onDeleteReminder: (id: string) => Promise<void>;
   onDismissReminder: (id: string) => Promise<void>;
   userId: string;
+  /** Nonce from the FAB quick-action sheet: opens the add-reminder form when it changes. */
+  openFormTrigger?: number;
 }
 
 const BellIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -27,11 +29,19 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({
   onUpdateReminder,
   onDeleteReminder,
   onDismissReminder,
-  userId
+  userId,
+  openFormTrigger
 }) => {
   const { t } = useApp();
 
   const [showForm, setShowForm] = useState(false);
+
+  // FAB "Add reminder" quick action: open the same form the inline button opens.
+  useEffect(() => {
+    if (openFormTrigger) {
+      setShowForm(true);
+    }
+  }, [openFormTrigger]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',

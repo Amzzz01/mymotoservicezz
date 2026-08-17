@@ -53,7 +53,7 @@ const InstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-96">
+    <div className="fixed bottom-20 md:bottom-4 left-4 right-4 z-40 md:left-auto md:right-4 md:w-96">
       <div className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg shadow-2xl p-4 flex items-center justify-between animate-fade-in">
         <div className="flex-1">
           <h3 className="font-bold text-lg mb-1">Install MyMotoLog</h3>

@@ -56,26 +56,55 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-900 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 transition-colors duration-200">
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 font-sans">
         {/* Logo and Title */}
-        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8">
-          <img
-            src="/icons/icon-192x192.png"
-            alt="MyMotoLog"
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full"
-          />
+        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full animate-gentle-bounce animate-ring-pulse">
+            <img
+              src="/icons/icon-192x192.png"
+              alt="MyMotoLog"
+              className="w-full h-full rounded-full object-cover"
+            />
+          </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-100 tracking-wider">
             MyMotoLog
           </h1>
         </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
+          Track every ride, every service
+        </p>
 
         {/* Auth Form */}
-        <div className="w-full max-w-sm bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-lg shadow-2xl border border-slate-200 dark:border-slate-700">
-          <h2 className="text-xl sm:text-2xl font-bold text-center text-slate-800 dark:text-slate-100 mb-6">
-            {isLogin ? 'Log In' : 'Register'}
-          </h2>
+        <div className="animate-card-in w-full max-w-sm bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-lg shadow-2xl border border-slate-200 dark:border-slate-700">
+          {/* Login/Register segmented control */}
+          <div className="relative flex bg-slate-100 dark:bg-slate-700 rounded-full p-1.5 mb-8">
+            <div
+              className="absolute inset-y-1 left-1 right-1/2 bg-white dark:bg-slate-800 rounded-full shadow-md transition-transform duration-[250ms] ease-out"
+              style={{ transform: isLogin ? 'translateX(0%)' : 'translateX(100%)' }}
+            />
+            <button
+              type="button"
+              onClick={() => { setIsLogin(true); setError(''); }}
+              disabled={loading}
+              className={`relative z-10 flex-1 py-2 text-sm font-semibold rounded-full transition-colors ${
+                isLogin ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              {t.login}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsLogin(false); setError(''); }}
+              disabled={loading}
+              className={`relative z-10 flex-1 py-2 text-sm font-semibold rounded-full transition-colors ${
+                !isLogin ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              {t.register}
+            </button>
+          </div>
 
           {error && (
             <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-md mb-4 text-sm">
@@ -93,7 +122,7 @@ const AuthPage: React.FC = () => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/30 transition-colors"
                 placeholder="you@example.com"
                 disabled={loading}
                 required
@@ -109,7 +138,7 @@ const AuthPage: React.FC = () => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/30 transition-colors"
                 placeholder="••••••••"
                 disabled={loading}
                 required
@@ -120,23 +149,14 @@ const AuthPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:from-slate-400 disabled:to-slate-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed"
+                className={`w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:from-slate-400 disabled:to-slate-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed ${
+                  loading ? '' : 'animate-ring-pulse'
+                }`}
               >
                 {loading ? 'Please wait...' : (isLogin ? 'Log In' : 'Register')}
               </button>
             </div>
           </form>
-
-          <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
-            {isLogin ? "Don't have an account?" : 'Already have an account?'}
-            <button
-              onClick={() => { setIsLogin(!isLogin); setError(''); }}
-              className="font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 ml-1"
-              disabled={loading}
-            >
-              {isLogin ? 'Register' : 'Log In'}
-            </button>
-          </p>
         </div>
       </div>
 

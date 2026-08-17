@@ -7,7 +7,6 @@ import {
   User as FirebaseUser
 } from 'firebase/auth';
 import { auth } from '../firebase';
-import LoadingScreen from '../components/LoadingScreen';
 
 interface AuthContextType {
   currentUser: FirebaseUser | null;
@@ -34,7 +33,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
-  const [showSplash, setShowSplash] = useState(true);
 
   // Reset the session timer
   const resetTimer = () => {
@@ -121,14 +119,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  // Keep the splash mounted briefly after auth resolves so it can fade out smoothly
-  useEffect(() => {
-    if (!loading) {
-      const timer = setTimeout(() => setShowSplash(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
-
   const register = async (email: string, password: string): Promise<boolean> => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
@@ -169,8 +159,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ currentUser, login, register, logout, loading }}>
-      {showSplash && <LoadingScreen fadeOut={!loading} />}
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

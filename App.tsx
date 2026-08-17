@@ -21,6 +21,7 @@ import InstallPrompt from './components/InstallPrompt';
 import VehicleSelector from './components/VehicleSelector';
 import AnnouncementSystem from './components/AnnouncementSystem';
 import SkeletonList from './components/SkeletonList';
+import Spinner from './components/Spinner';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -41,7 +42,7 @@ function App() {
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
 
   // Custom hooks for data management
-  const { vehicles, activeVehicle, addVehicle, updateVehicle, deleteVehicle, setActive, error: vehiclesError } = useVehicles(currentUser?.uid);
+  const { vehicles, activeVehicle, addVehicle, updateVehicle, deleteVehicle, setActive, loading: vehiclesLoading, error: vehiclesError } = useVehicles(currentUser?.uid);
 
   const {
     records,
@@ -283,7 +284,11 @@ function App() {
 
           {activeTab === 'overview' && (
             <>
-              {activeVehicle ? (
+              {vehiclesLoading ? (
+                <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow-md">
+                  <Spinner size="lg" />
+                </div>
+              ) : activeVehicle ? (
                 <>
                   <CostDashboard costSummary={costSummary} />
                   <MaintenanceForm

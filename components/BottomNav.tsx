@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
 
 export type MainTab = 'overview' | 'analytics' | 'mileage' | 'reminders';
-export type QuickAction = 'addRecord' | 'scanReceipt' | 'addReminder';
+export type QuickAction = 'addRecord' | 'scanReceipt' | 'addMileage' | 'addReminder';
 
 interface BottomNavProps {
   activeTab: MainTab | 'history';
@@ -162,6 +162,13 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, reminderC
                 >
                   <span className="bg-blue-500 text-white p-2.5 rounded-lg"><CameraIcon className="w-5 h-5" /></span>
                   {t.scanReceipt}
+                </button>
+                <button
+                  onClick={() => handleQuickAction('addMileage')}
+                  className="w-full flex items-center gap-4 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-slate-800 dark:text-slate-100 font-semibold p-4 rounded-xl transition-colors min-h-[44px]"
+                >
+                  <span className="bg-amber-500 text-white p-2.5 rounded-lg"><GaugeIcon className="w-5 h-5" /></span>
+                  {t.addMileageLog}
                 </button>
                 <button
                   onClick={() => handleQuickAction('addReminder')}

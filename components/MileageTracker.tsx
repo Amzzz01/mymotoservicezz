@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MileageLog, MileageStats, MaintenanceRecord, Vehicle, Reminder } from '../types';
 import { useApp } from '../context/AppContext';
 import SkeletonList from './SkeletonList';
@@ -13,6 +13,8 @@ interface MileageTrackerProps {
   onAddLog: (log: Omit<MileageLog, 'id' | 'createdAt'>) => Promise<void>;
   onUpdateLog: (id: string, updates: Partial<MileageLog>) => Promise<void>;
   onDeleteLog: (id: string) => Promise<void>;
+  /** Nonce from the FAB quick-action sheet: opens the log form when it changes. */
+  openFormTrigger?: number;
 }
 
 const MileageTracker: React.FC<MileageTrackerProps> = ({
@@ -25,6 +27,7 @@ const MileageTracker: React.FC<MileageTrackerProps> = ({
   onAddLog,
   onUpdateLog,
   onDeleteLog,
+  openFormTrigger,
 }) => {
   const { t } = useApp();
   const [showForm, setShowForm] = useState(false);
@@ -37,6 +40,13 @@ const MileageTracker: React.FC<MileageTrackerProps> = ({
     fuelAmount: '',
     fuelCost: '',
   });
+
+  // FAB "Add mileage" quick action: open the same form the inline button opens.
+  useEffect(() => {
+    if (openFormTrigger) {
+      setShowForm(true);
+    }
+  }, [openFormTrigger]);
 
   // Distance between maintenance services
   const serviceDistances = useMemo(() => {

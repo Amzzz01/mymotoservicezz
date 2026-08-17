@@ -47,6 +47,7 @@ function App() {
   // target component's effect fires whether it's already mounted or remounting fresh.
   const [openChoiceTrigger, setOpenChoiceTrigger] = useState(0);
   const [openScannerTrigger, setOpenScannerTrigger] = useState(0);
+  const [openMileageFormTrigger, setOpenMileageFormTrigger] = useState(0);
   const [openReminderFormTrigger, setOpenReminderFormTrigger] = useState(0);
 
   // Custom hooks for data management
@@ -201,6 +202,9 @@ function App() {
     if (action === 'addReminder') {
       setActiveTab('reminders');
       setOpenReminderFormTrigger(n => n + 1);
+    } else if (action === 'addMileage') {
+      setActiveTab('mileage');
+      setOpenMileageFormTrigger(n => n + 1);
     } else {
       setActiveTab('overview');
       if (action === 'addRecord') {
@@ -239,11 +243,6 @@ function App() {
               onManageVehicles={() => setShowVehicleManager(true)}
             />
 
-            {/* User email - hide on mobile */}
-            <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 hidden md:block">
-              {t.welcome}, <span className="font-bold">{currentUser.email}</span>!
-            </span>
-
             {/* ✅ NEW: Announcement System */}
             <AnnouncementSystem userId={currentUser.uid} />
 
@@ -257,7 +256,6 @@ function App() {
               aria-label={t.logout}
             >
               <LogoutIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm font-medium hidden sm:block">{t.logout}</span>
             </button>
           </div>
         </div>
@@ -391,6 +389,7 @@ function App() {
               onAddLog={handleAddMileageLog}
               onUpdateLog={handleUpdateMileageLog}
               onDeleteLog={deleteMileageLog}
+              openFormTrigger={openMileageFormTrigger}
             />
           )}
 

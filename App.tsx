@@ -102,12 +102,17 @@ function App() {
     }
   };
 
-  if (showSplash) {
-    return <LoadingScreen fadeOut={appReady} />;
+  if (!appReady) {
+    return <LoadingScreen fadeOut={false} />;
   }
 
   if (!currentUser) {
-    return <AuthPage />;
+    return (
+      <>
+        {showSplash && <LoadingScreen fadeOut={appReady} />}
+        <AuthPage />
+      </>
+    );
   }
 
   const handleAddRecord = async (record: Omit<MaintenanceRecord, 'id'>) => {
@@ -185,7 +190,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 font-sans transition-colors duration-200">
+    <>
+      {showSplash && <LoadingScreen fadeOut={appReady} />}
+      <div className="min-h-screen bg-slate-100 dark:bg-slate-900 font-sans transition-colors duration-200">
       <header className="bg-white/80 dark:bg-slate-800/50 backdrop-blur-sm p-3 sm:p-4 sticky top-0 z-10 shadow-md dark:shadow-slate-900/50 transition-colors duration-200">
         <div className="container mx-auto flex items-center justify-between gap-2">
           {/* Logo and Title - Mobile optimized */}
@@ -407,7 +414,8 @@ function App() {
       <Footer />
 
       <InstallPrompt />
-    </div>
+      </div>
+    </>
   );
 }
 

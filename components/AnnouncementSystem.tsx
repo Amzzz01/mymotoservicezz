@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAnnouncements } from '../hooks/useAnnouncements';
 import AnnouncementModal from './AnnouncementModal';
+import { RoadTaxAlert } from '../utils/roadTax';
 
 interface AnnouncementSystemProps {
   userId: string;
+  roadTaxAlerts: RoadTaxAlert[];
+  onRenewRoadTax: (vehicleId: string) => void;
 }
 
 const BellIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -13,7 +16,7 @@ const BellIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const AnnouncementSystem: React.FC<AnnouncementSystemProps> = ({ userId }) => {
+const AnnouncementSystem: React.FC<AnnouncementSystemProps> = ({ userId, roadTaxAlerts, onRenewRoadTax }) => {
   const {
     announcements,
     viewedAnnouncements,
@@ -55,6 +58,14 @@ const AnnouncementSystem: React.FC<AnnouncementSystemProps> = ({ userId }) => {
     await markAllAsViewed();
   };
 
+  const handleRenewRoadTax = (vehicleId: string) => {
+    setShowModal(false);
+    onRenewRoadTax(vehicleId);
+  };
+
+  // Road tax alerts aren't "read" - they count until the road tax is renewed
+  const badgeCount = unreadCount + roadTaxAlerts.length;
+
   return (
     <>
       {/* Notification Bell Button */}
@@ -67,9 +78,9 @@ const AnnouncementSystem: React.FC<AnnouncementSystemProps> = ({ userId }) => {
           <BellIcon className="w-5 h-5 text-slate-700 dark:text-slate-300" />
           
           {/* Unread Badge */}
-          {unreadCount > 0 && (
+          {badgeCount > 0 && (
             <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {badgeCount > 9 ? '9+' : badgeCount}
             </div>
           )}
         </button>
@@ -118,6 +129,8 @@ const AnnouncementSystem: React.FC<AnnouncementSystemProps> = ({ userId }) => {
           onClose={() => setShowModal(false)}
           onMarkAsViewed={handleMarkAsViewed}
           onMarkAllAsViewed={handleMarkAllAsViewed}
+          roadTaxAlerts={roadTaxAlerts}
+          onRenewRoadTax={handleRenewRoadTax}
         />
       )}
     </>

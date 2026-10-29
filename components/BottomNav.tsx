@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
+import { RoadTaxAlert, fillTemplate } from '../utils/roadTax';
+import { ShieldAlertIcon } from './RoadTaxAlert';
 
 export type MainTab = 'overview' | 'analytics' | 'mileage' | 'reminders';
-export type QuickAction = 'addRecord' | 'scanReceipt' | 'addMileage' | 'addReminder';
+export type QuickAction = 'addRecord' | 'scanReceipt' | 'addMileage' | 'addReminder' | 'renewRoadTax';
 
 interface BottomNavProps {
   activeTab: MainTab | 'history';
   onTabChange: (tab: MainTab) => void;
   reminderCount: number;
   onQuickAction: (action: QuickAction) => void;
+  roadTaxAlerts: RoadTaxAlert[];
 }
 
 const PlusIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -69,9 +72,15 @@ const NAV_ITEMS: { tab: MainTab; Icon: React.FC<{ className?: string }> }[] = [
   { tab: 'reminders', Icon: OutlineBellIcon },
 ];
 
-const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, reminderCount, onQuickAction }) => {
+const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, reminderCount, onQuickAction, roadTaxAlerts }) => {
   const { t } = useApp();
   const [showSheet, setShowSheet] = useState(false);
+
+  const expiredCount = roadTaxAlerts.filter(a => a.status === 'expired').length;
+  const roadTaxSummary = fillTemplate(t.renewRoadTaxSummary, {
+    expired: expiredCount,
+    soon: roadTaxAlerts.length - expiredCount,
+  });
 
   const tabLabel: Record<MainTab, string> = {
     overview: t.overview,
@@ -126,6 +135,9 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, reminderC
           aria-label="Quick actions"
         >
           <PlusIcon className="w-7 h-7" />
+          {roadTaxAlerts.length > 0 && (
+            <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-800" aria-hidden="true" />
+          )}
         </button>
       </div>
 
@@ -149,6 +161,18 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, reminderC
                 </button>
               </div>
               <div className="p-4 space-y-3">
+                {roadTaxAlerts.length > 0 && (
+                  <button
+                    onClick={() => handleQuickAction('renewRoadTax')}
+                    className="w-full flex items-center gap-4 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border-2 border-red-300 dark:border-red-700 text-left p-4 rounded-xl transition-colors min-h-[44px]"
+                  >
+                    <span className="bg-red-600 text-white p-2.5 rounded-lg"><ShieldAlertIcon className="w-5 h-5" /></span>
+                    <span className="min-w-0">
+                      <span className="block font-bold text-red-800 dark:text-red-300">{t.renewRoadTax}</span>
+                      <span className="block text-sm text-red-700 dark:text-red-400">{roadTaxSummary}</span>
+                    </span>
+                  </button>
+                )}
                 <button
                   onClick={() => handleQuickAction('addRecord')}
                   className="w-full flex items-center gap-4 bg-cyan-50 dark:bg-cyan-900/30 hover:bg-cyan-100 dark:hover:bg-cyan-900/50 text-slate-800 dark:text-slate-100 font-semibold p-4 rounded-xl transition-colors min-h-[44px]"

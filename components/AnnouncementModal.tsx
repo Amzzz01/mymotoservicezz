@@ -2,6 +2,8 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { Announcement } from '../types';
 import { useApp } from '../context/AppContext';
+import { RoadTaxAlert, describeRoadTax, vehicleLabel } from '../utils/roadTax';
+import { ClockIcon, ShieldAlertIcon } from './RoadTaxAlert';
 
 interface AnnouncementModalProps {
   announcements: Announcement[];
@@ -9,6 +11,8 @@ interface AnnouncementModalProps {
   onClose: () => void;
   onMarkAsViewed: (announcementId: string) => void;
   onMarkAllAsViewed: () => void;
+  roadTaxAlerts: RoadTaxAlert[];
+  onRenewRoadTax: (vehicleId: string) => void;
 }
 
 const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
@@ -16,7 +20,9 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
   viewedAnnouncementIds,
   onClose,
   onMarkAsViewed,
-  onMarkAllAsViewed
+  onMarkAllAsViewed,
+  roadTaxAlerts,
+  onRenewRoadTax
 }) => {
   const { t } = useApp();
 
@@ -124,6 +130,47 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
 
           {/* Announcements List - Scrollable */}
           <div className="max-h-[60vh] overflow-y-auto p-6 space-y-4">
+            {roadTaxAlerts.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t.needsAction}</div>
+                {roadTaxAlerts.map(alert => {
+                  const expired = alert.status === 'expired';
+                  return (
+                    <div
+                      key={alert.vehicle.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl border ${
+                        expired
+                          ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700'
+                          : 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700'
+                      }`}
+                    >
+                      <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white ${expired ? 'bg-red-600' : 'bg-amber-600'}`}>
+                        {expired ? <ShieldAlertIcon className="w-5 h-5" /> : <ClockIcon className="w-5 h-5" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-bold text-sm ${expired ? 'text-red-800 dark:text-red-300' : 'text-amber-800 dark:text-amber-300'}`}>
+                          {expired ? t.roadTaxExpiredTitle : t.roadTaxSoonTitle}
+                        </div>
+                        <div className="text-sm text-slate-700 dark:text-slate-300 truncate">{vehicleLabel(alert.vehicle)}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">{describeRoadTax(alert.vehicle.roadTaxExpiry!, t)}</div>
+                      </div>
+                      <button
+                        onClick={() => onRenewRoadTax(alert.vehicle.id)}
+                        className={`flex-shrink-0 min-h-[36px] px-3 rounded-lg text-sm font-bold ${
+                          expired
+                            ? 'bg-red-600 hover:bg-red-500 text-white'
+                            : 'bg-white dark:bg-slate-800 border border-amber-600 text-amber-800 dark:text-amber-300'
+                        }`}
+                      >
+                        {t.renew}
+                      </button>
+                    </div>
+                  );
+                })}
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t.roadTaxAlertsStay}</p>
+              </div>
+            )}
+
             {announcements.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📭</div>

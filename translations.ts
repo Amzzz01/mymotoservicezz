@@ -307,6 +307,36 @@ export interface Translations {
   noMileageLogs: string;
   fuelStop: string;
   totalFuel: string;
+
+  // Road tax alerts & renewal
+  roadTaxExpiredTitle: string;
+  roadTaxSoonTitle: string;
+  roadTaxExpiredAgo: string;
+  roadTaxExpiredYesterday: string;
+  roadTaxExpiresToday: string;
+  roadTaxExpiresTomorrow: string;
+  roadTaxExpiresIn: string;
+  renew: string;
+  renewNow: string;
+  renewRoadTax: string;
+  renewRoadTaxSummary: string;
+  needsAction: string;
+  roadTaxAlertsStay: string;
+  newExpiryDate: string;
+  newExpiryHint: string;
+  expiryMustBeFuture: string;
+  roadTaxRenewedUntil: string;
+  saveNewDate: string;
+  failedRenewRoadTax: string;
+  roadTaxNotifyExpiredTitle: string;
+  roadTaxNotifyExpiredBody: string;
+  roadTaxNotifySoonTitle: string;
+  roadTaxNotifySoonBody: string;
+  remindTomorrow: string;
+  roadTaxNotifyPromptTitle: string;
+  roadTaxNotifyPromptBody: string;
+  allow: string;
+  notNow: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -617,6 +647,36 @@ export const translations: Record<Language, Translations> = {
     noMileageLogs: 'No mileage logs yet. Add your first entry!',
     fuelStop: 'Fuel',
     totalFuel: 'total fuel',
+
+    // Road tax alerts & renewal
+    roadTaxExpiredTitle: 'Road tax expired',
+    roadTaxSoonTitle: 'Road tax expiring soon',
+    roadTaxExpiredAgo: 'Expired {days} days ago ({date})',
+    roadTaxExpiredYesterday: 'Expired yesterday ({date})',
+    roadTaxExpiresToday: 'Expires today ({date})',
+    roadTaxExpiresTomorrow: 'Expires tomorrow ({date})',
+    roadTaxExpiresIn: 'Expires in {days} days ({date})',
+    renew: 'Renew',
+    renewNow: 'Renew now',
+    renewRoadTax: 'Renew Road Tax',
+    renewRoadTaxSummary: '{expired} expired, {soon} expiring soon',
+    needsAction: 'Needs action',
+    roadTaxAlertsStay: 'These stay here until the road tax is renewed.',
+    newExpiryDate: 'New expiry date',
+    newExpiryHint: 'Pre-filled: 1 year after the old expiry. Tap to change.',
+    expiryMustBeFuture: 'New expiry date must be after today.',
+    roadTaxRenewedUntil: 'Road tax renewed until {date}',
+    saveNewDate: 'Save new date',
+    failedRenewRoadTax: 'Failed to save the new road tax date. Please try again.',
+    roadTaxNotifyExpiredTitle: 'Road tax expired: {name}',
+    roadTaxNotifyExpiredBody: '{vehicle} road tax expired on {date}. Tap to renew in the app.',
+    roadTaxNotifySoonTitle: 'Road tax expiring soon: {name}',
+    roadTaxNotifySoonBody: '{vehicle} road tax expires on {date}. Renew early to avoid a fine.',
+    remindTomorrow: 'Remind me tomorrow',
+    roadTaxNotifyPromptTitle: 'Get road tax alerts?',
+    roadTaxNotifyPromptBody: "We'll notify you before and after your road tax expires.",
+    allow: 'Allow',
+    notNow: 'Not now',
   },
   ms: {
     // Header
@@ -925,6 +985,36 @@ export const translations: Record<Language, Translations> = {
     noMileageLogs: 'Tiada log perbatuan lagi. Tambah entri pertama anda!',
     fuelStop: 'Minyak',
     totalFuel: 'jumlah bahan api',
+
+    // Road tax alerts & renewal
+    roadTaxExpiredTitle: 'Cukai jalan tamat tempoh',
+    roadTaxSoonTitle: 'Cukai jalan hampir tamat',
+    roadTaxExpiredAgo: 'Tamat {days} hari lalu ({date})',
+    roadTaxExpiredYesterday: 'Tamat semalam ({date})',
+    roadTaxExpiresToday: 'Tamat hari ini ({date})',
+    roadTaxExpiresTomorrow: 'Tamat esok ({date})',
+    roadTaxExpiresIn: 'Tamat dalam {days} hari ({date})',
+    renew: 'Perbaharui',
+    renewNow: 'Perbaharui sekarang',
+    renewRoadTax: 'Perbaharui Cukai Jalan',
+    renewRoadTaxSummary: '{expired} tamat tempoh, {soon} hampir tamat',
+    needsAction: 'Perlu tindakan',
+    roadTaxAlertsStay: 'Ini kekal di sini sehingga cukai jalan diperbaharui.',
+    newExpiryDate: 'Tarikh tamat baharu',
+    newExpiryHint: 'Diisi awal: 1 tahun selepas tarikh tamat lama. Ketik untuk ubah.',
+    expiryMustBeFuture: 'Tarikh tamat baharu mesti selepas hari ini.',
+    roadTaxRenewedUntil: 'Cukai jalan diperbaharui sehingga {date}',
+    saveNewDate: 'Simpan tarikh baharu',
+    failedRenewRoadTax: 'Gagal menyimpan tarikh cukai jalan baharu. Sila cuba lagi.',
+    roadTaxNotifyExpiredTitle: 'Cukai jalan tamat: {name}',
+    roadTaxNotifyExpiredBody: 'Cukai jalan {vehicle} tamat pada {date}. Ketik untuk perbaharui dalam aplikasi.',
+    roadTaxNotifySoonTitle: 'Cukai jalan hampir tamat: {name}',
+    roadTaxNotifySoonBody: 'Cukai jalan {vehicle} tamat pada {date}. Perbaharui awal untuk elak saman.',
+    remindTomorrow: 'Ingatkan esok',
+    roadTaxNotifyPromptTitle: 'Terima amaran cukai jalan?',
+    roadTaxNotifyPromptBody: 'Kami akan maklumkan sebelum dan selepas cukai jalan anda tamat.',
+    allow: 'Benarkan',
+    notNow: 'Bukan sekarang',
   },
 };
 

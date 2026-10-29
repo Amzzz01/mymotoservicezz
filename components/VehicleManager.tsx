@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Vehicle, MaintenanceRecord } from '../types';
 import { useApp } from '../context/AppContext';
+import { formatRoadTaxDate, getRoadTaxStatus } from '../utils/roadTax';
 
 interface VehicleManagerProps {
   vehicles: Vehicle[];
@@ -232,17 +233,11 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
   };
 
   const isRoadTaxExpiringSoon = (expiryDate: string) => {
-    const today = new Date();
-    const expiry = new Date(expiryDate);
-    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return daysUntilExpiry <= 30 && daysUntilExpiry >= 0;
+    const status = getRoadTaxStatus(expiryDate);
+    return status === 'soon' || status === 'upcoming';
   };
 
-  const isRoadTaxExpired = (expiryDate: string) => {
-    const today = new Date();
-    const expiry = new Date(expiryDate);
-    return expiry < today;
-  };
+  const isRoadTaxExpired = (expiryDate: string) => getRoadTaxStatus(expiryDate) === 'expired';
 
   const renderVehicleIcon = (vehicle: Vehicle) => {
     if (vehicle.iconType === 'image' && vehicle.customIcon) {
@@ -597,7 +592,7 @@ const VehicleManager: React.FC<VehicleManagerProps> = ({
                   }`}>
                     {isRoadTaxExpired(vehicle.roadTaxExpiry) && `⚠️ ${t.expired} `}
                     {isRoadTaxExpiringSoon(vehicle.roadTaxExpiry) && !isRoadTaxExpired(vehicle.roadTaxExpiry) && '⚠️ '}
-                    {new Date(vehicle.roadTaxExpiry).toLocaleDateString()}
+                    {formatRoadTaxDate(vehicle.roadTaxExpiry)}
                   </span>
                 </div>
               )}

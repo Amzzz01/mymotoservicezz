@@ -3,6 +3,7 @@ import { CostSummary, MaintenanceRecord, Vehicle } from '../types';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useApp } from '../context/AppContext';
 import CostDashboard from './CostDashboard';
+import { formatRoadTaxDate, getRoadTaxStatus } from '../utils/roadTax';
 
 interface OverviewProps {
   records: MaintenanceRecord[];
@@ -41,26 +42,24 @@ const Overview: React.FC<OverviewProps> = ({ records, activeVehicle, costSummary
         ? `R ${activeVehicle.tyrePressureRear} psi`
         : null;
 
-  const daysUntilRoadTax = activeVehicle.roadTaxExpiry
-    ? Math.ceil((new Date(activeVehicle.roadTaxExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    : null;
-  const roadTaxColorClass = daysUntilRoadTax === null
-    ? 'text-slate-700 dark:text-slate-300'
-    : daysUntilRoadTax <= 7
-      ? 'text-red-600 dark:text-red-400'
-      : daysUntilRoadTax <= 30
-        ? 'text-yellow-600 dark:text-yellow-400'
-        : 'text-slate-700 dark:text-slate-300';
+  const roadTaxStatus = getRoadTaxStatus(activeVehicle.roadTaxExpiry);
+  const roadTaxColorClass = roadTaxStatus === 'expired'
+    ? 'text-red-600 dark:text-red-400'
+    : roadTaxStatus === 'soon' || roadTaxStatus === 'upcoming'
+      ? 'text-amber-600 dark:text-amber-400'
+      : 'text-slate-700 dark:text-slate-300';
 
-  const vehicleInfoRows = [
+  type InfoRow = { label: string; value: string; className: string; badge?: string };
+  const vehicleInfoRows = ([
     activeVehicle.registrationNumber && { label: t.registration, value: activeVehicle.registrationNumber, className: 'text-slate-700 dark:text-slate-300' },
     tyrePressureText && { label: t.tyrePressureLabel, value: tyrePressureText, className: 'text-slate-700 dark:text-slate-300' },
     activeVehicle.roadTaxExpiry && {
       label: t.roadTaxExpiry,
-      value: new Date(activeVehicle.roadTaxExpiry).toLocaleDateString(),
+      value: formatRoadTaxDate(activeVehicle.roadTaxExpiry),
       className: roadTaxColorClass,
+      badge: roadTaxStatus === 'expired' ? t.expired : undefined,
     },
-  ].filter((row): row is { label: string; value: string; className: string } => Boolean(row));
+  ] as (InfoRow | false | '' | undefined)[]).filter((row): row is InfoRow => Boolean(row));
 
   const recentRecords = [...records]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -129,7 +128,12 @@ const Overview: React.FC<OverviewProps> = ({ records, activeVehicle, costSummary
               {vehicleInfoRows.map((row) => (
                 <div key={row.label} className="flex items-center justify-between text-sm">
                   <span className="text-slate-500 dark:text-slate-400">{row.label}</span>
-                  <span className={`font-medium ${row.className}`}>{row.value}</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className={`font-medium ${row.className}`}>{row.value}</span>
+                    {row.badge && (
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-600 text-white">{row.badge}</span>
+                    )}
+                  </span>
                 </div>
               ))}
             </div>

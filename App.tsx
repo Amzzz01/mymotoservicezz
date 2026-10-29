@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { MaintenanceRecord } from './types';
 import { useFirestoreRecords } from './hooks/useFirestoreRecords';
 import { useVehicles } from './hooks/useVehicles';
@@ -23,6 +23,10 @@ import LoadingScreen from './components/LoadingScreen';
 import BottomNav, { MainTab, QuickAction } from './components/BottomNav';
 import Overview from './components/Overview';
 import ServiceHistory from './components/ServiceHistory';
+import RoadTaxAlert from './components/RoadTaxAlert';
+import RenewRoadTaxModal from './components/RenewRoadTaxModal';
+import { useRoadTaxNotifications } from './hooks/useRoadTaxNotifications';
+import { fillTemplate, formatRoadTaxDate, getRoadTaxAlerts } from './utils/roadTax';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -94,6 +98,46 @@ function App() {
   } = useMileageTracker(currentUser?.uid, activeVehicle?.id);
 
   const error = vehiclesError || recordsError;
+
+  // Road tax alerts cover every vehicle, not just the selected one
+  const roadTaxAlerts = useMemo(() => getRoadTaxAlerts(vehicles), [vehicles]);
+  const roadTaxNotifications = useRoadTaxNotifications(roadTaxAlerts, t);
+  // undefined = renew form closed; null = open with the most urgent vehicle preselected
+  const [renewVehicleId, setRenewVehicleId] = useState<string | null | undefined>(undefined);
+  const [toast, setToast] = useState<string | null>(null);
+
+  // Tapping a road tax phone notification lands here: via URL when the app was closed,
+  // or via a service worker message when it was already open.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('renewRoadTax')) {
+      setRenewVehicleId(params.get('renewRoadTax') || null);
+      setActiveTab('overview');
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+
+    if (!('serviceWorker' in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'renewRoadTax') {
+        setRenewVehicleId(event.data.vehicleId || null);
+        setActiveTab('overview');
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  const handleRenewRoadTax = async (vehicleId: string, newExpiry: string) => {
+    await updateVehicle(vehicleId, { roadTaxExpiry: newExpiry });
+    setRenewVehicleId(undefined);
+    setToast(fillTemplate(t.roadTaxRenewedUntil, { date: formatRoadTaxDate(newExpiry) }));
+  };
 
   const handleAddMileageLog = async (log: Parameters<typeof addMileageLog>[0]) => {
     await addMileageLog(log);
@@ -199,7 +243,9 @@ function App() {
   };
 
   const handleQuickAction = (action: QuickAction) => {
-    if (action === 'addReminder') {
+    if (action === 'renewRoadTax') {
+      setRenewVehicleId(null);
+    } else if (action === 'addReminder') {
       setActiveTab('reminders');
       setOpenReminderFormTrigger(n => n + 1);
     } else if (action === 'addMileage') {
@@ -244,7 +290,11 @@ function App() {
             />
 
             {/* ✅ NEW: Announcement System */}
-            <AnnouncementSystem userId={currentUser.uid} />
+            <AnnouncementSystem
+              userId={currentUser.uid}
+              roadTaxAlerts={roadTaxAlerts}
+              onRenewRoadTax={setRenewVehicleId}
+            />
 
             {/* Settings Button */}
             <SettingsButton />
@@ -321,6 +371,13 @@ function App() {
 
           {activeTab === 'overview' && (
             <>
+              <RoadTaxAlert
+                alerts={roadTaxAlerts}
+                onRenew={setRenewVehicleId}
+                showNotifyPrompt={roadTaxNotifications.showPermissionPrompt}
+                onAllowNotify={roadTaxNotifications.requestPermission}
+                onDismissNotifyPrompt={roadTaxNotifications.dismissPrompt}
+              />
               {vehiclesLoading ? (
                 <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow-md">
                   <Spinner size="lg" />
@@ -423,6 +480,7 @@ function App() {
         onTabChange={setActiveTab}
         reminderCount={reminders.filter(r => !r.dismissed && r.isActive).length}
         onQuickAction={handleQuickAction}
+        roadTaxAlerts={roadTaxAlerts}
       />
 
       <div className="pb-20 md:pb-0">
@@ -443,6 +501,24 @@ function App() {
           records={records}
           onClose={() => setShowVehicleManager(false)}
         />
+      )}
+
+      {renewVehicleId !== undefined && roadTaxAlerts.length > 0 && (
+        <RenewRoadTaxModal
+          alerts={roadTaxAlerts}
+          initialVehicleId={renewVehicleId}
+          onSave={handleRenewRoadTax}
+          onClose={() => setRenewVehicleId(undefined)}
+        />
+      )}
+
+      {toast && (
+        <div className="fixed top-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 flex justify-center pointer-events-none">
+          <div className="flex items-center gap-2 bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 text-sm font-medium px-4 py-3 rounded-lg shadow-2xl animate-fade-in" role="status">
+            <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center text-xs">✓</span>
+            {toast}
+          </div>
+        </div>
       )}
       </div>
     </>

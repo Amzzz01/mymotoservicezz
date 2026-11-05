@@ -132,7 +132,7 @@ export function useAnnouncements(userId: string, language: Language = 'en') {
       priority: 'medium',
       isActive: true,
       createdAt: item.sentAt,
-      fromAdmin: true,
+      adminType: item.type,
     }));
 
     // Sort by priority (high > medium > low) then by date (newest first)

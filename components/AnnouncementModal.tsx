@@ -202,13 +202,15 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                       <div className="flex items-center gap-2">
                         <span className="text-2xl">{getTypeIcon(announcement.type)}</span>
                         <span className="text-white font-bold text-sm uppercase tracking-wide">
-                          {announcement.type}
+                          {announcement.adminType
+                            ? (announcement.adminType === 'tip' ? t.notifTypeTip : t.notifTypeUpdate)
+                            : announcement.type}
                         </span>
                         {announcement.version && (
                           <span className="text-white/80 text-xs">v{announcement.version}</span>
                         )}
                       </div>
-                      {!announcement.fromAdmin && getPriorityBadge(announcement.priority)}
+                      {!announcement.adminType && getPriorityBadge(announcement.priority)}
                     </div>
 
                     {/* Content */}

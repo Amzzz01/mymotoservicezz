@@ -23,20 +23,18 @@ const MAX_BODY_LENGTH = 200;
 const EMPTY_CONTENT: NotificationContent = { titleEn: '', bodyEn: '', titleMs: '', bodyMs: '' };
 
 interface AdminComposeProps {
-  initialEmail?: string;
+  initialAudience: NotificationAudience;
   onBack: () => void;
   onSent: (result: NotificationSendResult) => void;
 }
 
-const AdminCompose: React.FC<AdminComposeProps> = ({ initialEmail, onBack, onSent }) => {
+const AdminCompose: React.FC<AdminComposeProps> = ({ initialAudience, onBack, onSent }) => {
   const { t, language } = useApp();
   const { currentUser } = useAuth();
   const [view, setView] = useState<'form' | 'audience'>('form');
   const [type, setType] = useState<NotificationType>('tip');
   const [content, setContent] = useState(EMPTY_CONTENT);
-  const [audience, setAudience] = useState<NotificationAudience>(
-    initialEmail ? { kind: 'users', emails: [initialEmail] } : { kind: 'everyone' }
-  );
+  const [audience, setAudience] = useState(initialAudience);
   const [openTab, setOpenTab] = useState<NotificationTab>('overview');
   const [scheduling, setScheduling] = useState(false);
   const [scheduleLocal, setScheduleLocal] = useState(''); // Date and time as typed, in this device's time zone

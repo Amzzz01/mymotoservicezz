@@ -1,10 +1,18 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../hooks/useAuth';
+import { ViewMode } from '../hooks/useViewMode';
 import { getAuthErrorMessage } from '../utils/authErrors';
 import { isAdminRole } from '../utils/roles';
+import AdminSettingsMenu from './AdminSettingsMenu';
 
-const SettingsButton: React.FC<{ onOpenAdmin: () => void; onOpenNotifications: () => void }> = ({ onOpenAdmin, onOpenNotifications }) => {
+interface SettingsButtonProps {
+  viewMode: ViewMode;
+  onChangeViewMode: (mode: ViewMode) => void;
+  onOpenNotifications: () => void;
+}
+
+const SettingsButton: React.FC<SettingsButtonProps> = ({ viewMode, onChangeViewMode, onOpenNotifications }) => {
   const { language, setLanguage, theme, toggleTheme, t } = useApp();
   const { hasGoogle, connectGoogle, role } = useAuth();
   const [showMenu, setShowMenu] = React.useState(false);
@@ -23,12 +31,15 @@ const SettingsButton: React.FC<{ onOpenAdmin: () => void; onOpenNotifications: (
     setLanguage(language === 'en' ? 'ms' : 'en');
   };
 
+  const isStaff = isAdminRole(role);
+
   return (
     <div className="relative">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors"
+        className={`flex items-center gap-2 p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors ${showMenu ? 'bg-slate-200 dark:bg-slate-700' : ''}`}
         aria-label={t.settings}
+        aria-expanded={showMenu}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -55,112 +66,106 @@ const SettingsButton: React.FC<{ onOpenAdmin: () => void; onOpenNotifications: (
       {showMenu && (
         <>
           <div
-            className="fixed inset-0 z-40 md:hidden"
+            className={`fixed inset-0 z-40 ${isStaff ? '' : 'md:hidden'}`}
             onClick={() => setShowMenu(false)}
           />
 
-          <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
-            {/* Theme Toggle */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {theme === 'dark' ? t.darkMode : t.lightMode}
-                </span>
-              </div>
-              <button
-                onClick={toggleTheme}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
-              >
-                {theme === 'dark' ? (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    <span>{t.lightMode}</span>
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
-                    <span>{t.darkMode}</span>
-                  </>
-                )}
-              </button>
+          {isStaff ? (
+            <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-[19rem] bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+              <AdminSettingsMenu
+                viewMode={viewMode}
+                onChangeViewMode={onChangeViewMode}
+                onOpenNotifications={onOpenNotifications}
+                onClose={() => setShowMenu(false)}
+              />
             </div>
-
-            {/* Language Toggle */}
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t.language}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">
-                  {language === 'en' ? 'English' : 'Bahasa Melayu'}
-                </span>
-              </div>
-              <button
-                onClick={handleLanguageToggle}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-400 hover:to-purple-400 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                </svg>
-                <span>{language === 'en' ? 'Bahasa Melayu' : 'English'}</span>
-              </button>
-            </div>
-
-            {/* Notification settings */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700">
-              <button
-                onClick={() => { setShowMenu(false); onOpenNotifications(); }}
-                className="w-full min-h-[44px] rounded-lg border border-cyan-600 text-cyan-800 dark:text-cyan-300 text-sm font-bold hover:bg-cyan-50 dark:hover:bg-cyan-900/30"
-              >
-                {t.prefsTitle}
-              </button>
-            </div>
-
-            {/* Connect Google (optional second way to log in) */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700">
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.googleAccount}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    {hasGoogle ? t.googleConnected : t.googleNotConnected}
-                  </div>
-                </div>
-                {!hasGoogle && (
-                  <button
-                    onClick={handleConnectGoogle}
-                    disabled={connecting}
-                    className="flex-shrink-0 min-h-[40px] px-3 rounded-lg text-sm font-bold border border-cyan-600 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 disabled:opacity-60"
-                  >
-                    {t.connect}
-                  </button>
-                )}
-              </div>
-              {connectError && (
-                <p className="text-xs text-red-600 dark:text-red-400 mt-2" role="alert">{connectError}</p>
-              )}
-            </div>
-
-            {isAdminRole(role) && (
-              <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex flex-col gap-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.accountRole}</span>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-700 text-white">
-                    {role === 'superadmin' ? t.roleSuperadmin : t.roleAdmin}
+          ) : (
+            <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+              {/* Theme Toggle */}
+              <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {theme === 'dark' ? t.darkMode : t.lightMode}
                   </span>
                 </div>
                 <button
-                  onClick={() => { setShowMenu(false); onOpenAdmin(); }}
-                  className="w-full min-h-[44px] rounded-lg bg-violet-700 hover:bg-violet-600 text-white text-sm font-bold"
+                  onClick={toggleTheme}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
                 >
-                  {t.adminPanel}
+                  {theme === 'dark' ? (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                      <span>{t.lightMode}</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                      </svg>
+                      <span>{t.darkMode}</span>
+                    </>
+                  )}
                 </button>
               </div>
-            )}
-          </div>
+
+              {/* Language Toggle */}
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {t.language}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                    {language === 'en' ? 'English' : 'Bahasa Melayu'}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLanguageToggle}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-400 hover:to-purple-400 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                  </svg>
+                  <span>{language === 'en' ? 'Bahasa Melayu' : 'English'}</span>
+                </button>
+              </div>
+
+              {/* Notification settings */}
+              <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+                <button
+                  onClick={() => { setShowMenu(false); onOpenNotifications(); }}
+                  className="w-full min-h-[44px] rounded-lg border border-cyan-600 text-cyan-800 dark:text-cyan-300 text-sm font-bold hover:bg-cyan-50 dark:hover:bg-cyan-900/30"
+                >
+                  {t.prefsTitle}
+                </button>
+              </div>
+
+              {/* Connect Google (optional second way to log in) */}
+              <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.googleAccount}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {hasGoogle ? t.googleConnected : t.googleNotConnected}
+                    </div>
+                  </div>
+                  {!hasGoogle && (
+                    <button
+                      onClick={handleConnectGoogle}
+                      disabled={connecting}
+                      className="flex-shrink-0 min-h-[40px] px-3 rounded-lg text-sm font-bold border border-cyan-600 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 disabled:opacity-60"
+                    >
+                      {t.connect}
+                    </button>
+                  )}
+                </div>
+                {connectError && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-2" role="alert">{connectError}</p>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

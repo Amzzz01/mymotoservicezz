@@ -34,6 +34,7 @@ interface AuthContextType {
   emailVerified: boolean;
   hasGoogle: boolean;
   role: UserRole;
+  roleLoaded: boolean;
   // A failure from a Google redirect, which only surfaces after the page loads again
   redirectError: string | null;
   clearRedirectError: () => void;
@@ -69,6 +70,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [hasGoogle, setHasGoogle] = useState(false);
   const [redirectError, setRedirectError] = useState<string | null>(null);
   const [role, setRole] = useState<UserRole>('user');
+  // Whose role is in `role`: null when signed out, undefined until the first check finishes
+  const [roleOwner, setRoleOwner] = useState<string | null | undefined>(undefined);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
@@ -180,6 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return onIdTokenChanged(auth, async (user) => {
       if (!user) {
         setRole('user');
+        setRoleOwner(null);
         return;
       }
       try {
@@ -189,6 +193,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('Failed to read role:', error);
         setRole('user');
       }
+      setRoleOwner(user.uid);
     });
   }, []);
 
@@ -336,6 +341,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       emailVerified,
       hasGoogle,
       role,
+      roleLoaded: roleOwner === (currentUser?.uid ?? null),
       redirectError,
       clearRedirectError: () => setRedirectError(null),
     }}>

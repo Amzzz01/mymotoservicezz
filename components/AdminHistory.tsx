@@ -11,6 +11,7 @@ import {
   setDailySendLimit,
 } from '../utils/adminApi';
 import { fillTemplate } from '../utils/roadTax';
+import { Translations } from '../translations';
 import AdminHeader from './AdminHeader';
 import Spinner from './Spinner';
 
@@ -20,6 +21,14 @@ interface HistoryData {
   usedToday: number;
 }
 
+export const getSendStatusBadge = (status: NotificationSendRecord['status'], t: Translations) => ({
+  scheduled: { label: t.histScheduled, className: 'bg-amber-100 text-amber-900 dark:bg-amber-900/50 dark:text-amber-300' },
+  cancelled: { label: t.histCancelled, className: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
+  sent: { label: t.histSent, className: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' },
+  sending: { label: t.histSending, className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' },
+  failed: { label: t.histFailed, className: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' },
+})[status];
+
 const Figure: React.FC<{ value: number; label: string }> = ({ value, label }) => (
   <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg px-1 py-2 text-center">
     <div className="text-lg font-extrabold text-slate-800 dark:text-slate-100">{value}</div>
@@ -27,7 +36,7 @@ const Figure: React.FC<{ value: number; label: string }> = ({ value, label }) =>
   </div>
 );
 
-const AdminHistory: React.FC<{ successMessage?: string; onBack: () => void }> = ({ successMessage, onBack }) => {
+const AdminHistory: React.FC<{ successMessage?: string }> = ({ successMessage }) => {
   const { t, language } = useApp();
   const { role, currentUser } = useAuth();
   const [data, setData] = useState<HistoryData | null>(null);
@@ -78,17 +87,9 @@ const AdminHistory: React.FC<{ successMessage?: string; onBack: () => void }> = 
     setSaving(false);
   };
 
-  const statusBadge: Record<NotificationSendRecord['status'], { label: string; className: string }> = {
-    scheduled: { label: t.histScheduled, className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' },
-    cancelled: { label: t.histCancelled, className: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
-    sent: { label: t.histSent, className: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' },
-    sending: { label: t.histSending, className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' },
-    failed: { label: t.histFailed, className: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' },
-  };
-
   return (
     <>
-      <AdminHeader title={t.adminSendHistory} onBack={onBack} />
+      <AdminHeader title={t.adminSendHistory} />
       <div className="max-w-xl mx-auto p-4 flex flex-col gap-2.5">
         {successMessage && <p className="text-sm font-semibold text-green-800 dark:text-green-400" role="status">{successMessage}</p>}
         {error && (
@@ -126,8 +127,8 @@ const AdminHistory: React.FC<{ successMessage?: string; onBack: () => void }> = 
           <div key={send.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 flex flex-col gap-2">
             <div className="flex justify-between items-center gap-2">
               <span className="text-[15px] font-bold text-slate-800 dark:text-slate-100 break-words min-w-0">{send.title}</span>
-              <span className={`flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${statusBadge[send.status].className}`}>
-                {statusBadge[send.status].label}
+              <span className={`flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${getSendStatusBadge(send.status, t).className}`}>
+                {getSendStatusBadge(send.status, t).label}
               </span>
             </div>
             <span className="text-sm text-slate-600 dark:text-slate-400 break-words">

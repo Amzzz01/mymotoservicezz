@@ -27,6 +27,7 @@ import RoadTaxAlert from './components/RoadTaxAlert';
 import RenewRoadTaxModal from './components/RenewRoadTaxModal';
 import { useRoadTaxNotifications } from './hooks/useRoadTaxNotifications';
 import { useNotificationPrefs } from './hooks/useNotificationPrefs';
+import { useViewMode } from './hooks/useViewMode';
 import NotificationSettings from './components/NotificationSettings';
 import { fillTemplate, formatRoadTaxDate, getRoadTaxAlerts } from './utils/roadTax';
 import { unregisterPushToken } from './utils/pushTokens';
@@ -52,12 +53,12 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 function App() {
-  const { currentUser, logout, loading: authLoading, redirectError, clearRedirectError, role } = useAuth();
+  const { currentUser, logout, loading: authLoading, redirectError, clearRedirectError, role, roleLoaded } = useAuth();
   const { t, language } = useApp();
   const [activeTab, setActiveTab] = useState<MainTab | 'history'>('overview');
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
   const [showVehicleManager, setShowVehicleManager] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const { viewMode, setViewMode } = useViewMode(currentUser?.uid);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [pendingTapSendId, setPendingTapSendId] = useState<string | null>(null);
 
@@ -125,8 +126,18 @@ function App() {
   const [renewVehicleId, setRenewVehicleId] = useState<string | null | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
 
+  // Road tax renewal and the tabs a notification opens are rider screens, so these leave Admin mode
+  const openRenewRoadTax = (vehicleId: string | null) => {
+    setViewMode('rider');
+    setRenewVehicleId(vehicleId);
+    setActiveTab('overview');
+  };
+
   const handleNotificationTap = (sendId: string, openTab: string) => {
-    if (NOTIFICATION_TABS.includes(openTab as MainTab)) setActiveTab(openTab as MainTab);
+    if (NOTIFICATION_TABS.includes(openTab as MainTab)) {
+      setViewMode('rider');
+      setActiveTab(openTab as MainTab);
+    }
     if (sendId) setPendingTapSendId(sendId);
   };
 
@@ -140,30 +151,32 @@ function App() {
   // Tapping a road tax phone notification lands here: via URL when the app was closed,
   // or via a service worker message when it was already open.
   // Tapping an admin notification lands the same way, opening the tab the admin chose.
+  // The URL waits for sign-in, because switching to Rider mode is remembered per account.
   useEffect(() => {
+    if (!currentUser?.uid) return;
     const params = new URLSearchParams(window.location.search);
     if (params.has('renewRoadTax')) {
-      setRenewVehicleId(params.get('renewRoadTax') || null);
-      setActiveTab('overview');
+      openRenewRoadTax(params.get('renewRoadTax') || null);
       window.history.replaceState(null, '', window.location.pathname);
     }
     if (params.has('notificationTab')) {
       handleNotificationTap(params.get('notificationSend') || '', params.get('notificationTab') || '');
       window.history.replaceState(null, '', window.location.pathname);
     }
+  }, [currentUser?.uid]);
 
+  useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
     const onMessage = (event: MessageEvent) => {
       if (event.data?.type === 'renewRoadTax') {
-        setRenewVehicleId(event.data.vehicleId || null);
-        setActiveTab('overview');
+        openRenewRoadTax(event.data.vehicleId || null);
       } else if (event.data?.type === 'customNotification') {
         handleNotificationTap(event.data.sendId || '', event.data.openTab || '');
       }
     };
     navigator.serviceWorker.addEventListener('message', onMessage);
     return () => navigator.serviceWorker.removeEventListener('message', onMessage);
-  }, []);
+  }, [setViewMode]);
 
   // Connecting Google on a phone comes back as a fresh page load, so a failure surfaces here
   // (a failed sign-in, with nobody logged in yet, is shown by AuthPage instead)
@@ -208,7 +221,8 @@ function App() {
     }
   };
 
-  if (!appReady) {
+  // Someone last in Admin mode waits for their role, rather than seeing the rider screens flash first
+  if (!appReady || (viewMode === 'admin' && !roleLoaded)) {
     return <LoadingScreen fadeOut={false} />;
   }
 
@@ -316,6 +330,50 @@ function App() {
     }
   };
 
+  const headerActions = (
+    <>
+      <AnnouncementSystem
+        userId={currentUser.uid}
+        roadTaxAlerts={roadTaxAlerts}
+        onRenewRoadTax={openRenewRoadTax}
+      />
+      <SettingsButton
+        viewMode={viewMode}
+        onChangeViewMode={setViewMode}
+        onOpenNotifications={() => setShowNotificationSettings(true)}
+      />
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-1 sm:gap-2 text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50"
+        aria-label={t.logout}
+      >
+        <LogoutIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+      </button>
+    </>
+  );
+
+  const notificationSettings = showNotificationSettings && (
+    <NotificationSettings
+      permission={roadTaxNotifications.permission}
+      onRequestPermission={roadTaxNotifications.requestPermission}
+      prefs={notificationPrefs.prefs}
+      onChangePref={notificationPrefs.setPref}
+      onClose={() => setShowNotificationSettings(false)}
+    />
+  );
+
+  if (viewMode === 'admin' && isAdminRole(role)) {
+    return (
+      <>
+        {showSplash && <LoadingScreen fadeOut={appReady} />}
+        <React.Suspense fallback={<LoadingScreen fadeOut={false} />}>
+          <AdminPanel headerActions={headerActions} />
+        </React.Suspense>
+        {notificationSettings}
+      </>
+    );
+  }
+
   return (
     <>
       {showSplash && <LoadingScreen fadeOut={appReady} />}
@@ -344,27 +402,7 @@ function App() {
               onManageVehicles={() => setShowVehicleManager(true)}
             />
 
-            {/* ✅ NEW: Announcement System */}
-            <AnnouncementSystem
-              userId={currentUser.uid}
-              roadTaxAlerts={roadTaxAlerts}
-              onRenewRoadTax={setRenewVehicleId}
-            />
-
-            {/* Settings Button */}
-            <SettingsButton
-              onOpenAdmin={() => setShowAdminPanel(true)}
-              onOpenNotifications={() => setShowNotificationSettings(true)}
-            />
-
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1 sm:gap-2 text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50"
-              aria-label={t.logout}
-            >
-              <LogoutIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            {headerActions}
           </div>
         </div>
       </header>
@@ -571,27 +609,7 @@ function App() {
         />
       )}
 
-      {showNotificationSettings && (
-        <NotificationSettings
-          permission={roadTaxNotifications.permission}
-          onRequestPermission={roadTaxNotifications.requestPermission}
-          prefs={notificationPrefs.prefs}
-          onChangePref={notificationPrefs.setPref}
-          onClose={() => setShowNotificationSettings(false)}
-        />
-      )}
-
-      {showAdminPanel && isAdminRole(role) && (
-        <React.Suspense
-          fallback={
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-100 dark:bg-slate-900">
-              <Spinner size="lg" />
-            </div>
-          }
-        >
-          <AdminPanel onClose={() => setShowAdminPanel(false)} />
-        </React.Suspense>
-      )}
+      {notificationSettings}
 
       {toast && (
         <div className="fixed top-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 flex justify-center pointer-events-none">

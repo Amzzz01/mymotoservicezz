@@ -596,6 +596,22 @@ export interface Translations {
   adminLogNotificationCancelled: string;
   adminErrInvalidSchedule: string;
   adminErrNotScheduled: string;
+
+  // Admin and Rider modes
+  viewAs: string;
+  viewAsAdmin: string;
+  viewAsRider: string;
+  viewAsHint: string;
+  adminGoodMorning: string;
+  adminGoodAfternoon: string;
+  adminGoodEvening: string;
+  adminRecentSends: string;
+  adminViewAll: string;
+  adminNotifyLink: string;
+  adminTabHome: string;
+  adminTabHistory: string;
+  adminTabAnnounce: string;
+  adminTabTeam: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -983,9 +999,9 @@ export const translations: Record<Language, Translations> = {
     adminStatUsers: 'Users',
     adminStatVehicles: 'Vehicles',
     adminStatDevices: 'Devices with alerts on',
-    adminStatRoadTaxExpired: 'Road tax expired',
+    adminStatRoadTaxExpired: 'Road tax expired (vehicles)',
     adminSuperadminOnly: 'Superadmin only',
-    adminManageTeam: 'Manage admins',
+    adminManageTeam: 'Manage team',
     adminCountHint: 'Admins: {count}',
     adminUsers: 'Users',
     adminUsersHint: 'Find or disable',
@@ -1195,6 +1211,22 @@ export const translations: Record<Language, Translations> = {
     adminLogNotificationCancelled: 'Cancelled "{title}"',
     adminErrInvalidSchedule: 'Pick a time at least 5 minutes from now and within 60 days.',
     adminErrNotScheduled: 'This send is no longer waiting, so it can\'t be cancelled.',
+
+    // Admin and Rider modes
+    viewAs: 'View as',
+    viewAsAdmin: 'Admin',
+    viewAsRider: 'Rider',
+    viewAsHint: 'Rider shows your own bikes, records and reminders.',
+    adminGoodMorning: 'Good morning',
+    adminGoodAfternoon: 'Good afternoon',
+    adminGoodEvening: 'Good evening',
+    adminRecentSends: 'Recent sends',
+    adminViewAll: 'View all',
+    adminNotifyLink: 'Notify',
+    adminTabHome: 'Home',
+    adminTabHistory: 'History',
+    adminTabAnnounce: 'Announce',
+    adminTabTeam: 'Team',
   },
   ms: {
     // Header
@@ -1580,9 +1612,9 @@ export const translations: Record<Language, Translations> = {
     adminStatUsers: 'Pengguna',
     adminStatVehicles: 'Kenderaan',
     adminStatDevices: 'Peranti dengan makluman aktif',
-    adminStatRoadTaxExpired: 'Cukai jalan tamat',
+    adminStatRoadTaxExpired: 'Cukai jalan tamat (kenderaan)',
     adminSuperadminOnly: 'Superadmin sahaja',
-    adminManageTeam: 'Urus admin',
+    adminManageTeam: 'Urus pasukan',
     adminCountHint: 'Admin: {count}',
     adminUsers: 'Pengguna',
     adminUsersHint: 'Cari atau nyahaktif',
@@ -1792,6 +1824,22 @@ export const translations: Record<Language, Translations> = {
     adminLogNotificationCancelled: 'Membatalkan "{title}"',
     adminErrInvalidSchedule: 'Pilih masa sekurang-kurangnya 5 minit dari sekarang dan dalam 60 hari.',
     adminErrNotScheduled: 'Hantaran ini tidak lagi menunggu, jadi ia tidak boleh dibatalkan.',
+
+    // Admin and Rider modes
+    viewAs: 'Lihat sebagai',
+    viewAsAdmin: 'Admin',
+    viewAsRider: 'Penunggang',
+    viewAsHint: 'Penunggang menunjukkan motosikal, rekod dan peringatan anda sendiri.',
+    adminGoodMorning: 'Selamat pagi',
+    adminGoodAfternoon: 'Selamat petang',
+    adminGoodEvening: 'Selamat malam',
+    adminRecentSends: 'Hantaran terkini',
+    adminViewAll: 'Lihat semua',
+    adminNotifyLink: 'Maklumkan',
+    adminTabHome: 'Utama',
+    adminTabHistory: 'Sejarah',
+    adminTabAnnounce: 'Umum',
+    adminTabTeam: 'Pasukan',
   },
 };
 

@@ -3,12 +3,18 @@ import { useApp } from '../context/AppContext';
 
 interface AdminHeaderProps {
   title: string;
-  onBack: () => void;
-  badge?: string;
+  // Leave out on a main tab, which has no screen to go back to
+  onBack?: () => void;
 }
 
-const AdminHeader: React.FC<AdminHeaderProps> = ({ title, onBack, badge }) => {
+const AdminHeader: React.FC<AdminHeaderProps> = ({ title, onBack }) => {
   const { t } = useApp();
+
+  if (!onBack) {
+    return (
+      <h1 className="max-w-xl mx-auto w-full px-4 pt-4 text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-10 flex items-center gap-2 px-2 py-2.5 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
@@ -22,9 +28,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ title, onBack, badge }) => {
         </svg>
       </button>
       <h1 className="flex-grow text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h1>
-      {badge && (
-        <span className="mr-2 text-xs font-bold text-white bg-violet-700 px-2.5 py-1 rounded-full">{badge}</span>
-      )}
     </header>
   );
 };

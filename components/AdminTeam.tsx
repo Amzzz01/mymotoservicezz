@@ -15,7 +15,7 @@ import { fillTemplate } from '../utils/roadTax';
 import AdminHeader from './AdminHeader';
 import Spinner from './Spinner';
 
-const AdminTeam: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+const AdminTeam: React.FC = () => {
   const { t, language } = useApp();
   const { currentUser } = useAuth();
   const [team, setTeam] = useState<AdminUserSummary[] | null>(null);
@@ -91,7 +91,7 @@ const AdminTeam: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   return (
     <>
-      <AdminHeader title={t.adminManageTeam} onBack={onBack} />
+      <AdminHeader title={t.adminManageTeam} />
       <div className="max-w-xl mx-auto p-4 flex flex-col gap-3">
         <form onSubmit={handleFind} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 flex flex-col gap-2">
           <label htmlFor="admin-email" className="text-sm font-bold text-slate-800 dark:text-slate-100">{t.adminAddTitle}</label>

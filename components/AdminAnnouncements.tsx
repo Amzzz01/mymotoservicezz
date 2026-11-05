@@ -30,7 +30,7 @@ const NEW_ANNOUNCEMENT: AnnouncementFields = {
 const toFields = ({ title, message, version, type, priority, isActive }: ManagedAnnouncement): AnnouncementFields =>
   ({ title, message, version, type, priority, isActive });
 
-const AdminAnnouncements: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+const AdminAnnouncements: React.FC = () => {
   const { t, language } = useApp();
   const [announcements, setAnnouncements] = useState<ManagedAnnouncement[] | null>(null);
   // null = showing the list; otherwise the form is open, for a new one when editingId is undefined
@@ -211,7 +211,7 @@ const AdminAnnouncements: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   return (
     <>
-      <AdminHeader title={t.adminAnnouncements} onBack={onBack} />
+      <AdminHeader title={t.adminAnnouncements} />
       <div className="max-w-xl mx-auto p-4 flex flex-col gap-2.5">
         <button
           onClick={() => openForm(NEW_ANNOUNCEMENT)}

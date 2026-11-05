@@ -1,19 +1,34 @@
-import { useState, useEffect } from 'react';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
+import { useState, useEffect, useMemo } from 'react';
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
   doc,
   setDoc,
   getDoc,
-  orderBy 
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { Language } from '../translations';
 import { Announcement, ViewedAnnouncement } from '../types';
 
-export function useAnnouncements(userId: string) {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+const INBOX_SIZE = 30;
+
+interface InboxItem {
+  id: string;
+  type: 'tip' | 'update';
+  titleEn: string;
+  bodyEn: string;
+  titleMs: string;
+  bodyMs: string;
+  sentAt: string;
+}
+
+export function useAnnouncements(userId: string, language: Language = 'en') {
+  const [globalAnnouncements, setGlobalAnnouncements] = useState<Announcement[]>([]);
+  const [inbox, setInbox] = useState<InboxItem[]>([]);
   const [viewedAnnouncements, setViewedAnnouncements] = useState<ViewedAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +37,7 @@ export function useAnnouncements(userId: string) {
   // Fetch active announcements
   useEffect(() => {
     if (!userId) {
-      setAnnouncements([]);
+      setGlobalAnnouncements([]);
       setLoading(false);
       return;
     }
@@ -45,16 +60,7 @@ export function useAnnouncements(userId: string) {
           } as Announcement);
         });
         
-        // Sort by priority (high > medium > low) then by date (newest first)
-        announcementsData.sort((a, b) => {
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
-          const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
-          if (priorityDiff !== 0) return priorityDiff;
-          
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        });
-        
-        setAnnouncements(announcementsData);
+        setGlobalAnnouncements(announcementsData);
         setLoading(false);
         setError(null);
       },
@@ -95,6 +101,49 @@ export function useAnnouncements(userId: string) {
 
     return () => unsubscribe();
   }, [userId]);
+
+  // Fetch notifications sent to this user from the admin panel
+  useEffect(() => {
+    if (!userId) {
+      setInbox([]);
+      return;
+    }
+
+    const inboxQuery = query(
+      collection(db, 'users', userId, 'inbox'),
+      orderBy('sentAt', 'desc'),
+      limit(INBOX_SIZE)
+    );
+
+    return onSnapshot(
+      inboxQuery,
+      (snapshot) => setInbox(snapshot.docs.map(item => ({ id: item.id, ...item.data() } as InboxItem))),
+      (err) => console.error('Error fetching notifications:', err)
+    );
+  }, [userId]);
+
+  const announcements = useMemo(() => {
+    const fromInbox: Announcement[] = inbox.map(item => ({
+      id: item.id,
+      title: language === 'ms' ? item.titleMs : item.titleEn,
+      message: language === 'ms' ? item.bodyMs : item.bodyEn,
+      type: item.type === 'tip' ? 'maintenance' : 'update',
+      date: item.sentAt,
+      priority: 'medium',
+      isActive: true,
+      createdAt: item.sentAt,
+      fromAdmin: true,
+    }));
+
+    // Sort by priority (high > medium > low) then by date (newest first)
+    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    return [...globalAnnouncements, ...fromInbox].sort((a, b) => {
+      const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+      if (priorityDiff !== 0) return priorityDiff;
+
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  }, [globalAnnouncements, inbox, language]);
 
   // Calculate unread count
   useEffect(() => {

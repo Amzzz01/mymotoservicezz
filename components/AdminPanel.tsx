@@ -4,12 +4,14 @@ import { useAuth } from '../hooks/useAuth';
 import { AdminStats, getAdminErrorMessage, getAdminStats } from '../utils/adminApi';
 import { fillTemplate } from '../utils/roadTax';
 import AdminActivity from './AdminActivity';
+import AdminCompose from './AdminCompose';
 import AdminHeader from './AdminHeader';
+import AdminHistory from './AdminHistory';
 import AdminTeam from './AdminTeam';
 import AdminUsers from './AdminUsers';
 import Spinner from './Spinner';
 
-type AdminScreen = 'home' | 'team' | 'users' | 'activity';
+type AdminScreen = 'home' | 'team' | 'users' | 'activity' | 'compose' | 'history';
 
 const StatCard: React.FC<{ label: string; value: number; alert?: boolean }> = ({ label, value, alert }) => (
   <div className={`bg-white dark:bg-slate-800 border rounded-xl px-3.5 py-3 ${alert && value > 0 ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-700'}`}>
@@ -34,9 +36,21 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [screen, setScreen] = useState<AdminScreen>('home');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [error, setError] = useState('');
+  const [composeEmail, setComposeEmail] = useState<string | undefined>();
+  const [sentMessage, setSentMessage] = useState('');
 
   const isSuperadmin = role === 'superadmin';
   const goHome = () => setScreen('home');
+
+  const openCompose = (email?: string) => {
+    setComposeEmail(email);
+    setScreen('compose');
+  };
+
+  const openHistory = (message = '') => {
+    setSentMessage(message);
+    setScreen('history');
+  };
 
   const loadStats = useCallback(async () => {
     setError('');
@@ -56,8 +70,18 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-100 dark:bg-slate-900 font-sans">
       {screen === 'team' && isSuperadmin && <AdminTeam onBack={goHome} />}
-      {screen === 'users' && isSuperadmin && <AdminUsers onBack={goHome} />}
+      {screen === 'users' && isSuperadmin && <AdminUsers onBack={goHome} onSendTo={openCompose} />}
       {screen === 'activity' && isSuperadmin && <AdminActivity onBack={goHome} />}
+      {screen === 'compose' && (
+        <AdminCompose
+          initialEmail={composeEmail}
+          onBack={goHome}
+          onSent={({ people, attempted }) => openHistory(
+            fillTemplate(t.histSentSuccess, { people: String(people), devices: String(attempted) })
+          )}
+        />
+      )}
+      {screen === 'history' && <AdminHistory successMessage={sentMessage} onBack={goHome} />}
 
       {screen === 'home' && (
         <>
@@ -67,6 +91,16 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             badge={isSuperadmin ? t.roleSuperadmin : t.roleAdmin}
           />
           <div className="max-w-xl mx-auto p-4 flex flex-col gap-3.5">
+            <button
+              onClick={() => openCompose()}
+              className="min-h-[56px] rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold flex items-center justify-center gap-2.5"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeWidth={2.5} d="M12 5v14M5 12h14" />
+              </svg>
+              {t.adminNewNotification}
+            </button>
+
             {error && (
               <div className="bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 rounded-xl p-3.5" role="alert">
                 <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
@@ -88,6 +122,11 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <StatCard label={t.adminStatRoadTaxExpired} value={stats.roadTaxExpired} alert />
               </div>
             )}
+
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mt-0.5">{t.adminManage}</h2>
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+              <MenuRow label={t.adminSendHistory} hint={t.adminSendHistoryHint} onClick={() => openHistory()} />
+            </div>
 
             {isSuperadmin && (
               <>

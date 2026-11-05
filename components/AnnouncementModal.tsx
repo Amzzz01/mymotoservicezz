@@ -208,7 +208,7 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                           <span className="text-white/80 text-xs">v{announcement.version}</span>
                         )}
                       </div>
-                      {getPriorityBadge(announcement.priority)}
+                      {!announcement.fromAdmin && getPriorityBadge(announcement.priority)}
                     </div>
 
                     {/* Content */}

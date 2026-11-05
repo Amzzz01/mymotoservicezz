@@ -22,7 +22,7 @@ const Row: React.FC<{ label: string; value: string | number }> = ({ label, value
   </div>
 );
 
-const AdminUsers: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+const AdminUsers: React.FC<{ onBack: () => void; onSendTo: (email: string) => void }> = ({ onBack, onSendTo }) => {
   const { t, language } = useApp();
   const { currentUser } = useAuth();
   const [query, setQuery] = useState('');
@@ -136,6 +136,15 @@ const AdminUsers: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             </div>
 
             <p className="px-3 py-2.5 rounded-lg bg-slate-100 dark:bg-slate-700/50 text-sm text-slate-700 dark:text-slate-300">{t.adminPrivateNote}</p>
+
+            {!user.disabled && user.email && (
+              <button
+                onClick={() => onSendTo(user.email)}
+                className="min-h-[46px] rounded-lg border border-cyan-600 text-cyan-800 dark:text-cyan-300 text-sm font-bold hover:bg-cyan-50 dark:hover:bg-cyan-900/30"
+              >
+                {t.adminSendNotification}
+              </button>
+            )}
 
             {user.role === 'user' && user.uid !== currentUser?.uid && (
               user.disabled ? (

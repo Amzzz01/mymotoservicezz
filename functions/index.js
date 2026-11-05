@@ -20,6 +20,15 @@ export {
   setAdminRole,
   setUserDisabled,
 } from './admin.js';
+export {
+  getAudienceCounts,
+  getSendHistory,
+  previewNotification,
+  recordNotificationTap,
+  sendNotification,
+  sendTestNotification,
+  setDailySendLimit,
+} from './notifications.js';
 
 initializeApp();
 

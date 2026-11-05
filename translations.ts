@@ -446,6 +446,83 @@ export interface Translations {
   adminErrAlreadyDisabled: string;
   adminErrNotDisabled: string;
   adminErrGeneric: string;
+
+  // Admin notifications
+  adminNewNotification: string;
+  adminManage: string;
+  adminSendHistory: string;
+  adminSendHistoryHint: string;
+  adminSendNotification: string;
+  adminFilterSends: string;
+  adminLogNotificationSent: string;
+  adminLogNotificationDetail: string;
+  adminLogLimitChanged: string;
+  adminLogLimitDetail: string;
+  adminErrInvalidAudience: string;
+  adminErrInvalidContent: string;
+  adminErrInvalidLimit: string;
+  adminErrNoRecipients: string;
+  adminErrNoDevices: string;
+  adminErrAlreadySent: string;
+  adminErrLimitReached: string;
+  adminErrSendFailed: string;
+  notifTypeTip: string;
+  notifTypeUpdate: string;
+  notifSendTo: string;
+  notifOpens: string;
+  notifTest: string;
+  notifContinue: string;
+  notifTestSent: string;
+  notifEnableAlerts: string;
+  notifAlertsOn: string;
+  notifAlertsBlocked: string;
+  audSectionPeople: string;
+  audEveryone: string;
+  audPick: string;
+  audPickHint: string;
+  audEmailsLabel: string;
+  audSectionRoadTax: string;
+  audRoadTaxExpired: string;
+  audRoadTaxSoon: string;
+  audSectionActivity: string;
+  audNew: string;
+  audInactive: string;
+  audNoVehicle: string;
+  audSectionVehicle: string;
+  audVehicle: string;
+  audVehicleHint: string;
+  audVehicleValue: string;
+  audLanguage: string;
+  audLanguageHint: string;
+  audLanguageValue: string;
+  audServiceOverdue: string;
+  audLater: string;
+  audDevices: string;
+  audPeopleCount: string;
+  audDone: string;
+  confTitle: string;
+  confNote: string;
+  confLook: string;
+  confType: string;
+  confLanguages: string;
+  confLanguagesValue: string;
+  confBell: string;
+  confSendsLeft: string;
+  confSendsLeftValue: string;
+  confUnknown: string;
+  confTypeSend: string;
+  confSendNow: string;
+  histSent: string;
+  histSending: string;
+  histFailed: string;
+  histAttempted: string;
+  histDelivered: string;
+  histTapped: string;
+  histEmpty: string;
+  histUsage: string;
+  histChangeLimit: string;
+  histLimitPrompt: string;
+  histSentSuccess: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -895,6 +972,83 @@ export const translations: Record<Language, Translations> = {
     adminErrAlreadyDisabled: 'This account is already disabled.',
     adminErrNotDisabled: 'This account is not disabled.',
     adminErrGeneric: 'Something went wrong. Check your connection and try again.',
+
+    // Admin notifications
+    adminNewNotification: 'New notification',
+    adminManage: 'Manage',
+    adminSendHistory: 'Send history',
+    adminSendHistoryHint: 'What was sent',
+    adminSendNotification: 'Send notification',
+    adminFilterSends: 'Sends',
+    adminLogNotificationSent: 'Sent "{title}"',
+    adminLogNotificationDetail: 'To {audience}, {devices} devices',
+    adminLogLimitChanged: 'Changed daily send limit',
+    adminLogLimitDetail: 'From {from} to {to} a day',
+    adminErrInvalidAudience: 'Check who this is going to. You can pick up to 20 full emails.',
+    adminErrInvalidContent: 'Fill in the title and message in both languages.',
+    adminErrInvalidLimit: 'Enter a whole number from 1 to 20.',
+    adminErrNoRecipients: 'Nobody is in this group right now.',
+    adminErrNoDevices: 'This account has no device with alerts on.',
+    adminErrAlreadySent: 'This notification was already sent. Check Send history.',
+    adminErrLimitReached: 'The daily send limit has been reached. Try again tomorrow.',
+    adminErrSendFailed: 'The send stopped partway. Check Send history before trying again, as some people may already have it.',
+    notifTypeTip: 'Service tip',
+    notifTypeUpdate: 'App update',
+    notifSendTo: 'Send to',
+    notifOpens: 'Opens',
+    notifTest: 'Send test to me',
+    notifContinue: 'Continue',
+    notifTestSent: 'Test sent to your devices: {count}. It does not appear in any bell or in history.',
+    notifEnableAlerts: 'Turn on alerts on this device',
+    notifAlertsOn: 'Alerts are on. Tap Send test to me again.',
+    notifAlertsBlocked: 'Alerts could not be turned on. Allow notifications for this app in your browser or phone settings.',
+    audSectionPeople: 'People',
+    audEveryone: 'Everyone',
+    audPick: 'One or a few users',
+    audPickHint: 'By email',
+    audEmailsLabel: 'Full emails, one per line (up to 20)',
+    audSectionRoadTax: 'Road tax',
+    audRoadTaxExpired: 'Road tax expired',
+    audRoadTaxSoon: 'Expiring within 30 days',
+    audSectionActivity: 'Activity',
+    audNew: 'New in the last 30 days',
+    audInactive: 'Inactive for 60 days',
+    audNoVehicle: 'No vehicle added yet',
+    audSectionVehicle: 'Vehicle and language',
+    audVehicle: 'Vehicle type contains',
+    audVehicleHint: 'e.g. Honda',
+    audVehicleValue: 'Vehicle type: {text}',
+    audLanguage: 'Language',
+    audLanguageHint: 'EN or BM',
+    audLanguageValue: 'Language: {language}',
+    audServiceOverdue: 'Service overdue',
+    audLater: 'Later',
+    audDevices: 'Devices: {count}',
+    audPeopleCount: 'People: {count}',
+    audDone: 'Done',
+    confTitle: 'Send to {count} devices?',
+    confNote: 'A notification can\'t be taken back once it\'s sent.',
+    confLook: 'How it will look',
+    confType: 'Type',
+    confLanguages: 'Languages',
+    confLanguagesValue: '{en} EN, {ms} BM',
+    confBell: 'Also added to the bell',
+    confSendsLeft: 'Sends left today',
+    confSendsLeftValue: '{left} of {limit}',
+    confUnknown: 'No account found, so these will be skipped: {emails}',
+    confTypeSend: 'Sending to everyone: type SEND to confirm',
+    confSendNow: 'Send now',
+    histSent: 'Sent',
+    histSending: 'Sending',
+    histFailed: 'Failed',
+    histAttempted: 'Attempted',
+    histDelivered: 'Delivered to FCM',
+    histTapped: 'Tapped',
+    histEmpty: 'Nothing has been sent yet.',
+    histUsage: 'Group sends today: {used} of {limit}',
+    histChangeLimit: 'Change limit',
+    histLimitPrompt: 'Group sends allowed per day (1 to 20)',
+    histSentSuccess: 'Sent. People: {people}, devices: {devices}.',
   },
   ms: {
     // Header
@@ -1342,6 +1496,83 @@ export const translations: Record<Language, Translations> = {
     adminErrAlreadyDisabled: 'Akaun ini sudah dinyahaktif.',
     adminErrNotDisabled: 'Akaun ini tidak dinyahaktif.',
     adminErrGeneric: 'Ada masalah. Semak sambungan anda dan cuba lagi.',
+
+    // Admin notifications
+    adminNewNotification: 'Notifikasi baharu',
+    adminManage: 'Urus',
+    adminSendHistory: 'Sejarah penghantaran',
+    adminSendHistoryHint: 'Apa yang dihantar',
+    adminSendNotification: 'Hantar notifikasi',
+    adminFilterSends: 'Hantaran',
+    adminLogNotificationSent: 'Menghantar "{title}"',
+    adminLogNotificationDetail: 'Kepada {audience}, {devices} peranti',
+    adminLogLimitChanged: 'Mengubah had penghantaran harian',
+    adminLogLimitDetail: 'Daripada {from} kepada {to} sehari',
+    adminErrInvalidAudience: 'Semak penerima. Anda boleh pilih sehingga 20 e-mel penuh.',
+    adminErrInvalidContent: 'Isi tajuk dan mesej dalam kedua-dua bahasa.',
+    adminErrInvalidLimit: 'Masukkan nombor bulat dari 1 hingga 20.',
+    adminErrNoRecipients: 'Tiada sesiapa dalam kumpulan ini sekarang.',
+    adminErrNoDevices: 'Akaun ini tiada peranti dengan makluman aktif.',
+    adminErrAlreadySent: 'Notifikasi ini sudah dihantar. Semak Sejarah penghantaran.',
+    adminErrLimitReached: 'Had penghantaran harian telah dicapai. Cuba lagi esok.',
+    adminErrSendFailed: 'Penghantaran terhenti separuh jalan. Semak Sejarah penghantaran sebelum cuba lagi, kerana sesetengah orang mungkin sudah menerimanya.',
+    notifTypeTip: 'Tip servis',
+    notifTypeUpdate: 'Kemas kini aplikasi',
+    notifSendTo: 'Hantar kepada',
+    notifOpens: 'Membuka',
+    notifTest: 'Hantar ujian kepada saya',
+    notifContinue: 'Teruskan',
+    notifTestSent: 'Ujian dihantar ke peranti anda: {count}. Ia tidak muncul dalam loceng atau sejarah.',
+    notifEnableAlerts: 'Aktifkan makluman pada peranti ini',
+    notifAlertsOn: 'Makluman aktif. Ketik Hantar ujian kepada saya sekali lagi.',
+    notifAlertsBlocked: 'Makluman tidak dapat diaktifkan. Benarkan notifikasi untuk aplikasi ini dalam tetapan pelayar atau telefon.',
+    audSectionPeople: 'Orang',
+    audEveryone: 'Semua orang',
+    audPick: 'Seorang atau beberapa pengguna',
+    audPickHint: 'Ikut e-mel',
+    audEmailsLabel: 'E-mel penuh, satu setiap baris (sehingga 20)',
+    audSectionRoadTax: 'Cukai jalan',
+    audRoadTaxExpired: 'Cukai jalan tamat',
+    audRoadTaxSoon: 'Tamat dalam 30 hari',
+    audSectionActivity: 'Aktiviti',
+    audNew: 'Baharu dalam 30 hari lepas',
+    audInactive: 'Tidak aktif selama 60 hari',
+    audNoVehicle: 'Belum tambah kenderaan',
+    audSectionVehicle: 'Kenderaan dan bahasa',
+    audVehicle: 'Jenis kenderaan mengandungi',
+    audVehicleHint: 'cth. Honda',
+    audVehicleValue: 'Jenis kenderaan: {text}',
+    audLanguage: 'Bahasa',
+    audLanguageHint: 'EN atau BM',
+    audLanguageValue: 'Bahasa: {language}',
+    audServiceOverdue: 'Servis tertunggak',
+    audLater: 'Kemudian',
+    audDevices: 'Peranti: {count}',
+    audPeopleCount: 'Orang: {count}',
+    audDone: 'Selesai',
+    confTitle: 'Hantar ke {count} peranti?',
+    confNote: 'Notifikasi tidak boleh ditarik balik selepas dihantar.',
+    confLook: 'Rupa notifikasi',
+    confType: 'Jenis',
+    confLanguages: 'Bahasa',
+    confLanguagesValue: '{en} EN, {ms} BM',
+    confBell: 'Turut ditambah ke loceng',
+    confSendsLeft: 'Baki hantaran hari ini',
+    confSendsLeftValue: '{left} daripada {limit}',
+    confUnknown: 'Tiada akaun dijumpai, jadi ini akan dilangkau: {emails}',
+    confTypeSend: 'Menghantar kepada semua orang: taip SEND untuk sahkan',
+    confSendNow: 'Hantar sekarang',
+    histSent: 'Dihantar',
+    histSending: 'Sedang dihantar',
+    histFailed: 'Gagal',
+    histAttempted: 'Dicuba',
+    histDelivered: 'Diterima FCM',
+    histTapped: 'Diketik',
+    histEmpty: 'Belum ada apa-apa dihantar.',
+    histUsage: 'Hantaran kumpulan hari ini: {used} daripada {limit}',
+    histChangeLimit: 'Ubah had',
+    histLimitPrompt: 'Hantaran kumpulan dibenarkan sehari (1 hingga 20)',
+    histSentSuccess: 'Dihantar. Orang: {people}, peranti: {devices}.',
   },
 };
 

@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../hooks/useAuth';
-import { AdminLogAction, AdminLogEntry, formatAdminDateTime, getActivityLog, getAdminErrorMessage } from '../utils/adminApi';
+import { AdminLogEntry, describeAudience, formatAdminDateTime, getActivityLog, getAdminErrorMessage } from '../utils/adminApi';
+import { fillTemplate } from '../utils/roadTax';
 import AdminHeader from './AdminHeader';
 import Spinner from './Spinner';
 
@@ -28,15 +29,38 @@ const AdminActivity: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     load();
   }, [load]);
 
-  const actionLabels: Record<AdminLogAction, string> = {
-    role_added: t.adminLogRoleAdded,
-    role_removed: t.adminLogRoleRemoved,
-    user_disabled: t.adminLogUserDisabled,
-    user_enabled: t.adminLogUserEnabled,
+  const describeEntry = (entry: AdminLogEntry): { title: string; detail: string } => {
+    const { details } = entry;
+    switch (entry.action) {
+      case 'role_added':
+        return { title: t.adminLogRoleAdded, detail: entry.targetEmail };
+      case 'role_removed':
+        return { title: t.adminLogRoleRemoved, detail: entry.targetEmail };
+      case 'user_disabled':
+        return { title: t.adminLogUserDisabled, detail: `${entry.targetEmail}. ${t.adminReasonPrefix}: ${entry.reason}` };
+      case 'user_enabled':
+        return { title: t.adminLogUserEnabled, detail: entry.targetEmail };
+      case 'notification_sent':
+        return {
+          title: fillTemplate(t.adminLogNotificationSent, { title: details?.title ?? '' }),
+          detail: fillTemplate(t.adminLogNotificationDetail, {
+            audience: details?.audience ? describeAudience(details.audience, t) : '',
+            devices: String(details?.devices ?? 0),
+          }),
+        };
+      case 'limit_changed':
+        return {
+          title: t.adminLogLimitChanged,
+          detail: fillTemplate(t.adminLogLimitDetail, { from: String(details?.from ?? ''), to: String(details?.to ?? '') }),
+        };
+      default:
+        return { title: entry.action, detail: entry.targetEmail };
+    }
   };
 
   const filters: { id: LogFilter; label: string }[] = [
     { id: 'all', label: t.adminFilterAll },
+    { id: 'sends', label: t.adminFilterSends },
     { id: 'roles', label: t.adminFilterRoles },
     { id: 'users', label: t.adminFilterUsers },
   ];
@@ -47,7 +71,7 @@ const AdminActivity: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     <>
       <AdminHeader title={t.adminActivity} onBack={onBack} />
       <div className="max-w-xl mx-auto p-4 flex flex-col gap-3">
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-4 gap-1.5">
           {filters.map(({ id, label }) => (
             <button
               key={id}
@@ -76,17 +100,18 @@ const AdminActivity: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
         {visible && visible.length > 0 && (
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
-            {visible.map(entry => (
-              <div key={entry.id} className="px-3.5 py-3 flex flex-col gap-1 border-b last:border-b-0 border-slate-200 dark:border-slate-700">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{actionLabels[entry.action] ?? entry.action}</span>
-                <span className="text-sm text-slate-700 dark:text-slate-300 break-all">
-                  {entry.targetEmail}{entry.reason && `. ${t.adminReasonPrefix}: ${entry.reason}`}
-                </span>
-                <span className="text-sm text-slate-600 dark:text-slate-400 break-all">
-                  {entry.actorEmail === currentUser?.email ? t.adminYou : entry.actorEmail} · {formatAdminDateTime(entry.createdAt, language)}
-                </span>
-              </div>
-            ))}
+            {visible.map(entry => {
+              const { title, detail } = describeEntry(entry);
+              return (
+                <div key={entry.id} className="px-3.5 py-3 flex flex-col gap-1 border-b last:border-b-0 border-slate-200 dark:border-slate-700">
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100 break-words">{title}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300 break-words">{detail}</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-400 break-all">
+                    {entry.actorEmail === currentUser?.email ? t.adminYou : entry.actorEmail} · {formatAdminDateTime(entry.createdAt, language)}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
 

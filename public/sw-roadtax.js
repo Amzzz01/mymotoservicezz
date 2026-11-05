@@ -1,5 +1,6 @@
 // Imported into the generated Workbox service worker (see vite.config.ts → workbox.importScripts).
-// Shows the daily road tax push (sent by functions/index.js, even when the app is closed).
+// Shows pushes sent by Cloud Functions, even when the app is closed: the daily road tax alert
+// and notifications written by admins.
 self.addEventListener('push', (event) => {
   let data;
   try {
@@ -7,7 +8,22 @@ self.addEventListener('push', (event) => {
   } catch {
     return;
   }
-  if (!data || data.type !== 'roadTax') return;
+  if (!data) return;
+
+  if (data.type === 'custom') {
+    event.waitUntil(
+      self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-96x96.png',
+        tag: 'custom-' + (data.sendId || 'test'),
+        data: { sendId: data.sendId, openTab: data.openTab },
+      })
+    );
+    return;
+  }
+
+  if (data.type !== 'roadTax') return;
 
   event.waitUntil(
     self.registration.showNotification(data.title, {
@@ -20,6 +36,28 @@ self.addEventListener('push', (event) => {
         { action: 'renew', title: data.renewLabel },
         { action: 'later', title: data.laterLabel },
       ],
+    })
+  );
+});
+
+// Handles taps on admin notifications: opens the chosen tab, and the app counts the tap.
+self.addEventListener('notificationclick', (event) => {
+  const tag = event.notification.tag || '';
+  if (!tag.startsWith('custom-')) return;
+
+  event.notification.close();
+  const { sendId = '', openTab = '' } = event.notification.data || {};
+  const url = '/?notificationTab=' + encodeURIComponent(openTab) + '&notificationSend=' + encodeURIComponent(sendId);
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      for (const client of windows) {
+        if ('focus' in client) {
+          client.postMessage({ type: 'customNotification', sendId, openTab });
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
     })
   );
 });

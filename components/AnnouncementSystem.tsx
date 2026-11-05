@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAnnouncements } from '../hooks/useAnnouncements';
 import AnnouncementModal from './AnnouncementModal';
 import { RoadTaxAlert } from '../utils/roadTax';
+import { useApp } from '../context/AppContext';
 
 interface AnnouncementSystemProps {
   userId: string;
@@ -17,6 +18,7 @@ const BellIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const AnnouncementSystem: React.FC<AnnouncementSystemProps> = ({ userId, roadTaxAlerts, onRenewRoadTax }) => {
+  const { language } = useApp();
   const {
     announcements,
     viewedAnnouncements,
@@ -24,7 +26,7 @@ const AnnouncementSystem: React.FC<AnnouncementSystemProps> = ({ userId, roadTax
     markAsViewed,
     markAllAsViewed,
     getUnreadAnnouncements
-  } = useAnnouncements(userId);
+  } = useAnnouncements(userId, language);
 
   const [showModal, setShowModal] = useState(false);
   const [showInitialPopup, setShowInitialPopup] = useState(false);

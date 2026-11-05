@@ -35,6 +35,8 @@ import { isAdminRole } from './utils/roles';
 // Separate download, so normal users never load the admin code
 const AdminPanel = React.lazy(() => import('./components/AdminPanel'));
 
+const NOTIFICATION_TABS: MainTab[] = ['overview', 'analytics', 'mileage', 'reminders'];
+
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path d="M18.586 4H5.414A2.914 2.914 0 002.5 6.914v1.072A8.004 8.004 0 004 12.5v4.619a1 1 0 001.32.949l3.41-1.364A1 1 0 009 17.76V16h6v1.76a1 1 0 01-.27.648l-3.41 1.364a1 1 0 00-1.32.95V22h2a1 1 0 001-1v-1.115a8.04 8.04 0 003-3.033V15a1 1 0 00-1-1h-1v-1.5a8.004 8.004 0 001.5-4.514V6.914A2.914 2.914 0 0018.586 4zM8 12c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm8 0c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z" />
@@ -54,6 +56,7 @@ function App() {
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
   const [showVehicleManager, setShowVehicleManager] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [pendingTapSendId, setPendingTapSendId] = useState<string | null>(null);
 
   // FAB quick-action triggers: each is a nonce that increments on every tap, so the
   // target component's effect fires whether it's already mounted or remounting fresh.
@@ -118,13 +121,30 @@ function App() {
   const [renewVehicleId, setRenewVehicleId] = useState<string | null | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
 
+  const handleNotificationTap = (sendId: string, openTab: string) => {
+    if (NOTIFICATION_TABS.includes(openTab as MainTab)) setActiveTab(openTab as MainTab);
+    if (sendId) setPendingTapSendId(sendId);
+  };
+
+  // Waits for sign-in, because the page is still loading the account when opened from a notification
+  useEffect(() => {
+    if (!pendingTapSendId || !currentUser) return;
+    setPendingTapSendId(null);
+    import('./utils/notificationTap').then(({ recordNotificationTap }) => recordNotificationTap(pendingTapSendId));
+  }, [pendingTapSendId, currentUser]);
+
   // Tapping a road tax phone notification lands here: via URL when the app was closed,
   // or via a service worker message when it was already open.
+  // Tapping an admin notification lands the same way, opening the tab the admin chose.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.has('renewRoadTax')) {
       setRenewVehicleId(params.get('renewRoadTax') || null);
       setActiveTab('overview');
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+    if (params.has('notificationTab')) {
+      handleNotificationTap(params.get('notificationSend') || '', params.get('notificationTab') || '');
       window.history.replaceState(null, '', window.location.pathname);
     }
 
@@ -133,6 +153,8 @@ function App() {
       if (event.data?.type === 'renewRoadTax') {
         setRenewVehicleId(event.data.vehicleId || null);
         setActiveTab('overview');
+      } else if (event.data?.type === 'customNotification') {
+        handleNotificationTap(event.data.sendId || '', event.data.openTab || '');
       }
     };
     navigator.serviceWorker.addEventListener('message', onMessage);

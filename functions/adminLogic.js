@@ -59,4 +59,7 @@ export const summarizeUser = (record) => ({
   roleAddedAt: record.customClaims?.roleAddedAt ?? null,
 });
 
-export const logCategory = (action) => (action.startsWith('role_') ? 'roles' : 'users');
+export const logCategory = (action) => {
+  if (action.startsWith('role_')) return 'roles';
+  return action.startsWith('user_') ? 'users' : 'sends';
+};

@@ -111,4 +111,6 @@ test('logCategory separates role changes from user changes', () => {
   assert.equal(logCategory('role_removed'), 'roles');
   assert.equal(logCategory('user_disabled'), 'users');
   assert.equal(logCategory('user_enabled'), 'users');
+  assert.equal(logCategory('notification_sent'), 'sends');
+  assert.equal(logCategory('limit_changed'), 'sends');
 });

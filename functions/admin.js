@@ -16,15 +16,15 @@ import {
 } from './adminLogic.js';
 import { todayInMalaysia } from './roadTax.js';
 
-const CALLABLE_OPTIONS = { region: 'asia-southeast1', maxInstances: 5 };
-const STAFF = ['admin', 'superadmin'];
-const SUPERADMIN = ['superadmin'];
+export const CALLABLE_OPTIONS = { region: 'asia-southeast1', maxInstances: 5 };
+export const STAFF = ['admin', 'superadmin'];
+export const SUPERADMIN = ['superadmin'];
 const MAX_SEARCH_RESULTS = 10;
 const LOG_PAGE_SIZE = 100;
 const EARLIEST_EXPIRY = '2000-01-01'; // Keeps blank road tax dates out of the expired count
 
 // Runs on every call, so nothing here relies on what the sign-in token claims
-const requireRole = async (request, allowedRoles) => {
+export const requireRole = async (request, allowedRoles) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'no-access');
   const actor = await getAuth().getUser(request.auth.uid);
   if (!hasAccess(actor, allowedRoles)) throw new HttpsError('permission-denied', 'no-access');
@@ -41,12 +41,12 @@ const getTarget = async (uid) => {
   }
 };
 
-const rejectIf = (code) => {
+export const rejectIf = (code) => {
   if (code) throw new HttpsError('failed-precondition', code);
 };
 
 // The action already happened by now, so a logging failure is reported rather than undoing it
-const writeLog = async (actor, target, action, reason = '') => {
+export const writeLog = async (actor, target, action, reason = '', details = null) => {
   try {
     await getFirestore().collection('adminLogs').add({
       action,
@@ -56,6 +56,7 @@ const writeLog = async (actor, target, action, reason = '') => {
       targetUid: target.uid,
       targetEmail: target.email ?? '',
       reason,
+      details,
       createdAt: FieldValue.serverTimestamp(),
     });
   } catch (error) {
@@ -63,7 +64,7 @@ const writeLog = async (actor, target, action, reason = '') => {
   }
 };
 
-const forEachUser = async (visit) => {
+export const forEachUser = async (visit) => {
   let pageToken;
   do {
     const page = await getAuth().listUsers(1000, pageToken);
@@ -179,6 +180,7 @@ export const getActivityLog = onCall(CALLABLE_OPTIONS, async (request) => {
         actorEmail: entry.actorEmail,
         targetEmail: entry.targetEmail,
         reason: entry.reason,
+        details: entry.details ?? null,
         createdAt: entry.createdAt?.toDate().toISOString() ?? null,
       };
     }),

@@ -140,6 +140,12 @@ service cloud.firestore {
           && request.resource.data.language in ['en', 'ms']
           && request.resource.data.updatedAt is string;
       }
+
+      // ─── Admin notifications shown in the bell (written only by Cloud Functions) ───
+      match /inbox/{sendId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
     }
   }
 }

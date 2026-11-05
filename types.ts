@@ -185,6 +185,7 @@ export interface Announcement {
   priority: 'low' | 'medium' | 'high';
   isActive: boolean;
   createdAt: string;
+  fromAdmin?: boolean; // A notification written in the admin panel, rather than an app-wide announcement
 }
 
 export interface ViewedAnnouncement {

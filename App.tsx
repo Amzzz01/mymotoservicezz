@@ -30,6 +30,10 @@ import { fillTemplate, formatRoadTaxDate, getRoadTaxAlerts } from './utils/roadT
 import { unregisterPushToken } from './utils/pushTokens';
 import { getAuthErrorMessage } from './utils/authErrors';
 import EmailVerifyBanner from './components/EmailVerifyBanner';
+import { isAdminRole } from './utils/roles';
+
+// Separate download, so normal users never load the admin code
+const AdminPanel = React.lazy(() => import('./components/AdminPanel'));
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -44,11 +48,12 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 function App() {
-  const { currentUser, logout, loading: authLoading, redirectError, clearRedirectError } = useAuth();
+  const { currentUser, logout, loading: authLoading, redirectError, clearRedirectError, role } = useAuth();
   const { t, language } = useApp();
   const [activeTab, setActiveTab] = useState<MainTab | 'history'>('overview');
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
   const [showVehicleManager, setShowVehicleManager] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
 
   // FAB quick-action triggers: each is a nonce that increments on every tap, so the
   // target component's effect fires whether it's already mounted or remounting fresh.
@@ -321,7 +326,7 @@ function App() {
             />
 
             {/* Settings Button */}
-            <SettingsButton />
+            <SettingsButton onOpenAdmin={() => setShowAdminPanel(true)} />
 
             {/* Logout Button */}
             <button
@@ -535,6 +540,18 @@ function App() {
           onSave={handleRenewRoadTax}
           onClose={() => setRenewVehicleId(undefined)}
         />
+      )}
+
+      {showAdminPanel && isAdminRole(role) && (
+        <React.Suspense
+          fallback={
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-100 dark:bg-slate-900">
+              <Spinner size="lg" />
+            </div>
+          }
+        >
+          <AdminPanel onClose={() => setShowAdminPanel(false)} />
+        </React.Suspense>
       )}
 
       {toast && (

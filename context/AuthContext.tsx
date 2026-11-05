@@ -60,6 +60,7 @@ interface AuthProviderProps {
 const SESSION_TIMEOUT = 15 * 60 * 1000; // 30 minutes
 const WARNING_TIME = 5 * 60 * 1000; // Show warning 5 minutes before timeout
 const ACTIVITY_THRESHOLD = 60 * 1000; // 1 minute - minimum time between timer resets
+const TOKEN_REFRESH_GAP = 5 * 60 * 1000; // 5 minutes - minimum time between forced token refreshes
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
@@ -190,6 +191,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     });
   }, []);
+
+  // A role change or disable only reaches this device with a fresh token, so fetch one on opening
+  // the app and on coming back to it. Firebase signs the user out itself if access was revoked.
+  useEffect(() => {
+    if (!currentUser) return;
+    let lastRefresh = 0;
+    const refreshToken = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - lastRefresh < TOKEN_REFRESH_GAP) return;
+      lastRefresh = Date.now();
+      currentUser.getIdToken(true).catch(error => console.warn('Could not refresh sign-in token:', error));
+    };
+    refreshToken();
+    document.addEventListener('visibilitychange', refreshToken);
+    return () => document.removeEventListener('visibilitychange', refreshToken);
+  }, [currentUser]);
 
   const refreshUser = async (): Promise<boolean> => {
     const user = auth.currentUser;

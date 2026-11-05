@@ -12,6 +12,15 @@ import {
   todayInMalaysia,
 } from './roadTax.js';
 
+export {
+  getActivityLog,
+  getAdminStats,
+  listAdmins,
+  searchUsers,
+  setAdminRole,
+  setUserDisabled,
+} from './admin.js';
+
 initializeApp();
 
 const FCM_BATCH_SIZE = 500;

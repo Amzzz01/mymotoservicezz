@@ -372,6 +372,80 @@ export interface Translations {
   accountRole: string;
   roleAdmin: string;
   roleSuperadmin: string;
+
+  // Admin panel
+  adminPanel: string;
+  adminBack: string;
+  adminRetry: string;
+  adminCancel: string;
+  adminYes: string;
+  adminNo: string;
+  adminYou: string;
+  adminStatUsers: string;
+  adminStatVehicles: string;
+  adminStatDevices: string;
+  adminStatRoadTaxExpired: string;
+  adminSuperadminOnly: string;
+  adminManageTeam: string;
+  adminCountHint: string;
+  adminUsers: string;
+  adminUsersHint: string;
+  adminActivity: string;
+  adminActivityHint: string;
+  adminAddTitle: string;
+  adminFind: string;
+  adminAddHint: string;
+  adminEmailVerified: string;
+  adminJoinedVia: string;
+  adminMake: string;
+  adminConfirmMake: string;
+  adminMadeSuccess: string;
+  adminConfirmRemove: string;
+  adminRemovedSuccess: string;
+  adminCurrentTeam: string;
+  adminAddedOn: string;
+  adminRemove: string;
+  adminTeamNote: string;
+  adminFindByEmail: string;
+  adminNoUsers: string;
+  adminShowingSome: string;
+  adminStatusActive: string;
+  adminStatusDisabled: string;
+  adminJoined: string;
+  adminLastSignIn: string;
+  adminSignInMethods: string;
+  adminEmailVerifiedLabel: string;
+  adminProviderPassword: string;
+  adminPrivateNote: string;
+  adminEnable: string;
+  adminDisable: string;
+  adminDisableReason: string;
+  adminReasonRequired: string;
+  adminConfirmEnable: string;
+  adminDisableNote: string;
+  adminFilterAll: string;
+  adminFilterRoles: string;
+  adminFilterUsers: string;
+  adminNoActivity: string;
+  adminReasonPrefix: string;
+  adminLogNote: string;
+  adminLogRoleAdded: string;
+  adminLogRoleRemoved: string;
+  adminLogUserDisabled: string;
+  adminLogUserEnabled: string;
+  adminErrNoAccess: string;
+  adminErrUserNotFound: string;
+  adminErrQueryTooShort: string;
+  adminErrSelf: string;
+  adminErrSuperadmin: string;
+  adminErrAlreadyAdmin: string;
+  adminErrNotAdmin: string;
+  adminErrNotVerified: string;
+  adminErrUserDisabled: string;
+  adminErrRemoveRoleFirst: string;
+  adminErrAlreadyDisabled: string;
+  adminErrNotDisabled: string;
+  adminErrGeneric: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -747,6 +821,80 @@ export const translations: Record<Language, Translations> = {
     accountRole: 'Role',
     roleAdmin: 'Admin',
     roleSuperadmin: 'Superadmin',
+
+    // Admin panel
+    adminPanel: 'Admin panel',
+    adminBack: 'Back',
+    adminRetry: 'Try again',
+    adminCancel: 'Cancel',
+    adminYes: 'Yes',
+    adminNo: 'No',
+    adminYou: 'You',
+    adminStatUsers: 'Users',
+    adminStatVehicles: 'Vehicles',
+    adminStatDevices: 'Devices with alerts on',
+    adminStatRoadTaxExpired: 'Road tax expired',
+    adminSuperadminOnly: 'Superadmin only',
+    adminManageTeam: 'Manage admins',
+    adminCountHint: 'Admins: {count}',
+    adminUsers: 'Users',
+    adminUsersHint: 'Find or disable',
+    adminActivity: 'Activity log',
+    adminActivityHint: 'Who did what',
+    adminAddTitle: 'Add an admin',
+    adminFind: 'Find',
+    adminAddHint: 'Enter their full email. The person must register first, and their email must be verified.',
+    adminEmailVerified: 'Email verified',
+    adminJoinedVia: 'Joined {date} · {methods}',
+    adminMake: 'Make admin',
+    adminConfirmMake: 'Make {email} an admin?',
+    adminMadeSuccess: '{email} is now an admin. They get access the next time they open the app.',
+    adminConfirmRemove: 'Remove {email} as admin? They will be signed out.',
+    adminRemovedSuccess: '{email} is no longer an admin.',
+    adminCurrentTeam: 'Current team',
+    adminAddedOn: 'Added {date}',
+    adminRemove: 'Remove',
+    adminTeamNote: 'Removing an admin blocks their admin access straight away and signs them out the next time their app connects. Superadmin can\'t be added or removed here.',
+    adminFindByEmail: 'Find by email',
+    adminNoUsers: 'No users found.',
+    adminShowingSome: 'Showing {shown} of {total}. Type more of the email to narrow it down.',
+    adminStatusActive: 'Active',
+    adminStatusDisabled: 'Disabled',
+    adminJoined: 'Joined',
+    adminLastSignIn: 'Last sign-in',
+    adminSignInMethods: 'Sign-in methods',
+    adminEmailVerifiedLabel: 'Email verified',
+    adminProviderPassword: 'Password',
+    adminPrivateNote: 'Private: vehicle details and service records aren\'t shown, even to superadmin.',
+    adminEnable: 'Enable account',
+    adminDisable: 'Disable account',
+    adminDisableReason: 'Reason for disabling',
+    adminReasonRequired: 'Please enter a reason.',
+    adminConfirmEnable: 'Enable {email} again?',
+    adminDisableNote: 'Disabling blocks sign-in and removes their alerts. It asks for a reason, and it can be undone. It doesn\'t delete their data.',
+    adminFilterAll: 'All',
+    adminFilterRoles: 'Roles',
+    adminFilterUsers: 'Users',
+    adminNoActivity: 'Nothing here yet.',
+    adminReasonPrefix: 'Reason',
+    adminLogNote: 'Written only by the server. Nobody can edit or delete it from the app.',
+    adminLogRoleAdded: 'Made admin',
+    adminLogRoleRemoved: 'Removed admin',
+    adminLogUserDisabled: 'Disabled a user',
+    adminLogUserEnabled: 'Enabled a user',
+    adminErrNoAccess: 'You no longer have access to this.',
+    adminErrUserNotFound: 'No account with that email. They need to register first.',
+    adminErrQueryTooShort: 'Type at least 3 characters.',
+    adminErrSelf: 'You can\'t change your own account here.',
+    adminErrSuperadmin: 'Superadmin can\'t be changed here.',
+    adminErrAlreadyAdmin: 'This person is already an admin.',
+    adminErrNotAdmin: 'This person is not an admin.',
+    adminErrNotVerified: 'Email not verified yet',
+    adminErrUserDisabled: 'This account is disabled.',
+    adminErrRemoveRoleFirst: 'Remove their admin role first.',
+    adminErrAlreadyDisabled: 'This account is already disabled.',
+    adminErrNotDisabled: 'This account is not disabled.',
+    adminErrGeneric: 'Something went wrong. Check your connection and try again.',
   },
   ms: {
     // Header
@@ -1120,6 +1268,80 @@ export const translations: Record<Language, Translations> = {
     accountRole: 'Peranan',
     roleAdmin: 'Admin',
     roleSuperadmin: 'Superadmin',
+
+    // Admin panel
+    adminPanel: 'Panel admin',
+    adminBack: 'Kembali',
+    adminRetry: 'Cuba lagi',
+    adminCancel: 'Batal',
+    adminYes: 'Ya',
+    adminNo: 'Tidak',
+    adminYou: 'Anda',
+    adminStatUsers: 'Pengguna',
+    adminStatVehicles: 'Kenderaan',
+    adminStatDevices: 'Peranti dengan makluman aktif',
+    adminStatRoadTaxExpired: 'Cukai jalan tamat',
+    adminSuperadminOnly: 'Superadmin sahaja',
+    adminManageTeam: 'Urus admin',
+    adminCountHint: 'Admin: {count}',
+    adminUsers: 'Pengguna',
+    adminUsersHint: 'Cari atau nyahaktif',
+    adminActivity: 'Log aktiviti',
+    adminActivityHint: 'Siapa buat apa',
+    adminAddTitle: 'Tambah admin',
+    adminFind: 'Cari',
+    adminAddHint: 'Masukkan e-mel penuh. Orang itu mesti mendaftar dahulu, dan e-melnya mesti disahkan.',
+    adminEmailVerified: 'E-mel disahkan',
+    adminJoinedVia: 'Sertai {date} · {methods}',
+    adminMake: 'Jadikan admin',
+    adminConfirmMake: 'Jadikan {email} admin?',
+    adminMadeSuccess: '{email} kini admin. Akses diberi apabila dia membuka aplikasi nanti.',
+    adminConfirmRemove: 'Buang {email} sebagai admin? Dia akan dilog keluar.',
+    adminRemovedSuccess: '{email} bukan lagi admin.',
+    adminCurrentTeam: 'Pasukan semasa',
+    adminAddedOn: 'Ditambah {date}',
+    adminRemove: 'Buang',
+    adminTeamNote: 'Membuang admin menyekat akses adminnya serta-merta dan melog keluar apabila aplikasinya bersambung nanti. Superadmin tidak boleh ditambah atau dibuang di sini.',
+    adminFindByEmail: 'Cari ikut e-mel',
+    adminNoUsers: 'Tiada pengguna dijumpai.',
+    adminShowingSome: 'Menunjukkan {shown} daripada {total}. Taip lebih banyak e-mel untuk kecilkan carian.',
+    adminStatusActive: 'Aktif',
+    adminStatusDisabled: 'Dinyahaktif',
+    adminJoined: 'Sertai',
+    adminLastSignIn: 'Log masuk terakhir',
+    adminSignInMethods: 'Cara log masuk',
+    adminEmailVerifiedLabel: 'E-mel disahkan',
+    adminProviderPassword: 'Kata laluan',
+    adminPrivateNote: 'Peribadi: butiran kenderaan dan rekod servis tidak ditunjukkan, walaupun kepada superadmin.',
+    adminEnable: 'Aktifkan akaun',
+    adminDisable: 'Nyahaktif akaun',
+    adminDisableReason: 'Sebab dinyahaktif',
+    adminReasonRequired: 'Sila masukkan sebab.',
+    adminConfirmEnable: 'Aktifkan semula {email}?',
+    adminDisableNote: 'Nyahaktif menyekat log masuk dan membuang makluman pengguna. Sebab diperlukan, dan ia boleh dibatalkan. Data pengguna tidak dipadam.',
+    adminFilterAll: 'Semua',
+    adminFilterRoles: 'Peranan',
+    adminFilterUsers: 'Pengguna',
+    adminNoActivity: 'Belum ada apa-apa.',
+    adminReasonPrefix: 'Sebab',
+    adminLogNote: 'Ditulis oleh pelayan sahaja. Tiada sesiapa boleh mengubah atau memadamnya dari aplikasi.',
+    adminLogRoleAdded: 'Dijadikan admin',
+    adminLogRoleRemoved: 'Dibuang sebagai admin',
+    adminLogUserDisabled: 'Nyahaktif pengguna',
+    adminLogUserEnabled: 'Aktifkan pengguna',
+    adminErrNoAccess: 'Anda tiada akses lagi untuk ini.',
+    adminErrUserNotFound: 'Tiada akaun dengan e-mel itu. Dia perlu mendaftar dahulu.',
+    adminErrQueryTooShort: 'Taip sekurang-kurangnya 3 aksara.',
+    adminErrSelf: 'Anda tidak boleh mengubah akaun sendiri di sini.',
+    adminErrSuperadmin: 'Superadmin tidak boleh diubah di sini.',
+    adminErrAlreadyAdmin: 'Orang ini sudah menjadi admin.',
+    adminErrNotAdmin: 'Orang ini bukan admin.',
+    adminErrNotVerified: 'E-mel belum disahkan',
+    adminErrUserDisabled: 'Akaun ini dinyahaktif.',
+    adminErrRemoveRoleFirst: 'Buang peranan adminnya dahulu.',
+    adminErrAlreadyDisabled: 'Akaun ini sudah dinyahaktif.',
+    adminErrNotDisabled: 'Akaun ini tidak dinyahaktif.',
+    adminErrGeneric: 'Ada masalah. Semak sambungan anda dan cuba lagi.',
   },
 };
 

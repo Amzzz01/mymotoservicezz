@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getAuthErrorMessage } from '../utils/authErrors';
 import { isAdminRole } from '../utils/roles';
 
-const SettingsButton: React.FC = () => {
+const SettingsButton: React.FC<{ onOpenAdmin: () => void }> = ({ onOpenAdmin }) => {
   const { language, setLanguage, theme, toggleTheme, t } = useApp();
   const { hasGoogle, connectGoogle, role } = useAuth();
   const [showMenu, setShowMenu] = React.useState(false);
@@ -135,11 +135,19 @@ const SettingsButton: React.FC = () => {
             </div>
 
             {isAdminRole(role) && (
-              <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.accountRole}</span>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-700 text-white">
-                  {role === 'superadmin' ? t.roleSuperadmin : t.roleAdmin}
-                </span>
+              <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.accountRole}</span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-700 text-white">
+                    {role === 'superadmin' ? t.roleSuperadmin : t.roleAdmin}
+                  </span>
+                </div>
+                <button
+                  onClick={() => { setShowMenu(false); onOpenAdmin(); }}
+                  className="w-full min-h-[44px] rounded-lg bg-violet-700 hover:bg-violet-600 text-white text-sm font-bold"
+                >
+                  {t.adminPanel}
+                </button>
               </div>
             )}
           </div>

@@ -61,5 +61,6 @@ export const summarizeUser = (record) => ({
 
 export const logCategory = (action) => {
   if (action.startsWith('role_')) return 'roles';
+  if (action.startsWith('announcement_')) return 'announcements';
   return action.startsWith('user_') ? 'users' : 'sends';
 };

@@ -29,6 +29,7 @@ export {
   sendTestNotification,
   setDailySendLimit,
 } from './notifications.js';
+export { deleteAnnouncement, listAnnouncements, saveAnnouncement } from './announcements.js';
 
 initializeApp();
 

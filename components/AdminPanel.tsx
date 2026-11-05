@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { AdminStats, getAdminErrorMessage, getAdminStats } from '../utils/adminApi';
 import { fillTemplate } from '../utils/roadTax';
 import AdminActivity from './AdminActivity';
+import AdminAnnouncements from './AdminAnnouncements';
 import AdminCompose from './AdminCompose';
 import AdminHeader from './AdminHeader';
 import AdminHistory from './AdminHistory';
@@ -11,7 +12,7 @@ import AdminTeam from './AdminTeam';
 import AdminUsers from './AdminUsers';
 import Spinner from './Spinner';
 
-type AdminScreen = 'home' | 'team' | 'users' | 'activity' | 'compose' | 'history';
+type AdminScreen = 'home' | 'team' | 'users' | 'activity' | 'compose' | 'history' | 'announcements';
 
 const StatCard: React.FC<{ label: string; value: number; alert?: boolean }> = ({ label, value, alert }) => (
   <div className={`bg-white dark:bg-slate-800 border rounded-xl px-3.5 py-3 ${alert && value > 0 ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-700'}`}>
@@ -82,6 +83,7 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         />
       )}
       {screen === 'history' && <AdminHistory successMessage={sentMessage} onBack={goHome} />}
+      {screen === 'announcements' && <AdminAnnouncements onBack={goHome} />}
 
       {screen === 'home' && (
         <>
@@ -126,6 +128,11 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mt-0.5">{t.adminManage}</h2>
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
               <MenuRow label={t.adminSendHistory} hint={t.adminSendHistoryHint} onClick={() => openHistory()} />
+              <MenuRow
+                label={t.adminAnnouncements}
+                hint={stats ? fillTemplate(t.adminAnnouncementsHint, { count: String(stats.activeAnnouncements) }) : ''}
+                onClick={() => setScreen('announcements')}
+              />
             </div>
 
             {isSuperadmin && (

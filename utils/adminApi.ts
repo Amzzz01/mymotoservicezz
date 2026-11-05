@@ -9,6 +9,7 @@ export interface AdminStats {
   vehicles: number;
   devices: number;
   roadTaxExpired: number;
+  activeAnnouncements: number;
   admins: number | null; // Superadmin only
 }
 
@@ -35,7 +36,27 @@ export type AdminLogAction =
   | 'user_disabled'
   | 'user_enabled'
   | 'notification_sent'
-  | 'limit_changed';
+  | 'limit_changed'
+  | 'announcement_created'
+  | 'announcement_edited'
+  | 'announcement_deleted';
+
+export type AnnouncementType = 'feature' | 'update' | 'maintenance' | 'info';
+export type AnnouncementPriority = 'low' | 'medium' | 'high';
+
+export interface AnnouncementFields {
+  title: string;
+  message: string;
+  version: string;
+  type: AnnouncementType;
+  priority: AnnouncementPriority;
+  isActive: boolean;
+}
+
+export interface ManagedAnnouncement extends AnnouncementFields {
+  id: string;
+  date: string | null;
+}
 
 export type NotificationAudience =
   | { kind: 'everyone' | 'roadTaxExpired' | 'roadTaxSoon' | 'newUsers' | 'inactive' | 'noVehicle' }
@@ -46,7 +67,7 @@ export type NotificationAudience =
 export interface AdminLogEntry {
   id: string;
   action: AdminLogAction;
-  category: 'roles' | 'users' | 'sends';
+  category: 'roles' | 'users' | 'sends' | 'announcements';
   actorEmail: string;
   targetEmail: string;
   reason: string;
@@ -145,6 +166,14 @@ export const getSendHistory = () =>
 export const setDailySendLimit = (limit: number) =>
   call<{ dailyLimit: number }>('setDailySendLimit', { limit });
 
+export const listAnnouncements = async () =>
+  (await call<{ announcements: ManagedAnnouncement[] }>('listAnnouncements')).announcements;
+
+export const saveAnnouncement = (announcement: AnnouncementFields, id?: string) =>
+  call<{ id: string }>('saveAnnouncement', { id, announcement });
+
+export const deleteAnnouncement = (id: string) => call<{ ok: boolean }>('deleteAnnouncement', { id });
+
 export const describeAudience = (audience: NotificationAudience, t: Translations): string => {
   switch (audience.kind) {
     case 'everyone': return t.audEveryone;
@@ -184,6 +213,8 @@ export const getAdminErrorMessage = (error: any, t: Translations): string => {
     'daily-limit-reached': t.adminErrLimitReached,
     'confirm-required': t.confTypeSend,
     'send-failed': t.adminErrSendFailed,
+    'invalid-announcement': t.annErrInvalid,
+    'announcement-missing': t.annErrMissing,
   };
   return messages[error?.message] ?? t.adminErrGeneric;
 };

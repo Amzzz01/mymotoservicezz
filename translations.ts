@@ -523,6 +523,40 @@ export interface Translations {
   histChangeLimit: string;
   histLimitPrompt: string;
   histSentSuccess: string;
+
+  // Announcements management
+  adminAnnouncements: string;
+  adminAnnouncementsHint: string;
+  adminLogAnnouncementCreated: string;
+  adminLogAnnouncementEdited: string;
+  adminLogAnnouncementDeleted: string;
+  annNew: string;
+  annEdit: string;
+  annEditAction: string;
+  annTitle: string;
+  annMessage: string;
+  annType: string;
+  annPriority: string;
+  annVersion: string;
+  annShowToUsers: string;
+  annSave: string;
+  annHide: string;
+  annShow: string;
+  annDelete: string;
+  annConfirmDelete: string;
+  annStatusShowing: string;
+  annStatusHidden: string;
+  annEmpty: string;
+  annNote: string;
+  annTypeFeature: string;
+  annTypeUpdate: string;
+  annTypeMaintenance: string;
+  annTypeInfo: string;
+  annPriorityLow: string;
+  annPriorityMedium: string;
+  annPriorityHigh: string;
+  annErrInvalid: string;
+  annErrMissing: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -1049,6 +1083,40 @@ export const translations: Record<Language, Translations> = {
     histChangeLimit: 'Change limit',
     histLimitPrompt: 'Group sends allowed per day (1 to 20)',
     histSentSuccess: 'Sent. People: {people}, devices: {devices}.',
+
+    // Announcements management
+    adminAnnouncements: 'Announcements',
+    adminAnnouncementsHint: 'Showing: {count}',
+    adminLogAnnouncementCreated: 'Created announcement',
+    adminLogAnnouncementEdited: 'Edited announcement',
+    adminLogAnnouncementDeleted: 'Deleted announcement',
+    annNew: 'New announcement',
+    annEdit: 'Edit announcement',
+    annEditAction: 'Edit',
+    annTitle: 'Title',
+    annMessage: 'Message',
+    annType: 'Type',
+    annPriority: 'Priority',
+    annVersion: 'Version (optional)',
+    annShowToUsers: 'Show to users',
+    annSave: 'Save',
+    annHide: 'Hide',
+    annShow: 'Show',
+    annDelete: 'Delete',
+    annConfirmDelete: 'Delete "{title}"? This can\'t be undone. Use Hide if you may want it back.',
+    annStatusShowing: 'Showing',
+    annStatusHidden: 'Hidden',
+    annEmpty: 'No announcements yet.',
+    annNote: 'Changes reach everyone\'s bell straight away, with no phone notification. People who already read one won\'t be told again if you edit it.',
+    annTypeFeature: 'Feature',
+    annTypeUpdate: 'Update',
+    annTypeMaintenance: 'Maintenance',
+    annTypeInfo: 'Info',
+    annPriorityLow: 'Low',
+    annPriorityMedium: 'Medium',
+    annPriorityHigh: 'High',
+    annErrInvalid: 'Fill in the title and message.',
+    annErrMissing: 'This announcement no longer exists.',
   },
   ms: {
     // Header
@@ -1573,6 +1641,40 @@ export const translations: Record<Language, Translations> = {
     histChangeLimit: 'Ubah had',
     histLimitPrompt: 'Hantaran kumpulan dibenarkan sehari (1 hingga 20)',
     histSentSuccess: 'Dihantar. Orang: {people}, peranti: {devices}.',
+
+    // Announcements management
+    adminAnnouncements: 'Pengumuman',
+    adminAnnouncementsHint: 'Dipaparkan: {count}',
+    adminLogAnnouncementCreated: 'Mencipta pengumuman',
+    adminLogAnnouncementEdited: 'Mengubah pengumuman',
+    adminLogAnnouncementDeleted: 'Memadam pengumuman',
+    annNew: 'Pengumuman baharu',
+    annEdit: 'Ubah pengumuman',
+    annEditAction: 'Ubah',
+    annTitle: 'Tajuk',
+    annMessage: 'Mesej',
+    annType: 'Jenis',
+    annPriority: 'Keutamaan',
+    annVersion: 'Versi (pilihan)',
+    annShowToUsers: 'Papar kepada pengguna',
+    annSave: 'Simpan',
+    annHide: 'Sorok',
+    annShow: 'Papar',
+    annDelete: 'Padam',
+    annConfirmDelete: 'Padam "{title}"? Ini tidak boleh dibatalkan. Guna Sorok jika mungkin mahu ia semula.',
+    annStatusShowing: 'Dipaparkan',
+    annStatusHidden: 'Disorok',
+    annEmpty: 'Belum ada pengumuman.',
+    annNote: 'Perubahan terus sampai ke loceng semua orang, tanpa notifikasi telefon. Orang yang sudah membacanya tidak dimaklumkan lagi jika anda mengubahnya.',
+    annTypeFeature: 'Ciri',
+    annTypeUpdate: 'Kemas kini',
+    annTypeMaintenance: 'Penyelenggaraan',
+    annTypeInfo: 'Maklumat',
+    annPriorityLow: 'Rendah',
+    annPriorityMedium: 'Sederhana',
+    annPriorityHigh: 'Tinggi',
+    annErrInvalid: 'Isi tajuk dan mesej.',
+    annErrMissing: 'Pengumuman ini sudah tiada.',
   },
 };
 

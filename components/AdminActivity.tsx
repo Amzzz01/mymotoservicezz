@@ -53,6 +53,12 @@ const AdminActivity: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           title: t.adminLogLimitChanged,
           detail: fillTemplate(t.adminLogLimitDetail, { from: String(details?.from ?? ''), to: String(details?.to ?? '') }),
         };
+      case 'announcement_created':
+        return { title: t.adminLogAnnouncementCreated, detail: details?.title ?? '' };
+      case 'announcement_edited':
+        return { title: t.adminLogAnnouncementEdited, detail: details?.title ?? '' };
+      case 'announcement_deleted':
+        return { title: t.adminLogAnnouncementDeleted, detail: details?.title ?? '' };
       default:
         return { title: entry.action, detail: entry.targetEmail };
     }

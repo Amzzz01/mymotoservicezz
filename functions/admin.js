@@ -86,16 +86,17 @@ export const getAdminStats = onCall(CALLABLE_OPTIONS, async (request) => {
     if (record.customClaims?.role === 'admin') admins += 1;
   });
 
-  const [vehicles, devices, roadTaxExpired] = await Promise.all([
+  const [vehicles, devices, roadTaxExpired, activeAnnouncements] = await Promise.all([
     countOf(db.collection('vehicles')),
     countOf(db.collectionGroup('pushTokens')),
     countOf(db.collection('vehicles')
       .where('roadTaxExpiry', '>=', EARLIEST_EXPIRY)
       .where('roadTaxExpiry', '<', todayInMalaysia())),
+    countOf(db.collection('announcements').where('isActive', '==', true)),
   ]);
 
   const isSuperadmin = hasAccess(actor, SUPERADMIN);
-  return { users, vehicles, devices, roadTaxExpired, admins: isSuperadmin ? admins : null };
+  return { users, vehicles, devices, roadTaxExpired, activeAnnouncements, admins: isSuperadmin ? admins : null };
 });
 
 export const listAdmins = onCall(CALLABLE_OPTIONS, async (request) => {

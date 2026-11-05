@@ -1,9 +1,22 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../hooks/useAuth';
+import { getAuthErrorMessage } from '../utils/authErrors';
 
 const SettingsButton: React.FC = () => {
   const { language, setLanguage, theme, toggleTheme, t } = useApp();
+  const { hasGoogle, connectGoogle } = useAuth();
   const [showMenu, setShowMenu] = React.useState(false);
+  const [connecting, setConnecting] = React.useState(false);
+  const [connectError, setConnectError] = React.useState('');
+
+  const handleConnectGoogle = async () => {
+    setConnectError('');
+    setConnecting(true);
+    const code = await connectGoogle();
+    if (code) setConnectError(getAuthErrorMessage(code, t) || '');
+    setConnecting(false);
+  };
 
   const handleLanguageToggle = () => {
     setLanguage(language === 'en' ? 'ms' : 'en');
@@ -94,6 +107,30 @@ const SettingsButton: React.FC = () => {
                 </svg>
                 <span>{language === 'en' ? 'Bahasa Melayu' : 'English'}</span>
               </button>
+            </div>
+
+            {/* Connect Google (optional second way to log in) */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.googleAccount}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {hasGoogle ? t.googleConnected : t.googleNotConnected}
+                  </div>
+                </div>
+                {!hasGoogle && (
+                  <button
+                    onClick={handleConnectGoogle}
+                    disabled={connecting}
+                    className="flex-shrink-0 min-h-[40px] px-3 rounded-lg text-sm font-bold border border-cyan-600 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 disabled:opacity-60"
+                  >
+                    {t.connect}
+                  </button>
+                )}
+              </div>
+              {connectError && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-2" role="alert">{connectError}</p>
+              )}
             </div>
           </div>
         </>

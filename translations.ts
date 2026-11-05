@@ -337,6 +337,36 @@ export interface Translations {
   roadTaxNotifyPromptBody: string;
   allow: string;
   notNow: string;
+
+  // Sign-in: Google, forgot password, email verification
+  continueWithGoogle: string;
+  orDivider: string;
+  forgotPassword: string;
+  invalidLoginHint: string;
+  resetPasswordTitle: string;
+  resetPasswordHint: string;
+  sendResetLink: string;
+  backToLogin: string;
+  resetLinkSent: string;
+  enterYourEmail: string;
+  invalidEmail: string;
+  googleSignInFailed: string;
+  googleAccountExists: string;
+  googleAlreadyLinked: string;
+  tooManyAttempts: string;
+  authNetworkError: string;
+  verifyEmailTitle: string;
+  verifyEmailBody: string;
+  sendVerifyLink: string;
+  verifyLinkSent: string;
+  iveVerified: string;
+  notVerifiedYet: string;
+  verifyEmailFailed: string;
+  emailVerifiedDone: string;
+  googleAccount: string;
+  googleConnected: string;
+  googleNotConnected: string;
+  connect: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -677,6 +707,36 @@ export const translations: Record<Language, Translations> = {
     roadTaxNotifyPromptBody: "We'll notify you before and after your road tax expires.",
     allow: 'Allow',
     notNow: 'Not now',
+
+    // Sign-in: Google, forgot password, email verification
+    continueWithGoogle: 'Continue with Google',
+    orDivider: 'or',
+    forgotPassword: 'Forgot password?',
+    invalidLoginHint: 'Invalid email or password. If you have used Google before, try Continue with Google, or use Forgot password.',
+    resetPasswordTitle: 'Reset your password',
+    resetPasswordHint: "Enter your email and we'll send you a link to set a new password.",
+    sendResetLink: 'Send reset link',
+    backToLogin: 'Back to log in',
+    resetLinkSent: 'If that email has an account, a reset link is on its way. Check your spam folder too.',
+    enterYourEmail: 'Please enter your email.',
+    invalidEmail: 'That email address is not valid.',
+    googleSignInFailed: 'Google sign-in did not work. Please try again.',
+    googleAccountExists: 'This email already has an account. Log in with your password, then connect Google from Settings.',
+    googleAlreadyLinked: 'That Google account is already used by another MyMotoLog account.',
+    tooManyAttempts: 'Too many attempts. Please wait a few minutes and try again.',
+    authNetworkError: 'No connection. Check your internet and try again.',
+    verifyEmailTitle: 'Verify your email',
+    verifyEmailBody: 'Confirm that {email} is yours, so you can always recover your account.',
+    sendVerifyLink: 'Send link',
+    verifyLinkSent: 'Link sent. Check your inbox and spam folder, then tap the link.',
+    iveVerified: "I've verified",
+    notVerifiedYet: 'Not verified yet. Tap the link in the email first.',
+    verifyEmailFailed: 'Could not send the email. Please try again in a few minutes.',
+    emailVerifiedDone: 'Email verified',
+    googleAccount: 'Google account',
+    googleConnected: 'Connected',
+    googleNotConnected: 'Not connected',
+    connect: 'Connect',
   },
   ms: {
     // Header
@@ -1015,6 +1075,36 @@ export const translations: Record<Language, Translations> = {
     roadTaxNotifyPromptBody: 'Kami akan maklumkan sebelum dan selepas cukai jalan anda tamat.',
     allow: 'Benarkan',
     notNow: 'Bukan sekarang',
+
+    // Sign-in: Google, forgot password, email verification
+    continueWithGoogle: 'Teruskan dengan Google',
+    orDivider: 'atau',
+    forgotPassword: 'Lupa kata laluan?',
+    invalidLoginHint: 'E-mel atau kata laluan tidak sah. Jika anda pernah menggunakan Google, cuba Teruskan dengan Google, atau gunakan Lupa kata laluan.',
+    resetPasswordTitle: 'Tetapkan semula kata laluan',
+    resetPasswordHint: 'Masukkan e-mel anda dan kami akan hantar pautan untuk menetapkan kata laluan baharu.',
+    sendResetLink: 'Hantar pautan',
+    backToLogin: 'Kembali ke log masuk',
+    resetLinkSent: 'Jika e-mel itu mempunyai akaun, pautan sedang dihantar. Semak juga folder spam anda.',
+    enterYourEmail: 'Sila masukkan e-mel anda.',
+    invalidEmail: 'Alamat e-mel itu tidak sah.',
+    googleSignInFailed: 'Log masuk Google tidak berjaya. Sila cuba lagi.',
+    googleAccountExists: 'E-mel ini sudah mempunyai akaun. Log masuk dengan kata laluan, kemudian sambungkan Google dari Tetapan.',
+    googleAlreadyLinked: 'Akaun Google itu sudah digunakan oleh akaun MyMotoLog yang lain.',
+    tooManyAttempts: 'Terlalu banyak percubaan. Sila tunggu beberapa minit dan cuba lagi.',
+    authNetworkError: 'Tiada sambungan. Semak internet anda dan cuba lagi.',
+    verifyEmailTitle: 'Sahkan e-mel anda',
+    verifyEmailBody: 'Sahkan bahawa {email} milik anda, supaya anda sentiasa boleh memulihkan akaun anda.',
+    sendVerifyLink: 'Hantar pautan',
+    verifyLinkSent: 'Pautan dihantar. Semak peti masuk dan folder spam, kemudian ketik pautan itu.',
+    iveVerified: 'Saya sudah sahkan',
+    notVerifiedYet: 'Belum disahkan. Ketik pautan dalam e-mel dahulu.',
+    verifyEmailFailed: 'Tidak dapat menghantar e-mel. Sila cuba lagi selepas beberapa minit.',
+    emailVerifiedDone: 'E-mel disahkan',
+    googleAccount: 'Akaun Google',
+    googleConnected: 'Disambungkan',
+    googleNotConnected: 'Belum disambungkan',
+    connect: 'Sambung',
   },
 };
 

@@ -90,6 +90,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
         // Notification click handling for road tax alerts
         importScripts: ['/sw-roadtax.js'],
+        // Firebase's sign-in pages must reach the network, not fall back to the cached app
+        navigateFallbackDenylist: [/^\/__\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,

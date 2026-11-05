@@ -28,6 +28,8 @@ import RenewRoadTaxModal from './components/RenewRoadTaxModal';
 import { useRoadTaxNotifications } from './hooks/useRoadTaxNotifications';
 import { fillTemplate, formatRoadTaxDate, getRoadTaxAlerts } from './utils/roadTax';
 import { unregisterPushToken } from './utils/pushTokens';
+import { getAuthErrorMessage } from './utils/authErrors';
+import EmailVerifyBanner from './components/EmailVerifyBanner';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -42,7 +44,7 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 function App() {
-  const { currentUser, logout, loading: authLoading } = useAuth();
+  const { currentUser, logout, loading: authLoading, redirectError, clearRedirectError } = useAuth();
   const { t, language } = useApp();
   const [activeTab, setActiveTab] = useState<MainTab | 'history'>('overview');
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
@@ -131,6 +133,15 @@ function App() {
     navigator.serviceWorker.addEventListener('message', onMessage);
     return () => navigator.serviceWorker.removeEventListener('message', onMessage);
   }, []);
+
+  // Connecting Google on a phone comes back as a fresh page load, so a failure surfaces here
+  // (a failed sign-in, with nobody logged in yet, is shown by AuthPage instead)
+  useEffect(() => {
+    if (!redirectError || !currentUser) return;
+    const message = getAuthErrorMessage(redirectError, t);
+    if (message) alert(message);
+    clearRedirectError();
+  }, [redirectError, currentUser]);
 
   useEffect(() => {
     if (!toast) return;
@@ -384,6 +395,7 @@ function App() {
 
           {activeTab === 'overview' && (
             <>
+              <EmailVerifyBanner />
               <RoadTaxAlert
                 alerts={roadTaxAlerts}
                 onRenew={setRenewVehicleId}

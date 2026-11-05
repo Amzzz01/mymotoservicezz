@@ -1,6 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useApp } from '../context/AppContext';
+import { getAuthErrorMessage } from '../utils/authErrors';
+
+const GoogleIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className={className} aria-hidden="true">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+  </svg>
+);
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -14,9 +24,52 @@ const AuthPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register } = useAuth();
+  const [showReset, setShowReset] = useState(false);
+  const [notice, setNotice] = useState('');
+  const { login, register, loginWithGoogle, resetPassword, redirectError, clearRedirectError } = useAuth();
   const { t } = useApp();
   const currentYear = new Date().getFullYear();
+
+  // A Google redirect that failed comes back here as a fresh page load
+  useEffect(() => {
+    if (!redirectError) return;
+    setError(getAuthErrorMessage(redirectError, t) || '');
+    clearRedirectError();
+  }, [redirectError]);
+
+  const handleGoogle = async () => {
+    setError('');
+    setNotice('');
+    setLoading(true);
+    const code = await loginWithGoogle();
+    if (code) setError(getAuthErrorMessage(code, t) || '');
+    setLoading(false);
+  };
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setNotice('');
+    if (!email) {
+      setError(t.enterYourEmail);
+      return;
+    }
+    setLoading(true);
+    const code = await resetPassword(email);
+    // Same message for unknown emails, so this form can't reveal who has an account
+    if (!code || code === 'auth/user-not-found') {
+      setNotice(t.resetLinkSent);
+    } else {
+      setError(getAuthErrorMessage(code, t) || '');
+    }
+    setLoading(false);
+  };
+
+  const closeReset = () => {
+    setShowReset(false);
+    setError('');
+    setNotice('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +93,8 @@ const AuthPage: React.FC = () => {
       if (isLogin) {
         success = await login(email, password);
         if (!success) {
-          setError('Invalid email or password.');
+          // Signing in with Google removes an unverified password, so point people to the way back in
+          setError(t.invalidLoginHint);
         }
       } else {
         success = await register(email, password);
@@ -78,8 +132,12 @@ const AuthPage: React.FC = () => {
 
         {/* Auth Form */}
         <div className="animate-card-in w-full max-w-sm bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-lg shadow-2xl border border-slate-200 dark:border-slate-700">
+          {showReset ? (
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">{t.resetPasswordTitle}</h2>
+          ) : (
+          <>
           {/* Login/Register segmented control */}
-          <div className="relative flex bg-slate-100 dark:bg-slate-700 rounded-full p-1.5 mb-8">
+          <div className="relative flex bg-slate-100 dark:bg-slate-700 rounded-full p-1.5 mb-6">
             <div
               className="absolute inset-y-1 left-1 right-1/2 bg-white dark:bg-slate-800 rounded-full shadow-md transition-transform duration-[250ms] ease-out"
               style={{ transform: isLogin ? 'translateX(0%)' : 'translateX(100%)' }}
@@ -105,12 +163,71 @@ const AuthPage: React.FC = () => {
               {t.register}
             </button>
           </div>
+          </>
+          )}
 
           {error && (
-            <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-md mb-4 text-sm">
+            <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-md mb-4 text-sm" role="alert">
               {error}
             </div>
           )}
+
+          {notice && (
+            <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-300 px-4 py-3 rounded-md mb-4 text-sm" role="status">
+              {notice}
+            </div>
+          )}
+
+          {showReset ? (
+            <form onSubmit={handleReset} className="space-y-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t.resetPasswordHint}</p>
+              <div>
+                <label htmlFor="reset-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="reset-email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md p-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/30 transition-colors"
+                  placeholder="you@example.com"
+                  disabled={loading}
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:from-slate-400 disabled:to-slate-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Please wait...' : t.sendResetLink}
+              </button>
+              <button
+                type="button"
+                onClick={closeReset}
+                className="w-full min-h-[44px] text-sm font-semibold text-cyan-700 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300"
+              >
+                {t.backToLogin}
+              </button>
+            </form>
+          ) : (
+          <>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={loading}
+            className="w-full min-h-[48px] flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-semibold rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <GoogleIcon className="w-5 h-5" />
+            {t.continueWithGoogle}
+          </button>
+
+          <div className="flex items-center gap-3 my-5 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+            {t.orDivider}
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -143,6 +260,17 @@ const AuthPage: React.FC = () => {
                 disabled={loading}
                 required
               />
+              {isLogin && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => { setShowReset(true); setError(''); setNotice(''); }}
+                    className="min-h-[36px] text-sm font-semibold text-cyan-700 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300"
+                  >
+                    {t.forgotPassword}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="pt-2">
@@ -157,6 +285,8 @@ const AuthPage: React.FC = () => {
               </button>
             </div>
           </form>
+          </>
+          )}
         </div>
       </div>
 

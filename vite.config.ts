@@ -83,6 +83,12 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          },
+          {
+            src: '/icons/badge-96.png',
+            sizes: '96x96',
+            type: 'image/png',
+            purpose: 'monochrome'
           }
         ]
       },

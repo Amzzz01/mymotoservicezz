@@ -31,6 +31,7 @@ export interface Vehicle {
   tyrePressureFront?: number; // Front tyre pressure in PSI
   tyrePressureRear?: number; // Rear tyre pressure in PSI
   roadTaxExpiry?: string; // Road tax expiry date (ISO format)
+  roadTaxPushedOn?: string; // Date the daily road tax push last went out (set by Cloud Function)
   customIcon?: string; // Custom icon/image URL or emoji
   iconType?: 'emoji' | 'image'; // Type of custom icon
 }

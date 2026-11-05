@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Translations } from '../translations';
+import { Language, Translations } from '../translations';
 import { RoadTaxAlert, fillTemplate, formatRoadTaxDate, toDateInputValue } from '../utils/roadTax';
+import { registerPushToken } from '../utils/pushTokens';
 
 const PROMPT_DISMISSED_KEY = 'mymotolog_roadTaxNotifyPromptDismissed';
 const notifiedKey = (alert: RoadTaxAlert) =>
@@ -25,22 +26,41 @@ const writeStorage = (key: string, value: string) => {
   }
 };
 
+interface RoadTaxNotificationOptions {
+  userId?: string;
+  language: Language;
+  // Ask for permission as soon as a road tax date exists, so the first push can arrive
+  // while the app is closed, not only once an alert is already showing.
+  hasRoadTaxDate: boolean;
+}
+
 /**
- * Shows a phone notification for each vehicle whose road tax is expired or due soon,
- * at most once per vehicle per day, whenever the app is opened.
- * (Notifications while the app is fully closed need FCM + a scheduled Cloud Function.)
+ * Two delivery paths for the same notification (same tag, so they replace each other):
+ * - Push: registers this device's token; the daily Cloud Function reaches it even when the app is closed.
+ * - On open: shows it locally, at most once per vehicle per day, unless today's push already went out.
  */
-export const useRoadTaxNotifications = (alerts: RoadTaxAlert[], t: Translations) => {
+export const useRoadTaxNotifications = (
+  alerts: RoadTaxAlert[],
+  t: Translations,
+  { userId, language, hasRoadTaxDate }: RoadTaxNotificationOptions
+) => {
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(
     () => (isSupported() ? Notification.permission : 'unsupported')
   );
   const [promptDismissed, setPromptDismissed] = useState(() => readStorage(PROMPT_DISMISSED_KEY) === '1');
 
   useEffect(() => {
+    if (permission !== 'granted' || !userId) return;
+    registerPushToken(userId, language).catch(err => console.error('Failed to register for push:', err));
+  }, [permission, userId, language]);
+
+  useEffect(() => {
     if (permission !== 'granted' || alerts.length === 0) return;
 
     const today = toDateInputValue(new Date());
-    const pending = alerts.filter(alert => readStorage(notifiedKey(alert)) !== today);
+    const pending = alerts.filter(alert =>
+      readStorage(notifiedKey(alert)) !== today && alert.vehicle.roadTaxPushedOn !== today
+    );
     if (pending.length === 0) return;
 
     navigator.serviceWorker.ready
@@ -87,7 +107,7 @@ export const useRoadTaxNotifications = (alerts: RoadTaxAlert[], t: Translations)
   };
 
   return {
-    showPermissionPrompt: permission === 'default' && !promptDismissed && alerts.length > 0,
+    showPermissionPrompt: permission === 'default' && !promptDismissed && hasRoadTaxDate,
     requestPermission,
     dismissPrompt,
   };

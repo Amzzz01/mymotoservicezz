@@ -27,6 +27,7 @@ import RoadTaxAlert from './components/RoadTaxAlert';
 import RenewRoadTaxModal from './components/RenewRoadTaxModal';
 import { useRoadTaxNotifications } from './hooks/useRoadTaxNotifications';
 import { fillTemplate, formatRoadTaxDate, getRoadTaxAlerts } from './utils/roadTax';
+import { unregisterPushToken } from './utils/pushTokens';
 
 const MotoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -42,7 +43,7 @@ const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 function App() {
   const { currentUser, logout, loading: authLoading } = useAuth();
-  const { t } = useApp();
+  const { t, language } = useApp();
   const [activeTab, setActiveTab] = useState<MainTab | 'history'>('overview');
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
   const [showVehicleManager, setShowVehicleManager] = useState(false);
@@ -101,7 +102,11 @@ function App() {
 
   // Road tax alerts cover every vehicle, not just the selected one
   const roadTaxAlerts = useMemo(() => getRoadTaxAlerts(vehicles), [vehicles]);
-  const roadTaxNotifications = useRoadTaxNotifications(roadTaxAlerts, t);
+  const roadTaxNotifications = useRoadTaxNotifications(roadTaxAlerts, t, {
+    userId: currentUser?.uid,
+    language,
+    hasRoadTaxDate: vehicles.some(v => Boolean(v.roadTaxExpiry)),
+  });
   // undefined = renew form closed; null = open with the most urgent vehicle preselected
   const [renewVehicleId, setRenewVehicleId] = useState<string | null | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
@@ -132,6 +137,14 @@ function App() {
     const timer = setTimeout(() => setToast(null), 3500);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  const handleLogout = async () => {
+    // Stop pushes to this device; a failure here must never block signing out
+    if (currentUser) {
+      await unregisterPushToken(currentUser.uid).catch(err => console.error('Failed to remove push token:', err));
+    }
+    await logout();
+  };
 
   const handleRenewRoadTax = async (vehicleId: string, newExpiry: string) => {
     await updateVehicle(vehicleId, { roadTaxExpiry: newExpiry });
@@ -301,7 +314,7 @@ function App() {
 
             {/* Logout Button */}
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="flex items-center gap-1 sm:gap-2 text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50"
               aria-label={t.logout}
             >

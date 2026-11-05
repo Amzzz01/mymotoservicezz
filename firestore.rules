@@ -131,6 +131,15 @@ service cloud.firestore {
     // ─── User Profiles (viewed announcements, preferences) ───
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
+
+      // ─── Push notification tokens (one doc per device) ───
+      match /pushTokens/{tokenId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.token == tokenId
+          && request.resource.data.language in ['en', 'ms']
+          && request.resource.data.updatedAt is string;
+      }
     }
   }
 }

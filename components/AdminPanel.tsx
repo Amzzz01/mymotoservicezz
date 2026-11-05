@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../hooks/useAuth';
-import { AdminStats, getAdminErrorMessage, getAdminStats } from '../utils/adminApi';
+import { AdminStats, formatAdminDateTime, getAdminErrorMessage, getAdminStats } from '../utils/adminApi';
 import { fillTemplate } from '../utils/roadTax';
 import AdminActivity from './AdminActivity';
 import AdminAnnouncements from './AdminAnnouncements';
@@ -32,7 +32,7 @@ const MenuRow: React.FC<{ label: string; hint: string; onClick: () => void }> = 
 );
 
 const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { t } = useApp();
+  const { t, language } = useApp();
   const { role } = useAuth();
   const [screen, setScreen] = useState<AdminScreen>('home');
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -77,8 +77,10 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <AdminCompose
           initialEmail={composeEmail}
           onBack={goHome}
-          onSent={({ people, attempted }) => openHistory(
-            fillTemplate(t.histSentSuccess, { people: String(people), devices: String(attempted) })
+          onSent={({ people, attempted, scheduledFor }) => openHistory(
+            scheduledFor
+              ? fillTemplate(t.histScheduledSuccess, { date: formatAdminDateTime(scheduledFor, language) })
+              : fillTemplate(t.histSentSuccess, { people: String(people), devices: String(attempted) })
           )}
         />
       )}

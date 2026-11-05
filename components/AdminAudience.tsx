@@ -155,6 +155,8 @@ const AdminAudience: React.FC<AdminAudienceProps> = ({ value, onChange, onBack }
           <span className="text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">{t.audLater}</span>
         </div>
 
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{t.audPrefsNote}</p>
+
         <button
           type="button"
           onClick={onBack}

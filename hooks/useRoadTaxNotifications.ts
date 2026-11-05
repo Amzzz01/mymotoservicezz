@@ -29,9 +29,8 @@ const writeStorage = (key: string, value: string) => {
 interface RoadTaxNotificationOptions {
   userId?: string;
   language: Language;
-  // Ask for permission as soon as a road tax date exists, so the first push can arrive
-  // while the app is closed, not only once an alert is already showing.
-  hasRoadTaxDate: boolean;
+  // False while the user's settings are loading, so someone who turned these off is never shown one
+  roadTaxEnabled: boolean;
 }
 
 /**
@@ -42,7 +41,7 @@ interface RoadTaxNotificationOptions {
 export const useRoadTaxNotifications = (
   alerts: RoadTaxAlert[],
   t: Translations,
-  { userId, language, hasRoadTaxDate }: RoadTaxNotificationOptions
+  { userId, language, roadTaxEnabled }: RoadTaxNotificationOptions
 ) => {
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(
     () => (isSupported() ? Notification.permission : 'unsupported')
@@ -55,7 +54,7 @@ export const useRoadTaxNotifications = (
   }, [permission, userId, language]);
 
   useEffect(() => {
-    if (permission !== 'granted' || alerts.length === 0) return;
+    if (permission !== 'granted' || alerts.length === 0 || !roadTaxEnabled) return;
 
     const today = toDateInputValue(new Date());
     const pending = alerts.filter(alert =>
@@ -92,7 +91,7 @@ export const useRoadTaxNotifications = (
         });
       })
       .catch(err => console.error('Service worker not ready for notifications:', err));
-  }, [permission, alerts, t]);
+  }, [permission, alerts, t, roadTaxEnabled]);
 
   const dismissPrompt = () => {
     writeStorage(PROMPT_DISMISSED_KEY, '1');
@@ -107,7 +106,8 @@ export const useRoadTaxNotifications = (
   };
 
   return {
-    showPermissionPrompt: permission === 'default' && !promptDismissed && hasRoadTaxDate,
+    permission,
+    showPermissionPrompt: permission === 'default' && !promptDismissed,
     requestPermission,
     dismissPrompt,
   };

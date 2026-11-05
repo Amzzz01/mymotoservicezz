@@ -3,6 +3,8 @@ import { logger } from 'firebase-functions';
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
+import { wantsNotification } from './notificationLogic.js';
+import { loadPrefsByUser } from './notifications.js';
 import {
   TIME_ZONE,
   alertCutoff,
@@ -21,11 +23,13 @@ export {
   setUserDisabled,
 } from './admin.js';
 export {
+  cancelScheduledSend,
   getAudienceCounts,
   getSendHistory,
   previewNotification,
   recordNotificationTap,
   sendNotification,
+  sendScheduledNotifications,
   sendTestNotification,
   setDailySendLimit,
 } from './notifications.js';
@@ -65,9 +69,12 @@ export const sendRoadTaxReminders = onSchedule(
       tokensByUser.set(tokenDoc.userId, [...(tokensByUser.get(tokenDoc.userId) ?? []), tokenDoc]);
     }
 
-    const sends = vehicles.flatMap(vehicle =>
-      (tokensByUser.get(vehicle.data().userId) ?? []).map(tokenDoc => ({ vehicle, tokenDoc }))
-    );
+    const prefsByUser = await loadPrefsByUser();
+    const sends = vehicles
+      .filter(vehicle => wantsNotification(prefsByUser.get(vehicle.data().userId), 'roadTax'))
+      .flatMap(vehicle =>
+        (tokensByUser.get(vehicle.data().userId) ?? []).map(tokenDoc => ({ vehicle, tokenDoc }))
+      );
 
     const deadTokenRefs = new Map();
     const notifiedVehicles = new Map();

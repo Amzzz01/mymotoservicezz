@@ -1,9 +1,11 @@
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { getAuth } from 'firebase-admin/auth';
-import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { CALLABLE_OPTIONS, STAFF, SUPERADMIN, forEachUser, rejectIf, requireRole, writeLog } from './admin.js';
+import { hasAccess } from './adminLogic.js';
 import {
   COUNTED_AUDIENCES,
   DEFAULT_DAILY_LIMIT,
@@ -12,27 +14,30 @@ import {
   cleanContent,
   cleanLimit,
   cleanOpenTab,
+  cleanScheduleTime,
   cleanType,
   countLanguages,
+  filterByPrefs,
   isBulkAudience,
   isValidSendId,
   languageOf,
   needsVehicles,
   selectUserIds,
 } from './notificationLogic.js';
-import { newestTokenOwners, todayInMalaysia } from './roadTax.js';
+import { TIME_ZONE, newestTokenOwners, todayInMalaysia } from './roadTax.js';
 
 const SEND_OPTIONS = { ...CALLABLE_OPTIONS, timeoutSeconds: 300, memory: '512MiB' };
 const FCM_BATCH_SIZE = 500;
 const PUSH_TTL_SECONDS = 3 * 24 * 60 * 60;
 const HISTORY_SIZE = 50;
+const NOBODY = { uid: '', email: '' };
 const DEAD_TOKEN_CODES = new Set([
   'messaging/registration-token-not-registered',
   'messaging/invalid-registration-token',
 ]);
 
 const configRef = () => getFirestore().doc('adminConfig/notifications');
-const quotaRef = (today) => getFirestore().doc(`notificationQuota/${today}`);
+const quotaRef = (date) => getFirestore().doc(`notificationQuota/${date}`);
 
 const loadUsers = async () => {
   const users = [];
@@ -59,20 +64,26 @@ const loadTokens = async () => {
   );
 };
 
+export const loadPrefsByUser = async () => {
+  const snapshot = await getFirestore().collection('users').select('notificationPrefs').get();
+  return new Map(snapshot.docs.map(doc => [doc.id, doc.data().notificationPrefs]));
+};
+
 const lookUpEmails = async (emails) => {
   const { users, notFound } = await getAuth().getUsers(emails.map(email => ({ email })));
   return { pickedUids: users.map(user => user.uid), unknownEmails: notFound.map(item => item.email) };
 };
 
 // Worked out fresh on the server for every preview and send, so the app can't widen an audience
-const resolveAudience = async (audience) => {
-  const [users, vehicles, tokens, picked] = await Promise.all([
+const resolveAudience = async (audience, type) => {
+  const [users, vehicles, tokens, picked, prefsByUser] = await Promise.all([
     loadUsers(),
     needsVehicles(audience) ? loadVehicles() : [],
     loadTokens(),
     audience.kind === 'users' ? lookUpEmails(audience.emails) : { pickedUids: [], unknownEmails: [] },
+    loadPrefsByUser(),
   ]);
-  const userIds = selectUserIds(audience, {
+  const selected = selectUserIds(audience, {
     users,
     vehicles,
     tokens,
@@ -80,6 +91,7 @@ const resolveAudience = async (audience) => {
     now: Date.now(),
     today: todayInMalaysia(),
   });
+  const userIds = filterByPrefs(selected, prefsByUser, type);
   return {
     userIds,
     tokens: tokens.filter(token => userIds.has(token.userId)),
@@ -99,8 +111,14 @@ const readContent = (raw) => {
   return content;
 };
 
-const readQuota = async () => {
-  const [config, quota] = await Promise.all([configRef().get(), quotaRef(todayInMalaysia()).get()]);
+const readType = (raw) => {
+  const type = cleanType(raw);
+  if (!type) throw new HttpsError('invalid-argument', 'invalid-content');
+  return type;
+};
+
+const readQuota = async (date = todayInMalaysia()) => {
+  const [config, quota] = await Promise.all([configRef().get(), quotaRef(date).get()]);
   return { dailyLimit: config.data()?.dailyLimit ?? DEFAULT_DAILY_LIMIT, usedToday: quota.data()?.count ?? 0 };
 };
 
@@ -135,6 +153,31 @@ const pushToTokens = async (tokens, buildData) => {
   return delivered;
 };
 
+// Fills the bell, pushes to phones and records the result. Used by sending now and by the schedule.
+const deliver = async (sendRef, send, actor, { userIds, tokens }) => {
+  const db = getFirestore();
+  const { titleEn, bodyEn, titleMs, bodyMs, type, openTab, audience } = send;
+  const content = { titleEn, bodyEn, titleMs, bodyMs };
+
+  try {
+    // The bell comes first, so the entry already exists when someone taps the notification
+    const sentAt = new Date().toISOString();
+    const writer = db.bulkWriter();
+    userIds.forEach(uid => writer.create(db.doc(`users/${uid}/inbox/${sendRef.id}`), { ...content, type, sentAt }));
+    await writer.close();
+
+    const delivered = await pushToTokens(tokens, token => buildCustomPushData(content, languageOf(token), sendRef.id, openTab));
+    await sendRef.update({ status: 'sent', people: userIds.size, attempted: tokens.length, delivered });
+
+    await writeLog(actor, NOBODY, 'notification_sent', '', { title: titleEn, audience, devices: tokens.length });
+    return delivered;
+  } catch (error) {
+    logger.error('Notification send failed', { sendId: sendRef.id, error: error.message });
+    await sendRef.update({ status: 'failed' }).catch(() => undefined);
+    throw error;
+  }
+};
+
 export const getAudienceCounts = onCall(CALLABLE_OPTIONS, async (request) => {
   await requireRole(request, STAFF);
   const [users, vehicles, tokens] = await Promise.all([loadUsers(), loadVehicles(), loadTokens()]);
@@ -152,7 +195,13 @@ export const getAudienceCounts = onCall(CALLABLE_OPTIONS, async (request) => {
 export const previewNotification = onCall(CALLABLE_OPTIONS, async (request) => {
   await requireRole(request, STAFF);
   const audience = readAudience(request.data?.audience);
-  const [{ userIds, tokens, unknownEmails }, quota] = await Promise.all([resolveAudience(audience), readQuota()]);
+  const type = readType(request.data?.type);
+  const scheduleTime = cleanScheduleTime(request.data?.scheduleAt, Date.now());
+  const quotaDate = todayInMalaysia(scheduleTime ? new Date(scheduleTime) : new Date());
+  const [{ userIds, tokens, unknownEmails }, quota] = await Promise.all([
+    resolveAudience(audience, type),
+    readQuota(quotaDate),
+  ]);
 
   return {
     people: userIds.size,
@@ -178,72 +227,154 @@ export const sendTestNotification = onCall(CALLABLE_OPTIONS, async (request) => 
 
 export const sendNotification = onCall(SEND_OPTIONS, async (request) => {
   const actor = await requireRole(request, STAFF);
-  const { sendId, confirm } = request.data ?? {};
+  const { sendId, confirm, scheduleAt } = request.data ?? {};
   if (!isValidSendId(sendId)) throw new HttpsError('invalid-argument', 'invalid-content');
 
   const content = readContent(request.data?.content);
-  const type = cleanType(request.data?.type);
-  if (!type) throw new HttpsError('invalid-argument', 'invalid-content');
+  const type = readType(request.data?.type);
   const openTab = cleanOpenTab(request.data?.openTab);
   const audience = readAudience(request.data?.audience);
   rejectIf(audience.kind === 'everyone' && confirm !== 'SEND' ? 'confirm-required' : null);
 
-  const { userIds, tokens } = await resolveAudience(audience);
-  rejectIf(userIds.size === 0 ? 'no-recipients' : null);
+  const scheduleTime = scheduleAt ? cleanScheduleTime(scheduleAt, Date.now()) : null;
+  if (scheduleAt && !scheduleTime) throw new HttpsError('invalid-argument', 'invalid-schedule');
+
+  const resolved = await resolveAudience(audience, type);
+  rejectIf(resolved.userIds.size === 0 ? 'no-recipients' : null);
 
   const db = getFirestore();
   const sendRef = db.doc(`notificationSends/${sendId}`);
-  const quotaDoc = quotaRef(todayInMalaysia());
+  const quotaDate = todayInMalaysia(scheduleTime ? new Date(scheduleTime) : new Date());
+  const quotaDoc = quotaRef(quotaDate);
+  const send = {
+    ...content,
+    type,
+    openTab,
+    audience,
+    status: scheduleTime ? 'scheduled' : 'sending',
+    actorUid: actor.uid,
+    actorEmail: actor.email ?? '',
+    people: resolved.userIds.size,
+    attempted: resolved.tokens.length,
+    delivered: 0,
+    tapped: 0,
+    quotaDate,
+    createdAt: FieldValue.serverTimestamp(),
+    ...(scheduleTime ? {
+      // dueAt only exists while waiting, which is what the schedule looks for
+      dueAt: Timestamp.fromMillis(scheduleTime),
+      scheduledFor: new Date(scheduleTime).toISOString(),
+    } : {}),
+  };
 
-  // One transaction, so a retry can't send twice and two admins can't both take the last send
+  // One transaction, so a retry can't send twice and two admins can't both take the last send.
+  // A scheduled send takes its place in the limit of the day it goes out.
   await db.runTransaction(async (transaction) => {
     if ((await transaction.get(sendRef)).exists) throw new HttpsError('failed-precondition', 'already-sent');
 
     if (isBulkAudience(audience)) {
       const dailyLimit = (await transaction.get(configRef())).data()?.dailyLimit ?? DEFAULT_DAILY_LIMIT;
-      const usedToday = (await transaction.get(quotaDoc)).data()?.count ?? 0;
-      if (usedToday >= dailyLimit) throw new HttpsError('failed-precondition', 'daily-limit-reached');
-      transaction.set(quotaDoc, { count: usedToday + 1 }, { merge: true });
+      const used = (await transaction.get(quotaDoc)).data()?.count ?? 0;
+      if (used >= dailyLimit) throw new HttpsError('failed-precondition', 'daily-limit-reached');
+      transaction.set(quotaDoc, { count: used + 1 }, { merge: true });
     }
 
-    transaction.create(sendRef, {
-      ...content,
-      type,
-      openTab,
-      audience,
-      status: 'sending',
-      actorUid: actor.uid,
-      actorEmail: actor.email ?? '',
-      people: userIds.size,
-      attempted: tokens.length,
-      delivered: 0,
-      tapped: 0,
-      createdAt: FieldValue.serverTimestamp(),
-    });
+    transaction.create(sendRef, send);
   });
 
-  try {
-    // The bell comes first, so the entry already exists when someone taps the notification
-    const sentAt = new Date().toISOString();
-    const writer = db.bulkWriter();
-    userIds.forEach(uid => writer.create(db.doc(`users/${uid}/inbox/${sendId}`), { ...content, type, sentAt }));
-    await writer.close();
-
-    const delivered = await pushToTokens(tokens, token => buildCustomPushData(content, languageOf(token), sendId, openTab));
-    await sendRef.update({ status: 'sent', delivered });
-
-    await writeLog(actor, { uid: '', email: '' }, 'notification_sent', '', {
+  if (scheduleTime) {
+    await writeLog(actor, NOBODY, 'notification_scheduled', '', {
       title: content.titleEn,
       audience,
-      devices: tokens.length,
+      scheduledFor: send.scheduledFor,
     });
-    return { people: userIds.size, attempted: tokens.length, delivered };
-  } catch (error) {
-    logger.error('Notification send failed', { sendId, error: error.message });
-    await sendRef.update({ status: 'failed' }).catch(() => undefined);
+    return { people: resolved.userIds.size, attempted: resolved.tokens.length, delivered: 0, scheduledFor: send.scheduledFor };
+  }
+
+  try {
+    const delivered = await deliver(sendRef, send, actor, resolved);
+    return { people: resolved.userIds.size, attempted: resolved.tokens.length, delivered, scheduledFor: null };
+  } catch {
     throw new HttpsError('internal', 'send-failed');
   }
 });
+
+export const cancelScheduledSend = onCall(CALLABLE_OPTIONS, async (request) => {
+  const actor = await requireRole(request, STAFF);
+  const { sendId } = request.data ?? {};
+  if (!isValidSendId(sendId)) throw new HttpsError('invalid-argument', 'not-scheduled');
+
+  const db = getFirestore();
+  const sendRef = db.doc(`notificationSends/${sendId}`);
+  const send = await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(sendRef);
+    if (snapshot.data()?.status !== 'scheduled') throw new HttpsError('failed-precondition', 'not-scheduled');
+
+    const data = snapshot.data();
+    if (isBulkAudience(data.audience)) {
+      const quotaDoc = quotaRef(data.quotaDate);
+      const used = (await transaction.get(quotaDoc)).data()?.count ?? 0;
+      transaction.set(quotaDoc, { count: Math.max(used - 1, 0) }, { merge: true });
+    }
+    transaction.update(sendRef, { status: 'cancelled', dueAt: FieldValue.delete() });
+    return data;
+  });
+
+  await writeLog(actor, NOBODY, 'notification_cancelled', '', { title: send.titleEn, audience: send.audience });
+  return { ok: true };
+});
+
+const runScheduledSend = async (doc) => {
+  const db = getFirestore();
+
+  // Claimed in a transaction, so a cancel at the same moment can't also let it go out
+  const send = await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(doc.ref);
+    if (snapshot.data()?.status !== 'scheduled') return null;
+    transaction.update(doc.ref, { status: 'sending', dueAt: FieldValue.delete() });
+    return snapshot.data();
+  });
+  if (!send) return;
+
+  // An admin removed after scheduling shouldn't still be able to send
+  const actor = await getAuth().getUser(send.actorUid).catch(() => null);
+  if (!actor || !hasAccess(actor, STAFF)) {
+    await doc.ref.update({ status: 'cancelled' });
+    await writeLog(actor ?? { uid: send.actorUid, email: send.actorEmail }, NOBODY, 'notification_cancelled', '', {
+      title: send.titleEn,
+      audience: send.audience,
+    });
+    return;
+  }
+
+  const resolved = await resolveAudience(send.audience, send.type).catch(async (error) => {
+    await doc.ref.update({ status: 'failed' });
+    throw error;
+  });
+  await deliver(doc.ref, send, actor, resolved);
+};
+
+export const sendScheduledNotifications = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    timeZone: TIME_ZONE,
+    region: 'asia-southeast1',
+    timeoutSeconds: 300,
+    memory: '512MiB',
+  },
+  async () => {
+    const snapshot = await getFirestore().collection('notificationSends')
+      .where('dueAt', '<=', Timestamp.now())
+      .get();
+
+    for (const doc of snapshot.docs) {
+      // One failed send is marked as failed and mustn't stop the others
+      await runScheduledSend(doc).catch(error => {
+        logger.error('Scheduled send failed', { sendId: doc.id, error: error.message });
+      });
+    }
+  }
+);
 
 export const getSendHistory = onCall(CALLABLE_OPTIONS, async (request) => {
   await requireRole(request, STAFF);
@@ -265,6 +396,7 @@ export const getSendHistory = onCall(CALLABLE_OPTIONS, async (request) => {
         attempted: send.attempted,
         delivered: send.delivered,
         tapped: send.tapped,
+        scheduledFor: send.scheduledFor ?? null,
         createdAt: send.createdAt?.toDate().toISOString() ?? null,
       };
     }),
@@ -278,7 +410,7 @@ export const setDailySendLimit = onCall(CALLABLE_OPTIONS, async (request) => {
 
   const { dailyLimit } = await readQuota();
   await configRef().set({ dailyLimit: limit }, { merge: true });
-  await writeLog(actor, { uid: '', email: '' }, 'limit_changed', '', { from: dailyLimit, to: limit });
+  await writeLog(actor, NOBODY, 'limit_changed', '', { from: dailyLimit, to: limit });
   return { dailyLimit: limit };
 });
 

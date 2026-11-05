@@ -185,7 +185,7 @@ export interface Announcement {
   priority: 'low' | 'medium' | 'high';
   isActive: boolean;
   createdAt: string;
-  adminType?: 'tip' | 'update'; // Set on notifications written in the admin panel, rather than app-wide announcements
+  adminType?: 'tip' | 'update' | 'promotion'; // Set on notifications written in the admin panel, rather than app-wide announcements
 }
 
 export interface ViewedAnnouncement {

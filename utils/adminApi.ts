@@ -36,6 +36,8 @@ export type AdminLogAction =
   | 'user_disabled'
   | 'user_enabled'
   | 'notification_sent'
+  | 'notification_scheduled'
+  | 'notification_cancelled'
   | 'limit_changed'
   | 'announcement_created'
   | 'announcement_edited'
@@ -71,11 +73,18 @@ export interface AdminLogEntry {
   actorEmail: string;
   targetEmail: string;
   reason: string;
-  details: { title?: string; audience?: NotificationAudience; devices?: number; from?: number; to?: number } | null;
+  details: {
+    title?: string;
+    audience?: NotificationAudience;
+    devices?: number;
+    from?: number;
+    to?: number;
+    scheduledFor?: string;
+  } | null;
   createdAt: string | null;
 }
 
-export type NotificationType = 'tip' | 'update';
+export type NotificationType = 'tip' | 'update' | 'promotion';
 export type NotificationTab = 'overview' | 'analytics' | 'mileage' | 'reminders';
 
 export interface NotificationContent {
@@ -92,6 +101,14 @@ export interface NotificationDraft {
   audience: NotificationAudience;
   openTab: NotificationTab;
   confirm: string;
+  scheduleAt?: string;
+}
+
+export interface NotificationSendResult {
+  people: number;
+  attempted: number;
+  delivered: number;
+  scheduledFor: string | null;
 }
 
 export interface NotificationPreview {
@@ -107,7 +124,8 @@ export interface NotificationPreview {
 export interface NotificationSendRecord {
   id: string;
   title: string;
-  status: 'sending' | 'sent' | 'failed';
+  status: 'scheduled' | 'cancelled' | 'sending' | 'sent' | 'failed';
+  scheduledFor: string | null;
   audience: NotificationAudience;
   actorEmail: string;
   attempted: number;
@@ -151,14 +169,19 @@ export const getActivityLog = async () =>
 export const getAudienceCounts = async () =>
   (await call<{ counts: Record<string, number> }>('getAudienceCounts')).counts;
 
-export const previewNotification = (audience: NotificationAudience) =>
-  call<NotificationPreview>('previewNotification', { audience });
+export const previewNotification = (audience: NotificationAudience, type: NotificationType, scheduleAt?: string) =>
+  call<NotificationPreview>('previewNotification', { audience, type, scheduleAt });
 
 export const sendTestNotification = (content: NotificationContent, openTab: NotificationTab) =>
   call<{ devices: number; delivered: number }>('sendTestNotification', { content, openTab });
 
 export const sendNotification = (draft: NotificationDraft) =>
-  call<{ people: number; attempted: number; delivered: number }>('sendNotification', draft, SEND_TIMEOUT_MS);
+  call<NotificationSendResult>('sendNotification', draft, SEND_TIMEOUT_MS);
+
+export const cancelScheduledSend = (sendId: string) => call<{ ok: boolean }>('cancelScheduledSend', { sendId });
+
+export const describeNotificationType = (type: NotificationType, t: Translations): string =>
+  ({ tip: t.notifTypeTip, update: t.notifTypeUpdate, promotion: t.notifTypePromotion })[type];
 
 export const getSendHistory = () =>
   call<{ sends: NotificationSendRecord[]; dailyLimit: number; usedToday: number }>('getSendHistory');
@@ -213,6 +236,8 @@ export const getAdminErrorMessage = (error: any, t: Translations): string => {
     'daily-limit-reached': t.adminErrLimitReached,
     'confirm-required': t.confTypeSend,
     'send-failed': t.adminErrSendFailed,
+    'invalid-schedule': t.adminErrInvalidSchedule,
+    'not-scheduled': t.adminErrNotScheduled,
     'invalid-announcement': t.annErrInvalid,
     'announcement-missing': t.annErrMissing,
   };

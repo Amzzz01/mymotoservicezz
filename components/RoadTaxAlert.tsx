@@ -126,8 +126,8 @@ const RoadTaxAlert: React.FC<RoadTaxAlertProps> = ({
               <BellIcon className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <div className="font-bold text-slate-800 dark:text-slate-100">{t.roadTaxNotifyPromptTitle}</div>
-              <div className="text-sm text-slate-600 dark:text-slate-400">{t.roadTaxNotifyPromptBody}</div>
+              <div className="font-bold text-slate-800 dark:text-slate-100">{t.notifyPromptTitle}</div>
+              <div className="text-sm text-slate-600 dark:text-slate-400">{t.notifyPromptBody}</div>
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-3">

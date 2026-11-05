@@ -9,11 +9,14 @@ import {
   cleanContent,
   cleanLimit,
   cleanOpenTab,
+  cleanScheduleTime,
   cleanType,
   countLanguages,
+  filterByPrefs,
   isBulkAudience,
   isValidSendId,
   selectUserIds,
+  wantsNotification,
 } from './notificationLogic.js';
 
 const CONTENT = { titleEn: 'Title', bodyEn: 'Body', titleMs: 'Tajuk', bodyMs: 'Mesej' };
@@ -35,7 +38,8 @@ test('cleanContent needs both languages and respects the length limits', () => {
 
 test('type, tab, send id and limit reject anything unexpected', () => {
   assert.equal(cleanType('tip'), 'tip');
-  assert.equal(cleanType('promotion'), null);
+  assert.equal(cleanType('promotion'), 'promotion');
+  assert.equal(cleanType('spam'), null);
   assert.equal(cleanOpenTab('mileage'), 'mileage');
   assert.equal(cleanOpenTab('javascript:alert(1)'), 'overview');
   assert.equal(isValidSendId('123e4567-e89b-12d3-a456-426614174000'), true);
@@ -128,6 +132,33 @@ test('language groups come from the device language, defaulting to English', () 
   assert.deepEqual(pick({ kind: 'language', language: 'ms' }, { users, tokens }), ['ms']);
   assert.deepEqual(pick({ kind: 'language', language: 'en' }, { users, tokens }), ['en', 'unset']);
   assert.deepEqual(countLanguages(tokens), { en: 2, ms: 1 });
+});
+
+test('promotions need an opt-in, other types are on unless turned off', () => {
+  assert.equal(wantsNotification(undefined, 'promotion'), false);
+  assert.equal(wantsNotification({}, 'promotion'), false);
+  assert.equal(wantsNotification({ promotion: true }, 'promotion'), true);
+  assert.equal(wantsNotification(undefined, 'tip'), true);
+  assert.equal(wantsNotification({ update: false }, 'tip'), true);
+  assert.equal(wantsNotification({ tip: false }, 'tip'), false);
+  assert.equal(wantsNotification({ roadTax: false }, 'roadTax'), false);
+});
+
+test('filterByPrefs keeps only people who want this type', () => {
+  const prefs = new Map([['off', { tip: false }], ['in', { promotion: true }]]);
+  assert.deepEqual([...filterByPrefs(new Set(['off', 'in', 'none']), prefs, 'tip')], ['in', 'none']);
+  assert.deepEqual([...filterByPrefs(new Set(['off', 'in', 'none']), prefs, 'promotion')], ['in']);
+});
+
+test('cleanScheduleTime allows 5 minutes to 60 days ahead', () => {
+  const at = (ms) => new Date(NOW + ms).toISOString();
+  assert.equal(cleanScheduleTime(at(5 * 60 * 1000), NOW), NOW + 5 * 60 * 1000);
+  assert.equal(cleanScheduleTime(at(60 * DAY), NOW), NOW + 60 * DAY);
+  assert.equal(cleanScheduleTime(at(4 * 60 * 1000), NOW), null);
+  assert.equal(cleanScheduleTime(at(-DAY), NOW), null);
+  assert.equal(cleanScheduleTime(at(61 * DAY), NOW), null);
+  assert.equal(cleanScheduleTime('tomorrow', NOW), null);
+  assert.equal(cleanScheduleTime(undefined, NOW), null);
 });
 
 test('buildCustomPushData picks the device language and sends only strings', () => {

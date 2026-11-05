@@ -12,7 +12,9 @@ const NEW_USER_DAYS = 30;
 const INACTIVE_DAYS = 60;
 const ROAD_TAX_SOON_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const TYPES = ['tip', 'update'];
+const MIN_SCHEDULE_LEAD_MS = 5 * 60 * 1000;
+const MAX_SCHEDULE_LEAD_MS = 60 * DAY_MS;
+const TYPES = ['tip', 'update', 'promotion'];
 const OPEN_TABS = ['overview', 'analytics', 'mileage', 'reminders'];
 const LANGUAGES = ['en', 'ms'];
 const SIMPLE_AUDIENCES = ['everyone', 'roadTaxExpired', 'roadTaxSoon', 'newUsers', 'inactive', 'noVehicle'];
@@ -50,6 +52,20 @@ export const isValidSendId = (id) => typeof id === 'string' && /^[A-Za-z0-9-]{16
 
 export const cleanLimit = (limit) =>
   Number.isInteger(limit) && limit >= 1 && limit <= MAX_DAILY_LIMIT ? limit : null;
+
+// Promotions need an opt-in; everything else is on unless the user turned it off
+export const wantsNotification = (prefs, type) =>
+  type === 'promotion' ? prefs?.promotion === true : prefs?.[type] !== false;
+
+export const filterByPrefs = (userIds, prefsByUser, type) =>
+  new Set([...userIds].filter(uid => wantsNotification(prefsByUser.get(uid), type)));
+
+// Returns the time in milliseconds, or null if it's unreadable, too soon or too far ahead
+export const cleanScheduleTime = (value, now) => {
+  if (typeof value !== 'string') return null;
+  const time = new Date(value).getTime();
+  return time >= now + MIN_SCHEDULE_LEAD_MS && time <= now + MAX_SCHEDULE_LEAD_MS ? time : null;
+};
 
 // Returns a normalised audience, or null when it can't be used
 export const cleanAudience = (raw) => {

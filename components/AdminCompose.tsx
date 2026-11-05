@@ -4,9 +4,11 @@ import { useAuth } from '../hooks/useAuth';
 import {
   NotificationAudience,
   NotificationContent,
+  NotificationSendResult,
   NotificationTab,
   NotificationType,
   describeAudience,
+  describeNotificationType,
   getAdminErrorMessage,
   sendTestNotification,
 } from '../utils/adminApi';
@@ -23,7 +25,7 @@ const EMPTY_CONTENT: NotificationContent = { titleEn: '', bodyEn: '', titleMs: '
 interface AdminComposeProps {
   initialEmail?: string;
   onBack: () => void;
-  onSent: (result: { people: number; attempted: number }) => void;
+  onSent: (result: NotificationSendResult) => void;
 }
 
 const AdminCompose: React.FC<AdminComposeProps> = ({ initialEmail, onBack, onSent }) => {
@@ -36,6 +38,8 @@ const AdminCompose: React.FC<AdminComposeProps> = ({ initialEmail, onBack, onSen
     initialEmail ? { kind: 'users', emails: [initialEmail] } : { kind: 'everyone' }
   );
   const [openTab, setOpenTab] = useState<NotificationTab>('overview');
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleLocal, setScheduleLocal] = useState(''); // Date and time as typed, in this device's time zone
   const [showConfirm, setShowConfirm] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testMessage, setTestMessage] = useState('');
@@ -46,6 +50,8 @@ const AdminCompose: React.FC<AdminComposeProps> = ({ initialEmail, onBack, onSen
   const audienceReady =
     (audience.kind !== 'users' || audience.emails.length > 0) &&
     (audience.kind !== 'vehicleType' || audience.text.length > 0);
+  const scheduleAt = scheduling && scheduleLocal ? new Date(scheduleLocal).toISOString() : undefined;
+  const whenReady = !scheduling || Boolean(scheduleAt);
 
   const setField = (field: keyof NotificationContent, value: string) =>
     setContent(current => ({ ...current, [field]: value }));
@@ -129,8 +135,8 @@ const AdminCompose: React.FC<AdminComposeProps> = ({ initialEmail, onBack, onSen
       <div className="max-w-xl mx-auto p-4 flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <span className={labelClass}>{t.confType}</span>
-          <div className="grid grid-cols-2 gap-1.5">
-            {([['tip', t.notifTypeTip], ['update', t.notifTypeUpdate]] as [NotificationType, string][]).map(([id, label]) => (
+          <div className="grid grid-cols-3 gap-1.5">
+            {(['tip', 'update', 'promotion'] as NotificationType[]).map(id => (
               <button
                 key={id}
                 type="button"
@@ -141,7 +147,7 @@ const AdminCompose: React.FC<AdminComposeProps> = ({ initialEmail, onBack, onSen
                   : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold'
                 }`}
               >
-                {label}
+                {describeNotificationType(id, t)}
               </button>
             ))}
           </div>
@@ -159,6 +165,30 @@ const AdminCompose: React.FC<AdminComposeProps> = ({ initialEmail, onBack, onSen
             {t.notifSendTo}
             <span className="font-normal text-right text-slate-600 dark:text-slate-400 break-words min-w-0">{describeAudience(audience, t)} ›</span>
           </button>
+          <div className="min-h-[48px] px-3.5 flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-700">
+            <label htmlFor="notification-when">{t.notifWhen}</label>
+            <select
+              id="notification-when"
+              value={scheduling ? 'later' : 'now'}
+              onChange={event => setScheduling(event.target.value === 'later')}
+              className="min-h-[40px] px-2 rounded-lg font-normal bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100"
+            >
+              <option value="now">{t.notifWhenNow}</option>
+              <option value="later">{t.notifWhenLater}</option>
+            </select>
+          </div>
+          {scheduling && (
+            <div className="px-3.5 py-2.5 flex flex-col gap-1.5 border-b border-slate-200 dark:border-slate-700">
+              <label htmlFor="notification-time">{t.notifWhenPick}</label>
+              <input
+                id="notification-time"
+                type="datetime-local"
+                value={scheduleLocal}
+                onChange={event => setScheduleLocal(event.target.value)}
+                className="min-h-[44px] w-full px-2 rounded-lg font-normal bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100"
+              />
+            </div>
+          )}
           <div className="min-h-[48px] px-3.5 flex items-center justify-between gap-3">
             <label htmlFor="notification-tab">{t.notifOpens}</label>
             <select
@@ -199,7 +229,7 @@ const AdminCompose: React.FC<AdminComposeProps> = ({ initialEmail, onBack, onSen
           <button
             type="button"
             onClick={() => setShowConfirm(true)}
-            disabled={!contentReady || !audienceReady}
+            disabled={!contentReady || !audienceReady || !whenReady}
             className="flex-1 min-h-[48px] rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-sm font-bold disabled:opacity-50"
           >
             {t.notifContinue}
@@ -213,6 +243,7 @@ const AdminCompose: React.FC<AdminComposeProps> = ({ initialEmail, onBack, onSen
           content={content}
           audience={audience}
           openTab={openTab}
+          scheduleAt={scheduleAt}
           onCancel={() => setShowConfirm(false)}
           onSent={onSent}
         />

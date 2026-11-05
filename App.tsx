@@ -26,6 +26,8 @@ import ServiceHistory from './components/ServiceHistory';
 import RoadTaxAlert from './components/RoadTaxAlert';
 import RenewRoadTaxModal from './components/RenewRoadTaxModal';
 import { useRoadTaxNotifications } from './hooks/useRoadTaxNotifications';
+import { useNotificationPrefs } from './hooks/useNotificationPrefs';
+import NotificationSettings from './components/NotificationSettings';
 import { fillTemplate, formatRoadTaxDate, getRoadTaxAlerts } from './utils/roadTax';
 import { unregisterPushToken } from './utils/pushTokens';
 import { getAuthErrorMessage } from './utils/authErrors';
@@ -56,6 +58,7 @@ function App() {
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
   const [showVehicleManager, setShowVehicleManager] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [pendingTapSendId, setPendingTapSendId] = useState<string | null>(null);
 
   // FAB quick-action triggers: each is a nonce that increments on every tap, so the
@@ -112,10 +115,11 @@ function App() {
 
   // Road tax alerts cover every vehicle, not just the selected one
   const roadTaxAlerts = useMemo(() => getRoadTaxAlerts(vehicles), [vehicles]);
+  const notificationPrefs = useNotificationPrefs(currentUser?.uid);
   const roadTaxNotifications = useRoadTaxNotifications(roadTaxAlerts, t, {
     userId: currentUser?.uid,
     language,
-    hasRoadTaxDate: vehicles.some(v => Boolean(v.roadTaxExpiry)),
+    roadTaxEnabled: notificationPrefs.loaded && notificationPrefs.prefs.roadTax,
   });
   // undefined = renew form closed; null = open with the most urgent vehicle preselected
   const [renewVehicleId, setRenewVehicleId] = useState<string | null | undefined>(undefined);
@@ -348,7 +352,10 @@ function App() {
             />
 
             {/* Settings Button */}
-            <SettingsButton onOpenAdmin={() => setShowAdminPanel(true)} />
+            <SettingsButton
+              onOpenAdmin={() => setShowAdminPanel(true)}
+              onOpenNotifications={() => setShowNotificationSettings(true)}
+            />
 
             {/* Logout Button */}
             <button
@@ -561,6 +568,16 @@ function App() {
           initialVehicleId={renewVehicleId}
           onSave={handleRenewRoadTax}
           onClose={() => setRenewVehicleId(undefined)}
+        />
+      )}
+
+      {showNotificationSettings && (
+        <NotificationSettings
+          permission={roadTaxNotifications.permission}
+          onRequestPermission={roadTaxNotifications.requestPermission}
+          prefs={notificationPrefs.prefs}
+          onChangePref={notificationPrefs.setPref}
+          onClose={() => setShowNotificationSettings(false)}
         />
       )}
 

@@ -4,9 +4,12 @@ import {
   NotificationAudience,
   NotificationContent,
   NotificationPreview,
+  NotificationSendResult,
   NotificationTab,
   NotificationType,
   describeAudience,
+  describeNotificationType,
+  formatAdminDateTime,
   getAdminErrorMessage,
   previewNotification,
   sendNotification,
@@ -28,11 +31,12 @@ interface AdminConfirmProps {
   content: NotificationContent;
   audience: NotificationAudience;
   openTab: NotificationTab;
+  scheduleAt?: string;
   onCancel: () => void;
-  onSent: (result: { people: number; attempted: number }) => void;
+  onSent: (result: NotificationSendResult) => void;
 }
 
-const AdminConfirm: React.FC<AdminConfirmProps> = ({ type, content, audience, openTab, onCancel, onSent }) => {
+const AdminConfirm: React.FC<AdminConfirmProps> = ({ type, content, audience, openTab, scheduleAt, onCancel, onSent }) => {
   const { t, language } = useApp();
   const [preview, setPreview] = useState<NotificationPreview | null>(null);
   const [typed, setTyped] = useState('');
@@ -42,11 +46,11 @@ const AdminConfirm: React.FC<AdminConfirmProps> = ({ type, content, audience, op
   const sendId = useRef(crypto.randomUUID());
 
   useEffect(() => {
-    previewNotification(audience).then(setPreview).catch(err => {
+    previewNotification(audience, type, scheduleAt).then(setPreview).catch(err => {
       console.error('Failed to preview notification:', err);
       setError(getAdminErrorMessage(err, t));
     });
-  }, [audience, t]);
+  }, [audience, type, scheduleAt, t]);
 
   const needsTyping = audience.kind === 'everyone';
   const limitReached = Boolean(preview?.isBulk && preview.usedToday >= preview.dailyLimit);
@@ -64,6 +68,7 @@ const AdminConfirm: React.FC<AdminConfirmProps> = ({ type, content, audience, op
         audience,
         openTab,
         confirm: typed.trim(),
+        scheduleAt,
       });
       onSent(result);
     } catch (err) {
@@ -73,6 +78,7 @@ const AdminConfirm: React.FC<AdminConfirmProps> = ({ type, content, audience, op
     }
   };
 
+  const scheduleText = formatAdminDateTime(scheduleAt ?? null, language);
   const previewTitle = language === 'ms' ? content.titleMs : content.titleEn;
   const previewBody = language === 'ms' ? content.bodyMs : content.bodyEn;
 
@@ -85,9 +91,11 @@ const AdminConfirm: React.FC<AdminConfirmProps> = ({ type, content, audience, op
         className="w-full sm:max-w-md max-h-full overflow-y-auto bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl p-5 flex flex-col gap-3.5"
       >
         <h2 id="confirm-title" className="text-xl font-extrabold text-slate-800 dark:text-slate-100">
-          {preview ? fillTemplate(t.confTitle, { count: String(preview.devices) }) : t.notifContinue}
+          {scheduleAt
+            ? fillTemplate(t.confTitleScheduled, { date: scheduleText })
+            : preview ? fillTemplate(t.confTitle, { count: String(preview.devices) }) : t.notifContinue}
         </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{t.confNote}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{scheduleAt ? t.confScheduledNote : t.confNote}</p>
 
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">{t.confLook}</h3>
         <div className="bg-slate-800 dark:bg-slate-900 text-slate-100 rounded-2xl px-3.5 py-3 flex flex-col gap-1">
@@ -103,8 +111,10 @@ const AdminConfirm: React.FC<AdminConfirmProps> = ({ type, content, audience, op
 
         {preview && (
           <div className="border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
-            <Row label={t.confType} value={type === 'tip' ? t.notifTypeTip : t.notifTypeUpdate} />
+            <Row label={t.confType} value={describeNotificationType(type, t)} />
             <Row label={t.notifSendTo} value={describeAudience(audience, t)} />
+            <Row label={t.audDevicesLabel} value={String(preview.devices)} />
+            {scheduleAt && <Row label={t.confWhen} value={scheduleText} />}
             <Row
               label={t.confLanguages}
               value={fillTemplate(t.confLanguagesValue, { en: String(preview.languages.en), ms: String(preview.languages.ms) })}
@@ -112,7 +122,7 @@ const AdminConfirm: React.FC<AdminConfirmProps> = ({ type, content, audience, op
             <Row label={t.confBell} value={fillTemplate(t.audPeopleCount, { count: String(preview.people) })} />
             {preview.isBulk && (
               <Row
-                label={t.confSendsLeft}
+                label={scheduleAt ? t.confSendsLeftThatDay : t.confSendsLeft}
                 value={fillTemplate(t.confSendsLeftValue, {
                   left: String(Math.max(preview.dailyLimit - preview.usedToday, 0)),
                   limit: String(preview.dailyLimit),
@@ -161,7 +171,7 @@ const AdminConfirm: React.FC<AdminConfirmProps> = ({ type, content, audience, op
             className="flex-[2] min-h-[50px] rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {sending && <Spinner size="sm" variant="white" />}
-            {t.confSendNow}
+            {scheduleAt ? t.confSchedule : t.confSendNow}
           </button>
         </div>
       </div>

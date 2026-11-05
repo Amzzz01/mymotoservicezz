@@ -48,6 +48,19 @@ const AdminActivity: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             devices: String(details?.devices ?? 0),
           }),
         };
+      case 'notification_scheduled':
+        return {
+          title: fillTemplate(t.adminLogNotificationScheduled, { title: details?.title ?? '' }),
+          detail: fillTemplate(t.adminLogScheduledDetail, {
+            audience: details?.audience ? describeAudience(details.audience, t) : '',
+            date: formatAdminDateTime(details?.scheduledFor ?? null, language),
+          }),
+        };
+      case 'notification_cancelled':
+        return {
+          title: fillTemplate(t.adminLogNotificationCancelled, { title: details?.title ?? '' }),
+          detail: details?.audience ? describeAudience(details.audience, t) : '',
+        };
       case 'limit_changed':
         return {
           title: t.adminLogLimitChanged,

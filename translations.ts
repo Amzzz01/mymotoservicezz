@@ -333,8 +333,8 @@ export interface Translations {
   roadTaxNotifySoonTitle: string;
   roadTaxNotifySoonBody: string;
   remindTomorrow: string;
-  roadTaxNotifyPromptTitle: string;
-  roadTaxNotifyPromptBody: string;
+  notifyPromptTitle: string;
+  notifyPromptBody: string;
   allow: string;
   notNow: string;
 
@@ -557,6 +557,45 @@ export interface Translations {
   annPriorityHigh: string;
   annErrInvalid: string;
   annErrMissing: string;
+
+  // Notification settings and scheduled sends
+  prefsTitle: string;
+  prefsDeviceHeading: string;
+  prefsDeviceOn: string;
+  prefsDeviceOff: string;
+  prefsDeviceBlocked: string;
+  prefsDeviceUnsupported: string;
+  prefsTurnOn: string;
+  prefsTypesHeading: string;
+  prefsRoadTax: string;
+  prefsRoadTaxHint: string;
+  prefsTipHint: string;
+  prefsUpdateHint: string;
+  prefsPromotionHint: string;
+  prefsNote: string;
+  prefsSaveError: string;
+  notifTypePromotion: string;
+  notifWhen: string;
+  notifWhenNow: string;
+  notifWhenLater: string;
+  notifWhenPick: string;
+  audPrefsNote: string;
+  audDevicesLabel: string;
+  confSendsLeftThatDay: string;
+  confTitleScheduled: string;
+  confWhen: string;
+  confSchedule: string;
+  confScheduledNote: string;
+  histScheduled: string;
+  histCancelled: string;
+  histCancelSend: string;
+  histConfirmCancel: string;
+  histScheduledSuccess: string;
+  adminLogNotificationScheduled: string;
+  adminLogScheduledDetail: string;
+  adminLogNotificationCancelled: string;
+  adminErrInvalidSchedule: string;
+  adminErrNotScheduled: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -893,8 +932,8 @@ export const translations: Record<Language, Translations> = {
     roadTaxNotifySoonTitle: 'Road tax expiring soon: {name}',
     roadTaxNotifySoonBody: '{vehicle} road tax expires on {date}. Renew early to avoid a fine.',
     remindTomorrow: 'Remind me tomorrow',
-    roadTaxNotifyPromptTitle: 'Get road tax alerts?',
-    roadTaxNotifyPromptBody: "We'll notify you before and after your road tax expires.",
+    notifyPromptTitle: 'Turn on phone alerts?',
+    notifyPromptBody: 'Get road tax reminders and service tips, even when the app is closed. You can choose which ones in Settings.',
     allow: 'Allow',
     notNow: 'Not now',
 
@@ -1117,6 +1156,45 @@ export const translations: Record<Language, Translations> = {
     annPriorityHigh: 'High',
     annErrInvalid: 'Fill in the title and message.',
     annErrMissing: 'This announcement no longer exists.',
+
+    // Notification settings and scheduled sends
+    prefsTitle: 'Notifications',
+    prefsDeviceHeading: 'This device',
+    prefsDeviceOn: 'Phone alerts are on for this device.',
+    prefsDeviceOff: 'Phone alerts are off for this device.',
+    prefsDeviceBlocked: 'Phone alerts are blocked. To turn them on, allow notifications for this app in your browser or phone settings, then reopen the app.',
+    prefsDeviceUnsupported: 'This browser can\'t show phone alerts. On iPhone, add the app to your Home Screen first, then open it from there.',
+    prefsTurnOn: 'Turn on phone alerts',
+    prefsTypesHeading: 'What you receive',
+    prefsRoadTax: 'Road tax alerts',
+    prefsRoadTaxHint: 'Phone alerts before and after your road tax expires',
+    prefsTipHint: 'Maintenance advice for your motorcycle',
+    prefsUpdateHint: 'New features and important changes',
+    prefsPromotionHint: 'Offers and deals. Off unless you turn it on',
+    prefsNote: 'These apply to all your devices. Turning off a type also keeps it out of your bell, except road tax, which always shows in the app.',
+    prefsSaveError: 'Could not save. Check your connection and try again.',
+    notifTypePromotion: 'Promotion',
+    notifWhen: 'When',
+    notifWhenNow: 'Send now',
+    notifWhenLater: 'Schedule',
+    notifWhenPick: 'Date and time',
+    audDevicesLabel: 'Devices',
+    audPrefsNote: 'These counts are before people\'s settings. The next step shows the real number for your notification type.',
+    confSendsLeftThatDay: 'Sends left that day',
+    confTitleScheduled: 'Schedule for {date}?',
+    confWhen: 'When',
+    confSchedule: 'Schedule',
+    confScheduledNote: 'Goes out within 5 minutes of this time. The people are worked out again then, so the numbers may change. You can cancel it in Send history.',
+    histScheduled: 'Scheduled',
+    histCancelled: 'Cancelled',
+    histCancelSend: 'Cancel send',
+    histConfirmCancel: 'Cancel this scheduled notification?',
+    histScheduledSuccess: 'Scheduled for {date}.',
+    adminLogNotificationScheduled: 'Scheduled "{title}"',
+    adminLogScheduledDetail: 'To {audience}, for {date}',
+    adminLogNotificationCancelled: 'Cancelled "{title}"',
+    adminErrInvalidSchedule: 'Pick a time at least 5 minutes from now and within 60 days.',
+    adminErrNotScheduled: 'This send is no longer waiting, so it can\'t be cancelled.',
   },
   ms: {
     // Header
@@ -1451,8 +1529,8 @@ export const translations: Record<Language, Translations> = {
     roadTaxNotifySoonTitle: 'Cukai jalan hampir tamat: {name}',
     roadTaxNotifySoonBody: 'Cukai jalan {vehicle} tamat pada {date}. Perbaharui awal untuk elak saman.',
     remindTomorrow: 'Ingatkan esok',
-    roadTaxNotifyPromptTitle: 'Terima amaran cukai jalan?',
-    roadTaxNotifyPromptBody: 'Kami akan maklumkan sebelum dan selepas cukai jalan anda tamat.',
+    notifyPromptTitle: 'Aktifkan makluman telefon?',
+    notifyPromptBody: 'Terima peringatan cukai jalan dan tip servis, walaupun aplikasi ditutup. Anda boleh pilih yang mana dalam Tetapan.',
     allow: 'Benarkan',
     notNow: 'Bukan sekarang',
 
@@ -1675,6 +1753,45 @@ export const translations: Record<Language, Translations> = {
     annPriorityHigh: 'Tinggi',
     annErrInvalid: 'Isi tajuk dan mesej.',
     annErrMissing: 'Pengumuman ini sudah tiada.',
+
+    // Notification settings and scheduled sends
+    prefsTitle: 'Notifikasi',
+    prefsDeviceHeading: 'Peranti ini',
+    prefsDeviceOn: 'Makluman telefon aktif pada peranti ini.',
+    prefsDeviceOff: 'Makluman telefon tidak aktif pada peranti ini.',
+    prefsDeviceBlocked: 'Makluman telefon disekat. Untuk mengaktifkannya, benarkan notifikasi untuk aplikasi ini dalam tetapan pelayar atau telefon, kemudian buka semula aplikasi.',
+    prefsDeviceUnsupported: 'Pelayar ini tidak boleh memaparkan makluman telefon. Pada iPhone, tambah aplikasi ke Skrin Utama dahulu, kemudian buka dari situ.',
+    prefsTurnOn: 'Aktifkan makluman telefon',
+    prefsTypesHeading: 'Apa yang anda terima',
+    prefsRoadTax: 'Makluman cukai jalan',
+    prefsRoadTaxHint: 'Makluman telefon sebelum dan selepas cukai jalan tamat',
+    prefsTipHint: 'Nasihat penyelenggaraan motosikal anda',
+    prefsUpdateHint: 'Ciri baharu dan perubahan penting',
+    prefsPromotionHint: 'Tawaran dan promosi. Tidak aktif kecuali anda aktifkan',
+    prefsNote: 'Tetapan ini untuk semua peranti anda. Mematikan sesuatu jenis juga mengeluarkannya dari loceng, kecuali cukai jalan yang sentiasa dipaparkan dalam aplikasi.',
+    prefsSaveError: 'Tidak dapat disimpan. Semak sambungan anda dan cuba lagi.',
+    notifTypePromotion: 'Promosi',
+    notifWhen: 'Bila',
+    notifWhenNow: 'Hantar sekarang',
+    notifWhenLater: 'Jadualkan',
+    notifWhenPick: 'Tarikh dan masa',
+    audDevicesLabel: 'Peranti',
+    audPrefsNote: 'Kiraan ini sebelum mengambil kira tetapan pengguna. Langkah seterusnya menunjukkan bilangan sebenar untuk jenis notifikasi anda.',
+    confSendsLeftThatDay: 'Baki hantaran hari itu',
+    confTitleScheduled: 'Jadualkan pada {date}?',
+    confWhen: 'Bila',
+    confSchedule: 'Jadualkan',
+    confScheduledNote: 'Dihantar dalam masa 5 minit dari waktu ini. Penerima dikira semula pada masa itu, jadi bilangannya mungkin berubah. Anda boleh membatalkannya dalam Sejarah penghantaran.',
+    histScheduled: 'Dijadualkan',
+    histCancelled: 'Dibatalkan',
+    histCancelSend: 'Batal hantaran',
+    histConfirmCancel: 'Batalkan notifikasi berjadual ini?',
+    histScheduledSuccess: 'Dijadualkan pada {date}.',
+    adminLogNotificationScheduled: 'Menjadualkan "{title}"',
+    adminLogScheduledDetail: 'Kepada {audience}, pada {date}',
+    adminLogNotificationCancelled: 'Membatalkan "{title}"',
+    adminErrInvalidSchedule: 'Pilih masa sekurang-kurangnya 5 minit dari sekarang dan dalam 60 hari.',
+    adminErrNotScheduled: 'Hantaran ini tidak lagi menunggu, jadi ia tidak boleh dibatalkan.',
   },
 };
 

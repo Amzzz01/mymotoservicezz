@@ -203,7 +203,7 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                         <span className="text-2xl">{getTypeIcon(announcement.type)}</span>
                         <span className="text-white font-bold text-sm uppercase tracking-wide">
                           {announcement.adminType
-                            ? (announcement.adminType === 'tip' ? t.notifTypeTip : t.notifTypeUpdate)
+                            ? { tip: t.notifTypeTip, update: t.notifTypeUpdate, promotion: t.notifTypePromotion }[announcement.adminType]
                             : announcement.type}
                         </span>
                         {announcement.version && (

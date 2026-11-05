@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../hooks/useAuth';
 import {
   NotificationSendRecord,
+  cancelScheduledSend,
   describeAudience,
   formatAdminDateTime,
   getAdminErrorMessage,
@@ -63,7 +64,23 @@ const AdminHistory: React.FC<{ successMessage?: string; onBack: () => void }> = 
     }
   };
 
+  const handleCancelSend = async (sendId: string) => {
+    if (!window.confirm(t.histConfirmCancel)) return;
+    setSaving(true);
+    setError('');
+    try {
+      await cancelScheduledSend(sendId);
+    } catch (err) {
+      console.error('Failed to cancel the scheduled send:', err);
+      setError(getAdminErrorMessage(err, t));
+    }
+    await load();
+    setSaving(false);
+  };
+
   const statusBadge: Record<NotificationSendRecord['status'], { label: string; className: string }> = {
+    scheduled: { label: t.histScheduled, className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' },
+    cancelled: { label: t.histCancelled, className: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
     sent: { label: t.histSent, className: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' },
     sending: { label: t.histSending, className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' },
     failed: { label: t.histFailed, className: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' },
@@ -114,13 +131,24 @@ const AdminHistory: React.FC<{ successMessage?: string; onBack: () => void }> = 
               </span>
             </div>
             <span className="text-sm text-slate-600 dark:text-slate-400 break-words">
-              {formatAdminDateTime(send.createdAt, language)} · {describeAudience(send.audience, t)} · {send.actorEmail === currentUser?.email ? t.adminYou : send.actorEmail}
+              {formatAdminDateTime(send.scheduledFor ?? send.createdAt, language)} · {describeAudience(send.audience, t)} · {send.actorEmail === currentUser?.email ? t.adminYou : send.actorEmail}
             </span>
-            <div className="grid grid-cols-3 gap-1.5">
-              <Figure value={send.attempted} label={t.histAttempted} />
-              <Figure value={send.delivered} label={t.histDelivered} />
-              <Figure value={send.tapped} label={t.histTapped} />
-            </div>
+            {send.status === 'scheduled' && (
+              <button
+                onClick={() => handleCancelSend(send.id)}
+                disabled={saving}
+                className="self-start min-h-[44px] px-3.5 rounded-lg border border-red-700 dark:border-red-500 text-red-700 dark:text-red-400 text-sm font-bold disabled:opacity-60"
+              >
+                {t.histCancelSend}
+              </button>
+            )}
+            {send.status !== 'scheduled' && send.status !== 'cancelled' && (
+              <div className="grid grid-cols-3 gap-1.5">
+                <Figure value={send.attempted} label={t.histAttempted} />
+                <Figure value={send.delivered} label={t.histDelivered} />
+                <Figure value={send.tapped} label={t.histTapped} />
+              </div>
+            )}
           </div>
         ))}
       </div>

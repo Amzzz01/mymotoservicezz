@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getAuthErrorMessage } from '../utils/authErrors';
 import { isAdminRole } from '../utils/roles';
 
-const SettingsButton: React.FC<{ onOpenAdmin: () => void }> = ({ onOpenAdmin }) => {
+const SettingsButton: React.FC<{ onOpenAdmin: () => void; onOpenNotifications: () => void }> = ({ onOpenAdmin, onOpenNotifications }) => {
   const { language, setLanguage, theme, toggleTheme, t } = useApp();
   const { hasGoogle, connectGoogle, role } = useAuth();
   const [showMenu, setShowMenu] = React.useState(false);
@@ -107,6 +107,16 @@ const SettingsButton: React.FC<{ onOpenAdmin: () => void }> = ({ onOpenAdmin }) 
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                 </svg>
                 <span>{language === 'en' ? 'Bahasa Melayu' : 'English'}</span>
+              </button>
+            </div>
+
+            {/* Notification settings */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+              <button
+                onClick={() => { setShowMenu(false); onOpenNotifications(); }}
+                className="w-full min-h-[44px] rounded-lg border border-cyan-600 text-cyan-800 dark:text-cyan-300 text-sm font-bold hover:bg-cyan-50 dark:hover:bg-cyan-900/30"
+              >
+                {t.prefsTitle}
               </button>
             </div>
 

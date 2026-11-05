@@ -18,7 +18,7 @@ const INBOX_SIZE = 30;
 
 interface InboxItem {
   id: string;
-  type: 'tip' | 'update';
+  type: 'tip' | 'update' | 'promotion';
   titleEn: string;
   bodyEn: string;
   titleMs: string;
@@ -127,7 +127,7 @@ export function useAnnouncements(userId: string, language: Language = 'en') {
       id: item.id,
       title: language === 'ms' ? item.titleMs : item.titleEn,
       message: language === 'ms' ? item.bodyMs : item.bodyEn,
-      type: item.type === 'tip' ? 'maintenance' : 'update',
+      type: ({ tip: 'maintenance', update: 'update', promotion: 'feature' } as const)[item.type],
       date: item.sentAt,
       priority: 'medium',
       isActive: true,

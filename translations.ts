@@ -367,6 +367,11 @@ export interface Translations {
   googleConnected: string;
   googleNotConnected: string;
   connect: string;
+
+  // Roles
+  accountRole: string;
+  roleAdmin: string;
+  roleSuperadmin: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -737,6 +742,11 @@ export const translations: Record<Language, Translations> = {
     googleConnected: 'Connected',
     googleNotConnected: 'Not connected',
     connect: 'Connect',
+
+    // Roles
+    accountRole: 'Role',
+    roleAdmin: 'Admin',
+    roleSuperadmin: 'Superadmin',
   },
   ms: {
     // Header
@@ -1105,6 +1115,11 @@ export const translations: Record<Language, Translations> = {
     googleConnected: 'Disambungkan',
     googleNotConnected: 'Belum disambungkan',
     connect: 'Sambung',
+
+    // Roles
+    accountRole: 'Peranan',
+    roleAdmin: 'Admin',
+    roleSuperadmin: 'Superadmin',
   },
 };
 

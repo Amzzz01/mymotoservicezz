@@ -12,9 +12,11 @@ import {
   getRedirectResult,
   sendPasswordResetEmail,
   sendEmailVerification,
+  onIdTokenChanged,
   User as FirebaseUser
 } from 'firebase/auth';
 import { auth, usesAuthProxy } from '../firebase';
+import { UserRole, parseRole } from '../utils/roles';
 
 interface AuthContextType {
   currentUser: FirebaseUser | null;
@@ -31,6 +33,7 @@ interface AuthContextType {
   refreshUser: () => Promise<boolean>;
   emailVerified: boolean;
   hasGoogle: boolean;
+  role: UserRole;
   // A failure from a Google redirect, which only surfaces after the page loads again
   redirectError: string | null;
   clearRedirectError: () => void;
@@ -64,6 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [emailVerified, setEmailVerified] = useState(false);
   const [hasGoogle, setHasGoogle] = useState(false);
   const [redirectError, setRedirectError] = useState<string | null>(null);
+  const [role, setRole] = useState<UserRole>('user');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
@@ -168,6 +172,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Cleanup subscription
     return unsubscribe;
+  }, []);
+
+  // The role is a claim inside the sign-in token, so re-read it whenever the token changes
+  useEffect(() => {
+    return onIdTokenChanged(auth, async (user) => {
+      if (!user) {
+        setRole('user');
+        return;
+      }
+      try {
+        const { claims } = await user.getIdTokenResult();
+        setRole(parseRole(claims.role));
+      } catch (error) {
+        console.error('Failed to read role:', error);
+        setRole('user');
+      }
+    });
   }, []);
 
   const refreshUser = async (): Promise<boolean> => {
@@ -298,6 +319,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       refreshUser,
       emailVerified,
       hasGoogle,
+      role,
       redirectError,
       clearRedirectError: () => setRedirectError(null),
     }}>

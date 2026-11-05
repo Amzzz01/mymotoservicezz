@@ -2,10 +2,11 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../hooks/useAuth';
 import { getAuthErrorMessage } from '../utils/authErrors';
+import { isAdminRole } from '../utils/roles';
 
 const SettingsButton: React.FC = () => {
   const { language, setLanguage, theme, toggleTheme, t } = useApp();
-  const { hasGoogle, connectGoogle } = useAuth();
+  const { hasGoogle, connectGoogle, role } = useAuth();
   const [showMenu, setShowMenu] = React.useState(false);
   const [connecting, setConnecting] = React.useState(false);
   const [connectError, setConnectError] = React.useState('');
@@ -132,6 +133,15 @@ const SettingsButton: React.FC = () => {
                 <p className="text-xs text-red-600 dark:text-red-400 mt-2" role="alert">{connectError}</p>
               )}
             </div>
+
+            {isAdminRole(role) && (
+              <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.accountRole}</span>
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-700 text-white">
+                  {role === 'superadmin' ? t.roleSuperadmin : t.roleAdmin}
+                </span>
+              </div>
+            )}
           </div>
         </>
       )}
